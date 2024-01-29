@@ -47,10 +47,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         getMml() {
-            return this.#mml.concat([
-                '',
-                this.#generatorComment
-            ]).join('\n');
+            if (this.#mml.length) {
+                return this.#mml.concat([
+                    '',
+                    this.#generatorComment
+                ]).join('\n');
+            } else {
+                return '';
+            }
         }
 
         append(str) {
@@ -92,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
     flmml.addEventListener('complete', completeHandler);
 
     mml.onChange = (arr, mmlText) => {
-        mmlOut.innerHTML = `<pre><code>${htmlspecialchars(mmlText).replaceAll('\n','<br>')}</code></pre>`;
+        mmlOut.innerHTML = mmlText ? `<pre><code>${htmlspecialchars(mmlText).replaceAll('\n','<br>')}</code></pre>` : '(なし)';
         if (arr.length) {
             mmlForm.del.field.disabled = false;
             mmlForm.rw.field.disabled = false;
