@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlMML ビジュアルシーケンサー</title>
+    <meta name="color-scheme" content="dark">
+    <script type="module" src="main.js"></script>
+</head>
+<body>
+    <header><a href=".">FlMML ビジュアルシーケンサー</a></header>
+    <div class="wrap">
+        <div class="editor">
+            <form class="mml-form" id="mml-line">
+                <fieldset id="add-mml">
+                    <legend>追加</legend>
+                    <div>
+                        <input type="text" id="add-mml-text" value="L8 O5CDEFGAB&lt;C">
+                        <button id="add-button">追加</button>
+                    </div>
+                </fieldset>
+                <fieldset id="delete-mml" disabled>
+                    <legend>削除</legend>
+                    <div>
+                        <input type="number" id="delete-mml-index" min="0" max="0" value="0">
+                        <button id="delete-button">削除</button>
+                    </div>
+                </fieldset>
+                <fieldset id="rewrite-mml" disabled>
+                    <legend>書換</legend>
+                    <div>
+                        <input type="number" id="rewrite-mml-index" min="0" max="0" value="0">
+                        <input type="text" id="rewrite-mml-text" value="L8 O5CDEFGAB&lt;C">
+                        <button id="rewrite-button">書換</button>
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+        <div class="buttons">
+            <button id="play">再生</button>
+        </div>
+        <div class="warnings">
+            <output id="warn-out" for="mml-text play"></output>
+        </div>
+        <details class="mml" open>
+            <summary>現在のMML</summary>
+            <div>
+                <output id="mml">(なし)</output>
+            </div>
+        </details>
+    </div>
+</body>
+</html>
