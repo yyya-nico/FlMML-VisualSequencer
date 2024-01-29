@@ -4,7 +4,7 @@ import FlMMLWorkerLocation from './flmml-on-html5.worker.js?url'
 import {FlMML} from "flmml-on-html5";
 import {htmlspecialchars} from './utils';
 
-const version = 'v0.0.1 Alpha';
+const version = import.meta.env.VITE_APP_VER;
 
 document.addEventListener('DOMContentLoaded', () => {
     const mmlForm = document.forms['mml-line'];
