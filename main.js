@@ -57,6 +57,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        insert(i, str) {
+            const valid = Object.hasOwn(this.#mml, i) || i === 0;
+            if (valid) {
+                this.#mml.splice(i, 0, str);
+                this.#changeHandler(this.getMmlArr(), this.getMml());
+            } else {
+                this.#errorHandler('範囲外の書き換え指定', `範囲${this.#mml.length - 1}までのところ、${i}`);
+            }
+        }
+
         append(str) {
             this.#mml.push(str);
             this.#changeHandler(this.getMmlArr(), this.getMml());
@@ -82,9 +92,46 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    class History {
+        #histArr = [[],[]];
+        #maxArrLength = 70;
+        #popstateHandler = obj => {};
+
+        set onPopstate(fn) {
+            this.#popstateHandler = fn;
+        }
+        
+        pushState(obj) {
+            this.#histArr[0].push(obj);
+            if (this.#histArr[0].length > this.#maxArrLength) {
+                this.#histArr[0].shift();
+            }
+            this.#histArr[1].length = 0;
+        }
+
+        back() {
+            const data = this.#histArr[0].pop();
+            this.#popstateHandler({
+                reason: 'back',
+                data
+            });
+            data && this.#histArr[1].unshift(data);
+        }
+
+        forward() {
+            const data = this.#histArr[1].shift();
+            this.#popstateHandler({
+                reason: 'forward',
+                data
+            });
+            data && this.#histArr[0].push(data);
+        }
+    }
+
     FlMML.prepare(`#${playBtn.id}`);
     const flmml = new FlMML({workerURL: FlMMLWorkerLocation});
     const mml = new Mml();
+    const history = new History();
 
     const compileHandler = () => {
         warnOut.innerHTML = flmml.getWarnings().replaceAll('\n','<br>');
@@ -111,7 +158,50 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     mml.onError = (error, reason) => {
         alert(error + '\n' + reason);
-    }
+    };
+
+    history.onPopstate = obj => {
+        const data = obj.data;
+        switch (obj.reason) {
+            case 'back':
+                switch (data?.operation) { //元に戻す操作集
+                    case 'append':
+                        mml.delete(data.index);
+                        break;
+                    case 'delete':
+                        mml.insert(data.index, data.mmlText);
+                        break;
+                    case 'rewrite':
+                        mml.rewrite(data.index, data.beforeMmlText);
+                        break;
+                }
+                break;
+            case 'forward':
+                switch (data?.operation) { //やり直し操作集
+                    case 'append':
+                        mml.append(data.mmlText);
+                        break;
+                    case 'delete':
+                        mml.delete(data.index);
+                        break;
+                    case 'rewrite':
+                        mml.rewrite(data.index, data.afterMmlText);
+                        break;
+                }
+                break;
+        }
+    };
+
+    document.addEventListener('keydown', e => {
+        switch (e.key.toLowerCase()) {
+            case 'z':
+                e.ctrlKey && history.back();
+                break;
+            case 'y':
+                e.ctrlKey && history.forward();
+                break;
+        }
+    });
 
     //---------------
     // Form Controls
@@ -119,21 +209,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     mmlForm.addEventListener('submit', async e => {
         e.preventDefault();
+        const mmlArr = mml.getMmlArr();
         switch (e.submitter) {
             case mmlForm.add.btn:
                 mmlForm.add.field.disabled = true;
                 mmlForm.add.btn.textContent = '追加中...';
                 const addMmlText = mmlForm.add.mmlText.value;
                 mml.append(addMmlText);
-                mml.getMmlArr().length && (mmlForm.add.field.disabled = false);
+                history.pushState({
+                    operation: 'append',
+                    index: mmlArr.length - 1,
+                    mmlText: addMmlText
+                });
+                mmlArr.length && (mmlForm.add.field.disabled = false);
                 mmlForm.add.btn.textContent = '追加';
                 break;
             case mmlForm.del.btn:
                 mmlForm.del.field.disabled = true;
                 mmlForm.del.btn.textContent = '削除中...';
                 const delIndex = Number(mmlForm.del.index.value);
+                const delMmlText = mmlArr[delIndex];
                 mml.delete(delIndex);
-                mml.getMmlArr().length && (mmlForm.del.field.disabled = false);
+                history.pushState({
+                    operation: 'delete',
+                    index: delIndex,
+                    mmlText: delMmlText
+                });
+                mmlArr.length && (mmlForm.del.field.disabled = false);
                 mmlForm.del.btn.textContent = '削除';
                 break;
             case mmlForm.rw.btn:
@@ -141,8 +243,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 mmlForm.rw.btn.textContent = '書換中...';
                 const rwIndex = Number(mmlForm.rw.index.value);
                 const rwMmlText = mmlForm.rw.mmlText.value;
+                const beforeRwMmlText = mmlArr[rwIndex];
                 mml.rewrite(rwIndex, rwMmlText);
-                mml.getMmlArr().length && (mmlForm.rw.field.disabled = false);
+                history.pushState({
+                    operation: 'rewrite',
+                    index: rwIndex,
+                    beforeMmlText: beforeRwMmlText,
+                    afterMmlText: rwMmlText
+                });
+                mmlArr.length && (mmlForm.rw.field.disabled = false);
                 mmlForm.rw.btn.textContent = '書換';
                 break;
         }

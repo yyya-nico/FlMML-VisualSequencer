@@ -5,12 +5,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FlMML ビジュアルシーケンサー</title>
     <meta name="color-scheme" content="dark">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <script type="module" src="main.js"></script>
 </head>
 <body>
     <header><a href=".">FlMML ビジュアルシーケンサー</a></header>
     <div class="wrap">
         <div class="editor">
+            <div class="tones">
+                <div class="guide-text">
+                    ここに音色を追加
+                </div>
+                <ul>
+                    <li><button class="material-icons plain" aria-label="無調整">fast_forward</button></li>
+                </ul>
+            </div>
+            <div class="blocks">
+                <ul>
+                    <li><button class="material-icons tempo" aria-label="テンポ">fast_forward</button></li>
+                    <li><button class="material-icons volume" aria-label="音量">volume_up</button></li>
+                    <li><button class="material-icons rest" aria-label="休符">pause</button></li>
+                    <li><button class="material-icons note-shift" aria-label="ノートシフト">arrow_upward</button></li>
+                    <li><button class="loop-start" aria-label="ループ開始">◆</button></li>
+                    <li><button class="loop-break" aria-label="ループ脱出">/</button></li>
+                    <li><button class="material-icons loop-end" aria-label="ループ終了">loop</button></li>
+                    <li><button class="poly-start" aria-label="和音開始">[</button></li>
+                    <li><button class="poly-end" aria-label="和音終了">]</button></li>
+                    <li><button class="material-icons " aria-label=""></button></li>
+                    <li><button class="material-icons " aria-label=""></button></li>
+                    <li><button class="material-icons " aria-label=""></button></li>
+                    <li><button class="material-icons " aria-label=""></button></li>
+                    <li><button class="material-icons " aria-label=""></button></li>
+                    <li><button class="material-icons " aria-label=""></button></li>
+                    <li><button class="material-icons " aria-label=""></button></li>
+                    <li><button class="material-icons " aria-label=""></button></li>
+                    <li><button class="material-icons " aria-label=""></button></li>
+                    <li><button class="material-icons " aria-label=""></button></li>
+                </ul>
+            </div>
+            <div class="musical-score">
+            </div>
             <form class="mml-form" id="mml-line">
                 <fieldset id="add-mml">
                     <legend>追加</legend>
