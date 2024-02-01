@@ -64,6 +64,10 @@ body {
     scroll-behavior: smooth;
 }
 
+.material-icons {
+    vertical-align: middle;
+}
+
 a:any-link {
     color: #ffb039;
     text-decoration: none;
@@ -397,6 +401,21 @@ header {
 
     .buttons {
         display: flex;
-        justify-content: flex-end;
+        gap: 10px;
+
+        &.left {
+            justify-content: flex-start;
+        }
+
+        &.right {
+            justify-content: flex-end;
+        }
+
+        button {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+        }
     }
 }

@@ -88,8 +88,8 @@
                 </fieldset>
             </form>
         </div>
-        <div class="buttons">
-            <button id="play">再生</button>
+        <div class="buttons right">
+            <button id="play"><span class="material-icons">play_arrow</span>再生</button>
         </div>
         <div class="warnings">
             <output id="warn-out" for="mml-text play"></output>
@@ -100,6 +100,11 @@
                 <output id="mml">(なし)</output>
             </div>
         </details>
+        <div class="buttons left">
+            <button id="copy" disabled><span class="material-icons">content_copy</span>MMLをコピー</button>
+            <button id="save" disabled><span class="material-icons">save</span>MMLを保存</button>
+            <button id="open"><span class="material-icons">file_open</span>MMLを開く</button>
+        </div>
     </div>
 </body>
 </html>
