@@ -25,6 +25,9 @@ document.addEventListener('DOMContentLoaded', () => {
         btn: mmlForm.elements['rewrite-button']
     }
     const editor = document.querySelector('.editor');
+    const tones = document.getElementById('tones');
+    const action = document.getElementById('action');
+    const musicalScore = document.getElementById('musical-score');
     const playBtn = document.getElementById('play');
     const warnOut = document.getElementById('warn-out');
     const mmlOut = document.getElementById('mml');
@@ -151,6 +154,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const mml = new Mml();
     const history = new History();
 
+    // const noDrop = (...modes) => {
+    //     [tones, action, musicalScore].forEach((target, i) => {
+    //         if (modes[i]) {
+    //             target.classList.add('no-drop');
+    //         } else {
+    //             target.classList.remove('no-drop');
+    //         }
+    //     });
+    // };
     const createMIsHtml = name => `<span class="material-icons">${name}</span>`;
     const playHtml = createMIsHtml('play_arrow') + '再生';
     const stopHtml = createMIsHtml('stop') + '停止';
@@ -220,9 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    let ctrlPressed = false
     document.addEventListener('keydown', e => {
-        ctrlPressed = e.ctrlKey;
         switch (e.key.toLowerCase()) {
             case 'z':
                 e.ctrlKey && history.undo();
@@ -232,43 +242,84 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
         }
     });
-    document.addEventListener('keyup', e => {
-        ctrlPressed = e.ctrlKey;
-    });
 
+    let dragInfo = null;
     editor.addEventListener('dragstart', e => {
         const editorSectionElem = e.target.closest('#tones, #action, #musical-score');
-        e.dataTransfer.setData('application/json', JSON.stringify({
-            fromId: editorSectionElem?.id,
-            itemClassName: e.target.className
-        }));
-        if (!ctrlPressed) {
-            e.effectAllowed = 'move;'
-        } else {
-            e.effectAllowed = 'copy;'
-        }
+        dragInfo = {
+            from: editorSectionElem,
+            item: e.target
+        };
+        e.dataTransfer.effectAllowed = 'copyMove';
     });
-    editor.addEventListener('dragover', e => {
-        e.preventDefault();
-        if (!ctrlPressed) {
-            e.effectAllowed = 'move;'
-        } else {
-            e.effectAllowed = 'copy;'
-        }
+    [tones, action, musicalScore].forEach(target => {
+        target.addEventListener('dragenter', e => {
+            e.preventDefault();
+            if (!e.ctrlKey) {
+                e.dataTransfer.dropEffect = 'move';
+            } else {
+                e.dataTransfer.dropEffect = 'copy';
+            }
+        });
+        target.addEventListener('dragover', e => {
+            if (!e.ctrlKey) {
+                e.dataTransfer.dropEffect = 'move';
+            } else {
+                e.dataTransfer.dropEffect = 'copy';
+            }
+            const {from} = dragInfo;
+            switch (from) {
+                case tones:
+                    switch (target) {
+                        case tones:
+                            e.ctrlKey && e.preventDefault();
+                            break;
+                        case action:
+                            break;
+                        case musicalScore:
+                            e.preventDefault();
+                            break;
+                    }
+                    break;
+                case action:
+                    switch (target) {
+                        case tones:
+                            break;
+                        case action:
+                            break;
+                        case musicalScore:
+                            e.preventDefault();
+                            break;
+                    }
+                    break;
+                case musicalScore:
+                    switch (target) {
+                        case tones:
+                            break;
+                        case action:
+                            break;
+                        case musicalScore:
+                            e.ctrlKey && e.preventDefault();
+                            break;
+                    }
+                    break;
+            }
+        });
     });
     editor.addEventListener('drop', e => {
         e.preventDefault();
 
-        const {fromId, itemClassName} = JSON.parse(e.dataTransfer.getData('application/json'));
-        const foundElem = editor.querySelector(`[class="${itemClassName}"]`);
-        // console.log(e.target);
+        const {from, item} = dragInfo;
         const clonePlace = e.target.closest('#tones, #musical-score');
-        if (foundElem && clonePlace && (ctrlPressed || fromId !== 'musical-score' && clonePlace.id === 'musical-score') && !(fromId !== 'tones' && clonePlace.id === 'tones')) {
+        if (item && clonePlace && (e.ctrlKey || from !== musicalScore && clonePlace === musicalScore) && !(from !== tones && clonePlace === tones)) {
             const ul = clonePlace.querySelector('ul');
             const li = document.createElement('li');
-            li.appendChild(foundElem.cloneNode(true));
+            li.appendChild(item.cloneNode(true));
             ul.appendChild(li);
-        }  
+        }
+    });
+    editor.addEventListener('dragend', () => {
+        dragInfo = null;
     });
 
     //---------------
