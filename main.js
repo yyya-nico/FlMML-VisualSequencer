@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
         mmlText: mmlForm.elements['rewrite-mml-text'],
         btn: mmlForm.elements['rewrite-button']
     }
+    const editor = document.querySelector('.editor');
     const playBtn = document.getElementById('play');
     const warnOut = document.getElementById('warn-out');
     const mmlOut = document.getElementById('mml');
@@ -109,19 +110,19 @@ document.addEventListener('DOMContentLoaded', () => {
             this.#histArr[1].length = 0;
         }
 
-        back() {
+        undo() {
             const data = this.#histArr[0].pop();
             this.#popstateHandler({
-                reason: 'back',
+                reason: 'undo',
                 data
             });
             data && this.#histArr[1].unshift(data);
         }
 
-        forward() {
+        redo() {
             const data = this.#histArr[1].shift();
             this.#popstateHandler({
-                reason: 'forward',
+                reason: 'redo',
                 data
             });
             data && this.#histArr[0].push(data);
@@ -163,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
     history.onPopstate = obj => {
         const data = obj.data;
         switch (obj.reason) {
-            case 'back':
+            case 'undo':
                 switch (data?.operation) { //元に戻す操作集
                     case 'append':
                         mml.delete(data.index);
@@ -176,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         break;
                 }
                 break;
-            case 'forward':
+            case 'redo':
                 switch (data?.operation) { //やり直し操作集
                     case 'append':
                         mml.append(data.mmlText);
@@ -192,15 +193,58 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    let ctrlPressed = false
     document.addEventListener('keydown', e => {
+        ctrlPressed = e.ctrlKey;
         switch (e.key.toLowerCase()) {
             case 'z':
-                e.ctrlKey && history.back();
+                e.ctrlKey && history.undo();
                 break;
             case 'y':
-                e.ctrlKey && history.forward();
+                e.ctrlKey && history.redo();
                 break;
         }
+    });
+    document.addEventListener('keyup', e => {
+        ctrlPressed = e.ctrlKey;
+    });
+
+    editor.addEventListener('dragstart', e => {
+        const editorSectionElem = e.target.closest('#tones, #action, #musical-score');
+        e.dataTransfer.setData('application/json', JSON.stringify({
+            fromId: editorSectionElem?.id,
+            itemClassName: e.target.className
+        }));
+        switch (editorSectionElem?.id) {
+            case 'tones':
+            case 'action':
+                e.effectAllowed = 'copy;'
+                break;
+            case 'musical-score':
+                if (!ctrlPressed) {
+                    e.effectAllowed = 'move;'
+                } else {
+                    e.effectAllowed = 'copy;'
+                }
+                break;
+        }
+    });
+    editor.addEventListener('dragover', e => {
+        e.preventDefault();
+    });
+    editor.addEventListener('drop', e => {
+        e.preventDefault();
+
+        const {fromId, itemClassName} = JSON.parse(e.dataTransfer.getData('application/json'));
+        const foundElem = editor.querySelector(`[class="${itemClassName}"]`);
+        console.log(e.target);
+        const maybeMusicalScore = e.target.closest('#musical-score');
+        if (foundElem && maybeMusicalScore && (fromId !== 'musical-score' || ctrlPressed)) {
+            const ul = maybeMusicalScore.querySelector('ul');
+            const li = document.createElement('li');
+            li.appendChild(foundElem.cloneNode(true));
+            ul.appendChild(li);
+        }  
     });
 
     //---------------
