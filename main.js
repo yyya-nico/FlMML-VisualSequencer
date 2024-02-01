@@ -176,6 +176,8 @@ document.addEventListener('DOMContentLoaded', () => {
             mmlForm.del.index.value > mmlForm.del.index.max && (mmlForm.del.index.value = mmlForm.del.index.max);
             mmlForm.rw.index.value > mmlForm.rw.index.max && (mmlForm.rw.index.value = mmlForm.rw.index.max);
             localStorage.setItem('mmlArray', JSON.stringify(arr));
+        } else {
+            localStorage.removeItem('mmlArray');
         }
     };
     mml.onError = (error, reason) => {
