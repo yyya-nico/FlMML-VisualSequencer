@@ -263,7 +263,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const foundElem = editor.querySelector(`[class="${itemClassName}"]`);
         // console.log(e.target);
         const clonePlace = e.target.closest('#tones, #musical-score');
-        if (foundElem && clonePlace && (ctrlPressed || fromId !== 'musical-score' && clonePlace.id === 'musical-score') && fromId !== 'tones' && clonePlace.id === 'tones') {
+        if (foundElem && clonePlace && (ctrlPressed || fromId !== 'musical-score' && clonePlace.id === 'musical-score') && !(fromId !== 'tones' && clonePlace.id === 'tones')) {
             const ul = clonePlace.querySelector('ul');
             const li = document.createElement('li');
             li.appendChild(foundElem.cloneNode(true));
