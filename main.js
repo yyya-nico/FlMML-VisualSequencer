@@ -46,6 +46,11 @@ document.addEventListener('DOMContentLoaded', () => {
             this.#errorHandler = fn;
         }
 
+        setMmlArr(arr) {
+            this.#mml = arr;
+            this.#changeHandler(this.getMmlArr(), this.getMml());
+        }
+
         setMml(str) {
             this.#mml = str.split('\n');
             const isGeneratedMmlText = this.#mml.at(-2) === '' && this.#mml.at(-1) === this.#generatorComment;
@@ -170,11 +175,16 @@ document.addEventListener('DOMContentLoaded', () => {
             mmlForm.rw.index.max = arr.length - 1;
             mmlForm.del.index.value > mmlForm.del.index.max && (mmlForm.del.index.value = mmlForm.del.index.max);
             mmlForm.rw.index.value > mmlForm.rw.index.max && (mmlForm.rw.index.value = mmlForm.rw.index.max);
+            localStorage.setItem('mmlArray', JSON.stringify(arr));
         }
     };
     mml.onError = (error, reason) => {
         alert(error + '\n' + reason);
     };
+    const savedMmlArr = JSON.parse(localStorage.getItem('mmlArray'));
+    if (savedMmlArr) {
+        mml.setMmlArr(savedMmlArr);
+    }
 
     history.onPopstate = obj => {
         const data = obj.data;
