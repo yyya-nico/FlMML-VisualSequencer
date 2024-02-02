@@ -248,6 +248,10 @@ header {
     @return rgb(64 + math.random(159), 32 + math.random(159), 32 + math.random(159));
 }
 
+@function randomColorHsl() {
+    @return hsl(math.random(360) 50 + math.random(25) + 0% 30 + math.random(50) + 0%);
+}
+
 .wrap {
     overflow: clip;
     height: contentAreaHeight(vh);

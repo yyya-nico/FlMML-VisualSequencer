@@ -232,6 +232,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const rewriteNoteClass = (operation) => {
+        [...tones.getElementsByTagName('button')].forEach((elem, index) => {
+            const noteClassName = [...elem.classList].find(name => name.includes('note-'));
+            elem.classList.replace(noteClassName, `note-${index + 1}`);
+            operation === 'remove' && [...musicalScore.getElementsByClassName(noteClassName)].forEach(elem => {
+                elem.classList.replace(noteClassName, `note-${index + 1}`);
+            });
+        });
+    }
+
     document.addEventListener('keydown', e => {
         switch (e.key.toLowerCase()) {
             case 'z':
@@ -243,41 +253,56 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    editor.addEventListener('click', () => {
+
+    });
+
+    editor.addEventListener('contextmenu', e => {
+        const parent = e.target.closest('#tones, #musical-score');
+        if (parent && e.target.tagName.toLowerCase() === 'button') {
+            e.preventDefault();
+            const removeTarget = e.target.closest('li');
+            const buttonClassName = e.target.className;
+            removeTarget.remove();
+            musicalScore.querySelectorAll(`[class="${buttonClassName}"]`).forEach(elem => {
+                elem.closest('li').remove();
+            });
+            if (parent == tones) {
+                rewriteNoteClass('remove');
+            }
+        }
+    });
+
     let dragInfo = null;
     editor.addEventListener('dragstart', e => {
-        const editorSectionElem = e.target.closest('#tones, #action, #musical-score');
+        const editorSectionElem = e.target.nodeType === 1/* ELEMENT */ && e.target.closest('#tones, #action, #musical-score');
         dragInfo = {
             from: editorSectionElem,
             item: e.target
         };
         e.dataTransfer.effectAllowed = 'copyMove';
     });
+    let dropEffect = null;
     [tones, action, musicalScore].forEach(target => {
-        target.addEventListener('dragenter', e => {
-            e.preventDefault();
-            if (!e.ctrlKey) {
-                e.dataTransfer.dropEffect = 'move';
-            } else {
-                e.dataTransfer.dropEffect = 'copy';
-            }
-        });
-        target.addEventListener('dragover', e => {
-            if (!e.ctrlKey) {
-                e.dataTransfer.dropEffect = 'move';
-            } else {
-                e.dataTransfer.dropEffect = 'copy';
-            }
+        const dragEventHandler = e => {
             const {from} = dragInfo;
+            const dt = e.dataTransfer;
             switch (from) {
                 case tones:
                     switch (target) {
                         case tones:
-                            e.ctrlKey && e.preventDefault();
+                            e.preventDefault();
+                            if (!e.ctrlKey) {
+                                dt.dropEffect = 'move';
+                            } else {
+                                dt.dropEffect = 'copy';
+                            }
                             break;
                         case action:
                             break;
                         case musicalScore:
                             e.preventDefault();
+                            dt.dropEffect = 'copy';
                             break;
                     }
                     break;
@@ -289,6 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             break;
                         case musicalScore:
                             e.preventDefault();
+                            dt.dropEffect = 'copy';
                             break;
                     }
                     break;
@@ -299,27 +325,39 @@ document.addEventListener('DOMContentLoaded', () => {
                         case action:
                             break;
                         case musicalScore:
-                            e.ctrlKey && e.preventDefault();
+                            e.preventDefault();
+                            if (!e.ctrlKey) {
+                                dt.dropEffect = 'move';
+                            } else {
+                                dt.dropEffect = 'copy';
+                            }
                             break;
                     }
                     break;
             }
+            dropEffect = dt.dropEffect;
+        };
+        target.addEventListener('dragenter', dragEventHandler);
+        target.addEventListener('dragover', dragEventHandler);
+        target.addEventListener('drop', e => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = e.dataTransfer.dropEffect !== 'none' ? e.dataTransfer.dropEffect : dropEffect;
+            const {from, item} = dragInfo;
+            switch (e.dataTransfer.dropEffect) {
+                case 'copy':
+                    const ul = e.target.closest('#tones, #musical-score').querySelector('ul');
+                    const li = document.createElement('li');
+                    li.appendChild(item.cloneNode(true));
+                    ul.appendChild(li);
+                    if (from === tones && target == tones) {
+                        rewriteNoteClass('copy');
+                    }
+                    break;
+                case 'move':
+                    
+                    break;
+            }
         });
-    });
-    editor.addEventListener('drop', e => {
-        e.preventDefault();
-
-        const {from, item} = dragInfo;
-        const clonePlace = e.target.closest('#tones, #musical-score');
-        if (item && clonePlace && (e.ctrlKey || from !== musicalScore && clonePlace === musicalScore) && !(from !== tones && clonePlace === tones)) {
-            const ul = clonePlace.querySelector('ul');
-            const li = document.createElement('li');
-            li.appendChild(item.cloneNode(true));
-            ul.appendChild(li);
-        }
-    });
-    editor.addEventListener('dragend', () => {
-        dragInfo = null;
     });
 
     //---------------
