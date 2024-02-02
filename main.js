@@ -264,10 +264,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const removeTarget = e.target.closest('li');
             const buttonClassName = e.target.className;
             removeTarget.remove();
-            musicalScore.querySelectorAll(`[class="${buttonClassName}"]`).forEach(elem => {
-                elem.closest('li').remove();
-            });
             if (parent == tones) {
+                musicalScore.querySelectorAll(`[class="${buttonClassName}"]`).forEach(elem => {
+                    elem.closest('li').remove();
+                });
                 rewriteNoteClass('remove');
             }
         }
