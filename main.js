@@ -253,13 +253,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    editor.addEventListener('click', () => {
-
+    editor.addEventListener('click', e => {
+        const parentTones = e.target.closest('#tones') && e.target.tagName.toLowerCase() !== 'button';
+        if (parentTones) {
+            const ul = tones.querySelector('ul');
+            const li = document.createElement('li');
+            li.appendChild(ul.querySelector('button').cloneNode(true)); // TODO
+            ul.appendChild(li);
+            rewriteNoteClass('add');
+        }
     });
 
     editor.addEventListener('contextmenu', e => {
         const parent = e.target.closest('#tones, #musical-score');
-        if (parent && e.target.tagName.toLowerCase() === 'button') {
+        if (parent && e.target.tagName.toLowerCase() === 'button' && !e.target.classList.contains('note-1')) {
             e.preventDefault();
             const removeTarget = e.target.closest('li');
             const buttonClassName = e.target.className;
