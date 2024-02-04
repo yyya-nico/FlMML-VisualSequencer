@@ -28,6 +28,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const tones = document.getElementById('tones');
     const action = document.getElementById('action');
     const musicalScore = document.getElementById('musical-score');
+    const dialog = document.getElementById('dialog');
+    const dialogForm = document.forms['dialog-form'];
+    dialogForm._title = dialogForm.querySelector('.form-title');
+    dialogForm.inputs = dialogForm.querySelector('.inputs');
+    dialogForm.buttons = dialogForm.querySelector('.buttons');
     const playBtn = document.getElementById('play');
     const warnOut = document.getElementById('warn-out');
     const mmlOut = document.getElementById('mml');
@@ -147,22 +152,99 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             data && this.#histArr[0].push(data);
         }
+
+        clear() {
+            this.#histArr[0].length = 0;
+            this.#histArr[1].length = 0;
+        }
+    }
+
+    class DialogFormManager {
+        #dialogDefinitions = {
+            tone: {
+                title: '音色設定',
+                inputs: [
+                    {
+                        label: '名前',
+                        type: 'text',
+                        name: 'tone-name'
+                    },
+                    {
+                        label: '音の定義',
+                        type: 'text',
+                        name: 'tone-def'
+                    },
+                ],
+                buttons: [
+                    {
+                        class: 'primaly',
+                        value: 'set-tone',
+                        textContent: '確定'
+                    }
+                ]
+            }
+        }
+        #createElems = (type) => {
+            const def = this.#dialogDefinitions[type];
+            Object.keys(def).forEach(key => {
+                switch (key) {
+                    case 'title':
+                        dialogForm._title.textContent = def.title;
+                        break;
+                    case 'inputs':
+                        def.inputs.forEach(inputDef => {
+                            const input = document.createElement('input');
+                            let appendElem = input;
+                            Object.entries(inputDef).forEach(entry => {
+                                if (entry[0] === 'label') {
+                                    const label = document.createElement('label');
+                                    label.textContent = entry[1];
+                                    label.appendChild(input);
+                                    appendElem = label;
+                                } else {
+                                    input.setAttribute(entry[0], entry[1]);
+                                }
+                            });
+                            dialogForm.inputs.appendChild(appendElem);
+                        });
+                        break;
+                    case 'buttons':
+                        def.buttons.forEach(buttonDef => {
+                            const button = document.createElement('button');
+                            Object.entries(buttonDef).forEach(entry => {
+                                if (entry[0] === 'textContent') {
+                                    button.textContent = entry[1];
+                                } else {
+                                    button.setAttribute(entry[0], entry[1]);
+                                }
+                            });
+                            dialogForm.buttons.appendChild(button);
+                        });
+                        break;
+                }
+            });
+        }
+
+        constructor() {
+            this.type = null;
+            this.submitTarget = null;
+        }
+
+        set(type) {
+            dialogForm._title.textContent = '';
+            dialogForm.inputs.textContent = '';
+            dialogForm.buttons.textContent = '';
+            this.#createElems(type);
+            this.type = type;
+        }
     }
 
     FlMML.prepare(`#${playBtn.id}`);
     const flmml = new FlMML({workerURL: FlMMLWorkerLocation});
     const mml = new Mml();
     const history = new History();
+    const dialogFormManager = new DialogFormManager();
 
-    // const noDrop = (...modes) => {
-    //     [tones, action, musicalScore].forEach((target, i) => {
-    //         if (modes[i]) {
-    //             target.classList.add('no-drop');
-    //         } else {
-    //             target.classList.remove('no-drop');
-    //         }
-    //     });
-    // };
     const createMIsHtml = name => `<span class="material-icons">${name}</span>`;
     const playHtml = createMIsHtml('play_arrow') + '再生';
     const stopHtml = createMIsHtml('stop') + '停止';
@@ -254,29 +336,80 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     editor.addEventListener('click', e => {
-        const parentTones = e.target.closest('#tones') && e.target.tagName.toLowerCase() !== 'button';
-        if (parentTones) {
+        const parentTones = e.target.closest('#tones');
+        const isButton =  e.target.tagName.toLowerCase() === 'button';
+        if (parentTones && !isButton) {
             const ul = tones.querySelector('ul');
             const li = document.createElement('li');
-            li.appendChild(ul.querySelector('button').cloneNode(true)); // TODO
+            const defaultToneButton = '<button class="material-icons plain note-1" aria-label="無調整" draggable="true" data-tone="" data-tone-pitch="c">music_note</button>';
+            li.innerHTML = defaultToneButton;
             ul.appendChild(li);
             rewriteNoteClass('add');
+        } else if (isButton) {
+            if ('tone' in e.target.dataset) {
+                dialogFormManager.set('tone');
+                dialogFormManager.submitTarget = e.target;
+                dialogForm.elements['tone-name'].value = e.target.ariaLabel;
+                dialogForm.elements['tone-def'].value = e.target.dataset.tone;
+                dialog.showModal();
+            }
         }
     });
 
     editor.addEventListener('contextmenu', e => {
         const parent = e.target.closest('#tones, #musical-score');
-        if (parent && e.target.tagName.toLowerCase() === 'button' && !e.target.classList.contains('note-1')) {
+        const isButton =  e.target.tagName.toLowerCase() === 'button';
+        if (parent && isButton) {
             e.preventDefault();
             const removeTarget = e.target.closest('li');
             const buttonClassName = e.target.className;
             removeTarget.remove();
-            if (parent == tones) {
+            if (parent === tones) {
                 musicalScore.querySelectorAll(`[class="${buttonClassName}"]`).forEach(elem => {
                     elem.closest('li').remove();
                 });
                 rewriteNoteClass('remove');
             }
+        }
+    });
+
+    editor.addEventListener('wheel', e => {
+        const parentMusicalScore = e.target.closest('#musical-score');
+        const isButton =  e.target.tagName.toLowerCase() === 'button';
+        if (parentMusicalScore && isButton && 'tone' in e.target.dataset) { //TODO
+            e.preventDefault();
+            const pitches = ['c','c+','d','d+','e','f','f+','g','g+','a','a+','b'];
+            const octave = ['>', '<'];
+            const currentPitch = e.target.dataset.tonePitch;
+            const currentPitchIndex = pitches.findIndex(pitch => currentPitch.replaceAll(octave[0], '').replaceAll(octave[1], '') === pitch);
+            const countStr = str => (currentPitch.match(new RegExp(str, 'g')) || []).length;
+            const octaveCount = [
+                countStr(octave[0]),
+                countStr(octave[1])
+            ]
+            const octaveStr = octave[0].repeat(octaveCount[0]) + octave[1].repeat(octaveCount[1]);
+            if (e.deltaY < 0) { // Up
+                if (currentPitchIndex === pitches.length - 1) {
+                    if (octaveCount[0]) {
+                        e.target.dataset.tonePitch = octaveStr.substring(1) + pitches.at(0);
+                    } else {
+                        e.target.dataset.tonePitch = octaveStr + octave[1] + pitches.at(0);
+                    }
+                } else {
+                    e.target.dataset.tonePitch = octaveStr + pitches[currentPitchIndex + 1];
+                }
+            } else if (e.deltaY > 0) { // Down
+                if (currentPitchIndex === 0) {
+                    if (octaveCount[1]) {
+                        e.target.dataset.tonePitch = octaveStr.substring(1) + pitches.at(-1);
+                    } else {
+                        e.target.dataset.tonePitch = octaveStr + octave[0] + pitches.at(-1);
+                    }
+                } else {
+                    e.target.dataset.tonePitch = octaveStr + pitches[currentPitchIndex - 1];
+                }
+            }
+            flmml.play(e.target.dataset.tone + e.target.dataset.tonePitch);
         }
     });
 
@@ -356,8 +489,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     const li = document.createElement('li');
                     li.appendChild(item.cloneNode(true));
                     ul.appendChild(li);
-                    if (from === tones && target == tones) {
+                    if (from === tones && target === tones) {
                         rewriteNoteClass('copy');
+                    }
+                    if (target === musicalScore && 'tonePitch' in item.dataset) {
+                        flmml.play(item.dataset.tone + item.dataset.tonePitch);
                     }
                     break;
                 case 'move':
@@ -425,6 +561,26 @@ document.addEventListener('DOMContentLoaded', () => {
     // /Form Controls
     //----------------
 
+    dialog.addEventListener('click', e => {
+        if (e.target === dialog) {
+            dialog.close();
+        }
+    });
+
+    dialogForm.addEventListener('submit', e => {
+        const submitTarget = dialogFormManager.submitTarget;
+        switch (e.submitter.value) {
+            case 'set-tone':
+                const buttonClassName = submitTarget.className;
+                document.querySelectorAll(`[class="${buttonClassName}"]`).forEach(elem => {
+                    elem.ariaLabel = dialogForm.elements['tone-name'].value;
+                    elem.dataset.tone = dialogForm.elements['tone-def'].value;
+                });
+                flmml.play(submitTarget.dataset.tone + submitTarget.dataset.tonePitch);
+                break;
+        }
+    });
+
     playBtn.addEventListener('click', () => {
         const isPlaying = flmml.isPlaying();
         if (!isPlaying) {
@@ -470,6 +626,7 @@ document.addEventListener('DOMContentLoaded', () => {
         inputFile.onchange = () => {
             fr.onload = () => {
                 mml.setMml(fr.result);
+                history.clear();
             };
             fr.readAsText(inputFile.files[0]);
         }

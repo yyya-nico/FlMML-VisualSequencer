@@ -18,7 +18,7 @@
                     <small>空いているところをクリックで追加</small>
                 </div>
                 <ul>
-                    <li><button class="material-icons plain note-1" aria-label="無調整" draggable="true">music_note</button></li>
+                    <li><button class="material-icons plain note-1" aria-label="無調整" draggable="true" data-tone="" data-tone-pitch="c">music_note</button></li>
                 </ul>
             </div>
             <div id="action">
@@ -78,6 +78,16 @@
                     </div>
                 </fieldset>
             </form>
+            <dialog id="dialog">
+                <form id="dialog-form" method="dialog">
+                    <div class="form-title">
+                    </div>
+                    <div class="inputs">
+                    </div>
+                    <div class="buttons">
+                    </div>
+                </form>
+            </dialog>
         </div>
         <div class="buttons right">
             <button id="play"><span class="material-icons">play_arrow</span>再生</button>
