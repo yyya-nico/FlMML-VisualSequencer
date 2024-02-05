@@ -486,7 +486,7 @@ document.addEventListener('DOMContentLoaded', () => {
     editor.addEventListener('wheel', e => {
         const parentMusicalScore = e.target.closest('#musical-score');
         const isButton =  e.target.tagName.toLowerCase() === 'button';
-        if (parentMusicalScore && isButton && 'tone' in e.target.dataset) { //TODO
+        if (e.ctrlKey && parentMusicalScore && isButton && 'tone' in e.target.dataset) { //TODO
             e.preventDefault();
             const pitches = ['c','c+','d','d+','e','f','f+','g','g+','a','a+','b'];
             const octave = ['>', '<'];
