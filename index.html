@@ -26,6 +26,7 @@
                     作用
                 </div>
                 <ul>
+                    <li><button class="material-icons tempo" aria-label="音価" draggable="true">expand</button></li>
                     <li><button class="material-icons tempo" aria-label="テンポ" draggable="true">fast_forward</button></li>
                     <li><button class="material-icons volume" aria-label="音量" draggable="true">volume_up</button></li>
                     <li><button class="material-icons rest" aria-label="休符" draggable="true">pause</button></li>
@@ -54,30 +55,6 @@
             <div id="musical-score">
                 <ul></ul>
             </div>
-            <form class="mml-form" id="mml-line">
-                <fieldset id="add-mml">
-                    <legend>追加</legend>
-                    <div>
-                        <input type="text" id="add-mml-text" value="L8 O5CDEFGAB&lt;C">
-                        <button id="add-button">追加</button>
-                    </div>
-                </fieldset>
-                <fieldset id="delete-mml" disabled>
-                    <legend>削除</legend>
-                    <div>
-                        <input type="number" id="delete-mml-index" min="0" max="0" value="0">
-                        <button id="delete-button">削除</button>
-                    </div>
-                </fieldset>
-                <fieldset id="rewrite-mml" disabled>
-                    <legend>書換</legend>
-                    <div>
-                        <input type="number" id="rewrite-mml-index" min="0" max="0" value="0">
-                        <input type="text" id="rewrite-mml-text" value="L8 O5CDEFGAB&lt;C">
-                        <button id="rewrite-button">書換</button>
-                    </div>
-                </fieldset>
-            </form>
             <dialog id="dialog">
                 <form id="dialog-form" method="dialog">
                     <div class="form-title">
@@ -105,6 +82,32 @@
             <button id="copy" disabled><span class="material-icons">content_copy</span>MMLをコピー</button>
             <button id="save" disabled><span class="material-icons">save</span>ファイルに保存</button>
             <button id="open"><span class="material-icons">file_open</span>ファイルを開く</button>
+        </div>
+        <div class="editor">
+            <form class="mml-form" id="mml-line">
+                <fieldset id="add-mml">
+                    <legend>追加</legend>
+                    <div>
+                        <input type="text" id="add-mml-text" value="L8 O5CDEFGAB&lt;C">
+                        <button id="add-button">追加</button>
+                    </div>
+                </fieldset>
+                <fieldset id="delete-mml" disabled>
+                    <legend>削除</legend>
+                    <div>
+                        <input type="number" id="delete-mml-index" min="0" max="0" value="0">
+                        <button id="delete-button">削除</button>
+                    </div>
+                </fieldset>
+                <fieldset id="rewrite-mml" disabled>
+                    <legend>書換</legend>
+                    <div>
+                        <input type="number" id="rewrite-mml-index" min="0" max="0" value="0">
+                        <input type="text" id="rewrite-mml-text" value="L8 O5CDEFGAB&lt;C">
+                        <button id="rewrite-button">書換</button>
+                    </div>
+                </fieldset>
+            </form>
         </div>
     </div>
 </body>
