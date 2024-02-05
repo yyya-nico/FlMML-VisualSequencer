@@ -118,6 +118,42 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    class Block {
+        #blocksData = [];
+
+        constructor(areaElem) {
+            this.areaElem = areaElem;
+        }
+
+        blocksDataUpdate() {
+            this.#blocksData = [...this.areaElem.getElementsByTagName('button')].map(elem => ({
+                label: elem.ariaLabel,
+                noteClassName: [...elem.classList].find(name => name.includes('note-')),
+                tone: {
+                    tone: elem.dataset.tone,
+                    tonePitch: elem.dataset.tonePitch
+                },
+                elem: elem
+            }));
+        }
+        
+        exportMml(mml) {
+            mml.setMmlArr([]);
+            const toneObj = {};
+            this.#blocksData.forEach(block => {
+                const noteClassName = block.noteClassName;
+                const {tone, tonePitch} = block.tone;
+                if (noteClassName) {
+                    toneObj[noteClassName] = toneObj[noteClassName] || tone + ' ';
+                    toneObj[noteClassName] += tonePitch;
+                }
+            });
+            Object.values(toneObj).forEach(toneStr => {
+                mml.append(toneStr + ';');
+            });
+        }
+    }
+
     class History {
         #histArr = [[],[]];
         #maxArrLength = 70;
@@ -242,6 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
     FlMML.prepare(`#${playBtn.id}`);
     const flmml = new FlMML({workerURL: FlMMLWorkerLocation});
     const mml = new Mml();
+    const block = new Block(musicalScore);
     const history = new History();
     const dialogFormManager = new DialogFormManager();
 
@@ -336,22 +373,28 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     editor.addEventListener('click', e => {
-        const parentTones = e.target.closest('#tones');
+        const is = id => Boolean(e.target.closest('#' + id));
         const isButton =  e.target.tagName.toLowerCase() === 'button';
-        if (parentTones && !isButton) {
-            const ul = tones.querySelector('ul');
-            const li = document.createElement('li');
-            const defaultToneButton = '<button class="material-icons plain note-1" aria-label="無調整" draggable="true" data-tone="" data-tone-pitch="c">music_note</button>';
-            li.innerHTML = defaultToneButton;
-            ul.appendChild(li);
-            rewriteNoteClass('add');
-        } else if (isButton) {
-            if ('tone' in e.target.dataset) {
+        if (is('tones')) {
+            if (isButton) {
                 dialogFormManager.set('tone');
                 dialogFormManager.submitTarget = e.target;
                 dialogForm.elements['tone-name'].value = e.target.ariaLabel;
                 dialogForm.elements['tone-def'].value = e.target.dataset.tone;
                 dialog.showModal();
+            } else {
+                const ul = tones.querySelector('ul');
+                const li = document.createElement('li');
+                const defaultToneButton = '<button class="material-icons plain note-1" aria-label="無調整" draggable="true" data-tone="" data-tone-pitch="c">music_note</button>';
+                li.innerHTML = defaultToneButton;
+                ul.appendChild(li);
+                rewriteNoteClass('add');
+            }
+        } else if (is('musical-score')) {
+            if (isButton) {
+                if ('tone' in e.target.dataset) {
+                    flmml.play(e.target.dataset.tone + e.target.dataset.tonePitch);
+                }
             }
         }
     });
@@ -361,15 +404,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const isButton =  e.target.tagName.toLowerCase() === 'button';
         if (parent && isButton) {
             e.preventDefault();
-            const removeTarget = e.target.closest('li');
+            const removeTarget = e.target.parentElement;
             const buttonClassName = e.target.className;
             removeTarget.remove();
             if (parent === tones) {
                 musicalScore.querySelectorAll(`[class="${buttonClassName}"]`).forEach(elem => {
-                    elem.closest('li').remove();
+                    elem.parentElement.remove();
                 });
                 rewriteNoteClass('remove');
             }
+            block.blocksDataUpdate();
+            block.exportMml(mml);
         }
     });
 
@@ -410,6 +455,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
             flmml.play(e.target.dataset.tone + e.target.dataset.tonePitch);
+            block.blocksDataUpdate();
+            block.exportMml(mml);
         }
     });
 
@@ -483,22 +530,30 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             e.dataTransfer.dropEffect = e.dataTransfer.dropEffect !== 'none' ? e.dataTransfer.dropEffect : dropEffect;
             const {from, item} = dragInfo;
+            const ul = e.target.closest('#tones, #musical-score').querySelector('ul');
+            const itemLi = item.parentElement;
             switch (e.dataTransfer.dropEffect) {
                 case 'copy':
-                    const ul = e.target.closest('#tones, #musical-score').querySelector('ul');
-                    const li = document.createElement('li');
-                    li.appendChild(item.cloneNode(true));
-                    ul.appendChild(li);
-                    if (from === tones && target === tones) {
-                        rewriteNoteClass('copy');
-                    }
-                    if (target === musicalScore && 'tonePitch' in item.dataset) {
-                        flmml.play(item.dataset.tone + item.dataset.tonePitch);
-                    }
+                    ul.appendChild(itemLi.cloneNode(true));
                     break;
                 case 'move':
-                    
+                    const targetIsButton =  e.target.tagName.toLowerCase() === 'button';
+                    if (targetIsButton) {
+                        ul.insertBefore(itemLi, e.target.parentElement);
+                    } else {
+                        ul.appendChild(itemLi);
+                    }
                     break;
+            }
+            if (from === tones && target === tones) {
+                rewriteNoteClass('copyMove');
+            }
+            if (target === musicalScore) {
+                block.blocksDataUpdate();
+                block.exportMml(mml);
+            }
+            if ('tonePitch' in item.dataset) {
+                flmml.play(item.dataset.tone + item.dataset.tonePitch);
             }
         });
     });
