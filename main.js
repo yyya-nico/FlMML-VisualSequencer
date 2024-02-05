@@ -133,24 +133,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     tone: elem.dataset.tone,
                     tonePitch: elem.dataset.tonePitch
                 },
+                noteValue: elem.dataset.noteValue,
+                rest: elem.dataset.rest,
+                tempo: elem.dataset.tempo,
                 elem: elem
             }));
         }
         
         exportMml(mml) {
             mml.setMmlArr([]);
-            const toneObj = {};
+            let mmlText = '';
             this.#blocksData.forEach(block => {
-                const noteClassName = block.noteClassName;
                 const {tone, tonePitch} = block.tone;
-                if (noteClassName) {
-                    toneObj[noteClassName] = toneObj[noteClassName] || tone + ' ';
-                    toneObj[noteClassName] += tonePitch;
-                }
+                mmlText += tonePitch || block.noteValue || block.rest || block.tempo;
             });
-            Object.values(toneObj).forEach(toneStr => {
-                mml.append(toneStr + ';');
-            });
+            mml.append(mmlText);
         }
     }
 
@@ -215,6 +212,57 @@ document.addEventListener('DOMContentLoaded', () => {
                     {
                         class: 'primaly',
                         value: 'set-tone',
+                        textContent: '確定'
+                    }
+                ]
+            },
+            noteValue: {
+                title: '音価設定',
+                inputs: [
+                    {
+                        label: '音価(音の長さ)',
+                        type: 'number',
+                        name: 'note-value'
+                    }
+                ],
+                buttons: [
+                    {
+                        class: 'primaly',
+                        value: 'set-note-value',
+                        textContent: '確定'
+                    }
+                ]
+            },
+            rest: {
+                title: '休符設定',
+                inputs: [
+                    {
+                        label: '休符の長さ',
+                        type: 'number',
+                        name: 'rest'
+                    }
+                ],
+                buttons: [
+                    {
+                        class: 'primaly',
+                        value: 'set-rest',
+                        textContent: '確定'
+                    }
+                ]
+            },
+            tempo: {
+                title: 'テンポ設定',
+                inputs: [
+                    {
+                        label: 'テンポ指定(BPM)',
+                        type: 'number',
+                        name: 'tempo'
+                    }
+                ],
+                buttons: [
+                    {
+                        class: 'primaly',
+                        value: 'set-tempo',
                         textContent: '確定'
                     }
                 ]
@@ -351,15 +399,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const rewriteNoteClass = (operation) => {
-        [...tones.getElementsByTagName('button')].forEach((elem, index) => {
-            const noteClassName = [...elem.classList].find(name => name.includes('note-'));
-            elem.classList.replace(noteClassName, `note-${index + 1}`);
-            operation === 'remove' && [...musicalScore.getElementsByClassName(noteClassName)].forEach(elem => {
-                elem.classList.replace(noteClassName, `note-${index + 1}`);
-            });
-        });
-    }
+    const getNonExistNoteClassName = () => {
+        const noteClassNames = [...tones.getElementsByTagName('button')].map(elem => [...elem.classList].find(name => name.includes('note-')));
+        for (let index = 1; ; index++) {
+            if (!noteClassNames.includes('note-' + index)) {
+                return 'note-' + index;
+            }
+        }
+    };
 
     document.addEventListener('keydown', e => {
         switch (e.key.toLowerCase()) {
@@ -385,16 +432,35 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 const ul = tones.querySelector('ul');
                 const li = document.createElement('li');
-                const defaultToneButton = '<button class="material-icons plain note-1" aria-label="無調整" draggable="true" data-tone="" data-tone-pitch="c">music_note</button>';
-                li.innerHTML = defaultToneButton;
+                const nonExistClassName = getNonExistNoteClassName();
+                const toneButton = `<button class="material-icons plain ${nonExistClassName}" aria-label="無調整" draggable="true" data-tone="" data-tone-pitch="c">music_note</button>`;
+                li.innerHTML = toneButton;
                 ul.appendChild(li);
-                rewriteNoteClass('add');
             }
+        } else if (is('action')) {
         } else if (is('musical-score')) {
             if (isButton) {
                 if ('tone' in e.target.dataset) {
                     flmml.play(e.target.dataset.tone + e.target.dataset.tonePitch);
                 }
+            }
+        }
+        if (isButton) {
+            if ('noteValue' in e.target.dataset) {
+                dialogFormManager.set('noteValue');
+                dialogFormManager.submitTarget = e.target;
+                dialogForm.elements['note-value'].value = e.target.dataset.noteValue.replace('l', '');
+                dialog.showModal();
+            } else if ('rest' in e.target.dataset) {
+                dialogFormManager.set('rest');
+                dialogFormManager.submitTarget = e.target;
+                dialogForm.elements['rest'].value = e.target.dataset.rest.replace('r', '');
+                dialog.showModal();
+            } else if ('tempo' in e.target.dataset) {
+                dialogFormManager.set('tempo');
+                dialogFormManager.submitTarget = e.target;
+                dialogForm.elements['tempo'].value = e.target.dataset.tempo.replace('t', '');
+                dialog.showModal();
             }
         }
     });
@@ -411,7 +477,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 musicalScore.querySelectorAll(`[class="${buttonClassName}"]`).forEach(elem => {
                     elem.parentElement.remove();
                 });
-                rewriteNoteClass('remove');
             }
             block.blocksDataUpdate();
             block.exportMml(mml);
@@ -534,7 +599,33 @@ document.addEventListener('DOMContentLoaded', () => {
             const itemLi = item.parentElement;
             switch (e.dataTransfer.dropEffect) {
                 case 'copy':
-                    ul.appendChild(itemLi.cloneNode(true));
+                    if (target === tones) {
+                        const li = document.createElement('li');
+                        const newItem = item.cloneNode(true);
+                        const noteClassName = [...item.classList].find(name => name.includes('note-'));
+                        newItem.classList.replace(noteClassName, getNonExistNoteClassName());
+                        li.appendChild(newItem)
+                        ul.appendChild(li);
+                    } else if (from === action) {
+                        if ('noteValue' in item.dataset) {
+                            dialogFormManager.set('noteValue');
+                            dialogFormManager.submitTarget = item;
+                            dialogForm.elements['note-value'].value = item.dataset.noteValue.replace('l', '');
+                            dialog.showModal();
+                        } else if ('rest' in item.dataset) {
+                            dialogFormManager.set('rest');
+                            dialogFormManager.submitTarget = item;
+                            dialogForm.elements['rest'].value = item.dataset.rest.replace('r', '');
+                            dialog.showModal();
+                        } else if ('tempo' in item.dataset) {
+                            dialogFormManager.set('tempo');
+                            dialogFormManager.submitTarget = item;
+                            dialogForm.elements['tempo'].value = item.dataset.tempo.replace('t', '');
+                            dialog.showModal();
+                        }
+                    } else {
+                        ul.appendChild(item.parentElement.cloneNode(true));
+                    }
                     break;
                 case 'move':
                     const targetIsButton =  e.target.tagName.toLowerCase() === 'button';
@@ -545,15 +636,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     break;
             }
-            if (from === tones && target === tones) {
-                rewriteNoteClass('copyMove');
-            }
             if (target === musicalScore) {
                 block.blocksDataUpdate();
                 block.exportMml(mml);
-            }
-            if ('tonePitch' in item.dataset) {
-                flmml.play(item.dataset.tone + item.dataset.tonePitch);
+                if ('tonePitch' in item.dataset) {
+                    flmml.play(item.dataset.tone + item.dataset.tonePitch);
+                }
             }
         });
     });
@@ -633,7 +721,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 flmml.play(submitTarget.dataset.tone + submitTarget.dataset.tonePitch);
                 break;
+            case 'set-note-value':
+                submitTarget.dataset.noteValue = 'l' + dialogForm.elements['note-value'].value;
+                break;
+            case 'set-rest':
+                submitTarget.dataset.rest = 'r' + dialogForm.elements['rest'].value;
+                break;
+            case 'set-tempo':
+                submitTarget.dataset.tempo = 't' + dialogForm.elements['tempo'].value;
+                break;
         }
+        if (submitTarget.closest('#action')) {
+            musicalScore.firstElementChild.appendChild(submitTarget.parentElement.cloneNode(true));
+        }
+        block.blocksDataUpdate();
+        block.exportMml(mml);
     });
 
     playBtn.addEventListener('click', () => {
