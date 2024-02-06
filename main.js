@@ -446,6 +446,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const nonExistClassName = getNonExistNoteClassName();
                 const toneButton = `<button class="material-icons plain ${nonExistClassName}" aria-label="無調整" draggable="true" data-tone="" data-tone-pitch="c">music_note</button>`;
                 li.innerHTML = toneButton;
+                await dialogFormManager.prompt('tone', {
+                    'tone-name': li.firstElementChild.ariaLabel,
+                    'tone-def': li.firstElementChild.dataset.tone
+                }, li.firstElementChild);
                 ul.appendChild(li);
                 lastAddedButton = li.firstElementChild;
             }
