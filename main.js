@@ -309,17 +309,29 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        constructor() {
-            this.type = null;
-            this.submitTarget = null;
-        }
-
-        set(type) {
+        #set = (type, initVals) => {
             dialogForm._title.textContent = '';
             dialogForm.inputs.textContent = '';
             dialogForm.buttons.textContent = '';
             this.#createElems(type);
+            for (const [name, value] of Object.entries(initVals)) {
+                console.log(name, value);
+                dialogForm.elements[name].value = value;
+            }
             this.type = type;
+        }
+
+        constructor() {
+            this.type = null;
+            this.submitTarget = null;
+            this.resolve = null;
+        }
+
+        async prompt(type, initVals, submitTarget) {
+            this.#set(type, initVals);
+            this.submitTarget = submitTarget;
+            dialog.showModal();
+            return new Promise(resolve => this.resolve = resolve);
         }
     }
 
@@ -419,16 +431,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    editor.addEventListener('click', e => {
+    let lastAddedButton = tones.querySelector('button');
+    editor.addEventListener('click', async e => {
         const is = id => Boolean(e.target.closest('#' + id));
         const isButton =  e.target.tagName.toLowerCase() === 'button';
         if (is('tones')) {
             if (isButton) {
-                dialogFormManager.set('tone');
-                dialogFormManager.submitTarget = e.target;
-                dialogForm.elements['tone-name'].value = e.target.ariaLabel;
-                dialogForm.elements['tone-def'].value = e.target.dataset.tone;
-                dialog.showModal();
+                dialogFormManager.prompt('tone', {
+                    'tone-name': e.target.ariaLabel,
+                    'tone-def': e.target.dataset.tone
+                }, e.target);
             } else {
                 const ul = tones.querySelector('ul');
                 const li = document.createElement('li');
@@ -436,6 +448,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const toneButton = `<button class="material-icons plain ${nonExistClassName}" aria-label="無調整" draggable="true" data-tone="" data-tone-pitch="c">music_note</button>`;
                 li.innerHTML = toneButton;
                 ul.appendChild(li);
+                lastAddedButton = li.firstElementChild;
             }
         } else if (is('action')) {
         } else if (is('musical-score')) {
@@ -443,25 +456,38 @@ document.addEventListener('DOMContentLoaded', () => {
                 if ('tone' in e.target.dataset) {
                     flmml.play(e.target.dataset.tone + e.target.dataset.tonePitch);
                 }
+            } else {
+                if (lastAddedButton) {
+                    const ul = musicalScore.querySelector('ul');
+                    const li = document.createElement('li');
+                    const newItem = lastAddedButton.cloneNode(true);
+                    li.appendChild(newItem);
+                    ul.appendChild(li);
+                    lastAddedButton = newItem;
+                    block.blocksDataUpdate();
+                    block.exportMml(mml);
+                    if ('tonePitch' in newItem.dataset) {
+                        flmml.play(newItem.dataset.tone + newItem.dataset.tonePitch);
+                    }
+                }
             }
         }
         if (isButton) {
             if ('noteValue' in e.target.dataset) {
-                dialogFormManager.set('noteValue');
-                dialogFormManager.submitTarget = e.target;
-                dialogForm.elements['note-value'].value = e.target.dataset.noteValue.replace('l', '');
-                dialog.showModal();
+                await dialogFormManager.prompt('noteValue', {
+                    'note-value': e.target.dataset.noteValue.replace('l', '')
+                }, e.target);
             } else if ('rest' in e.target.dataset) {
-                dialogFormManager.set('rest');
-                dialogFormManager.submitTarget = e.target;
-                dialogForm.elements['rest'].value = e.target.dataset.rest.replace('r', '');
-                dialog.showModal();
+                await dialogFormManager.prompt('rest', {
+                    'rest': e.target.dataset.rest.replace('r', '')
+                }, e.target);
             } else if ('tempo' in e.target.dataset) {
-                dialogFormManager.set('tempo');
-                dialogFormManager.submitTarget = e.target;
-                dialogForm.elements['tempo'].value = e.target.dataset.tempo.replace('t', '');
-                dialog.showModal();
+                await dialogFormManager.prompt('tempo', {
+                    'tempo': e.target.dataset.tempo.replace('t', '')
+                }, e.target);
             }
+            block.blocksDataUpdate();
+            block.exportMml(mml);
         }
     });
 
@@ -486,7 +512,7 @@ document.addEventListener('DOMContentLoaded', () => {
     editor.addEventListener('wheel', e => {
         const parentMusicalScore = e.target.closest('#musical-score');
         const isButton =  e.target.tagName.toLowerCase() === 'button';
-        if (e.ctrlKey && parentMusicalScore && isButton && 'tone' in e.target.dataset) { //TODO
+        if (parentMusicalScore && isButton && 'tone' in e.target.dataset) { //TODO
             e.preventDefault();
             const pitches = ['c','c+','d','d+','e','f','f+','g','g+','a','a+','b'];
             const octave = ['>', '<'];
@@ -591,51 +617,48 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         target.addEventListener('dragenter', dragEventHandler);
         target.addEventListener('dragover', dragEventHandler);
-        target.addEventListener('drop', e => {
+        target.addEventListener('drop', async e => {
             e.preventDefault();
             e.dataTransfer.dropEffect = e.dataTransfer.dropEffect !== 'none' ? e.dataTransfer.dropEffect : dropEffect;
             const {from, item} = dragInfo;
             const ul = e.target.closest('#tones, #musical-score').querySelector('ul');
-            const itemLi = item.parentElement;
+            const targetIsButton =  e.target.tagName.toLowerCase() === 'button';
+            let newNode;
             switch (e.dataTransfer.dropEffect) {
                 case 'copy':
+                    const li = document.createElement('li')
+                    const newItem = item.cloneNode(true);
                     if (target === tones) {
-                        const li = document.createElement('li');
-                        const newItem = item.cloneNode(true);
                         const noteClassName = [...item.classList].find(name => name.includes('note-'));
                         newItem.classList.replace(noteClassName, getNonExistNoteClassName());
-                        li.appendChild(newItem)
-                        ul.appendChild(li);
                     } else if (from === action) {
                         if ('noteValue' in item.dataset) {
-                            dialogFormManager.set('noteValue');
-                            dialogFormManager.submitTarget = item;
-                            dialogForm.elements['note-value'].value = item.dataset.noteValue.replace('l', '');
-                            dialog.showModal();
+                            await dialogFormManager.prompt('noteValue', {
+                                'note-value': item.dataset.noteValue.replace('l', '')
+                            }, e.target);
                         } else if ('rest' in item.dataset) {
-                            dialogFormManager.set('rest');
-                            dialogFormManager.submitTarget = item;
-                            dialogForm.elements['rest'].value = item.dataset.rest.replace('r', '');
-                            dialog.showModal();
+                            await dialogFormManager.prompt('rest', {
+                                'rest': item.dataset.rest.replace('r', '')
+                            }, e.target);
                         } else if ('tempo' in item.dataset) {
-                            dialogFormManager.set('tempo');
-                            dialogFormManager.submitTarget = item;
-                            dialogForm.elements['tempo'].value = item.dataset.tempo.replace('t', '');
-                            dialog.showModal();
+                            await dialogFormManager.prompt('tempo', {
+                                'tempo': item.dataset.tempo.replace('t', '')
+                            }, e.target);
                         }
-                    } else {
-                        ul.appendChild(item.parentElement.cloneNode(true));
                     }
+                    li.appendChild(newItem);
+                    newNode = li;
                     break;
                 case 'move':
-                    const targetIsButton =  e.target.tagName.toLowerCase() === 'button';
-                    if (targetIsButton) {
-                        ul.insertBefore(itemLi, e.target.parentElement);
-                    } else {
-                        ul.appendChild(itemLi);
-                    }
+                    newNode = item.parentElement;
                     break;
             }
+            if (targetIsButton) {
+                ul.insertBefore(newNode, e.target.parentElement);
+            } else {
+                ul.appendChild(newNode);
+            }
+            lastAddedButton = newNode.firstElementChild;
             if (target === musicalScore) {
                 block.blocksDataUpdate();
                 block.exportMml(mml);
@@ -731,11 +754,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 submitTarget.dataset.tempo = 't' + dialogForm.elements['tempo'].value;
                 break;
         }
-        if (submitTarget.closest('#action')) {
-            musicalScore.firstElementChild.appendChild(submitTarget.parentElement.cloneNode(true));
-        }
-        block.blocksDataUpdate();
-        block.exportMml(mml);
+        dialogFormManager.resolve();
     });
 
     playBtn.addEventListener('click', () => {
