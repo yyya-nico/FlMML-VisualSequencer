@@ -145,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let mmlText = '';
             this.#blocksData.forEach(block => {
                 const {tone, tonePitch} = block.tone;
-                mmlText += tonePitch || block.noteValue || block.rest || block.tempo;
+                mmlText += tonePitch || block.noteValue || block.rest || block.tempo || '';
             });
             mml.append(mmlText);
         }
@@ -315,7 +315,6 @@ document.addEventListener('DOMContentLoaded', () => {
             dialogForm.buttons.textContent = '';
             this.#createElems(type);
             for (const [name, value] of Object.entries(initVals)) {
-                console.log(name, value);
                 dialogForm.elements[name].value = value;
             }
             this.type = type;
