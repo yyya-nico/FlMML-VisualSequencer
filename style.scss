@@ -351,6 +351,12 @@ header {
                         display: none;
                     }
                 }
+
+                &.droppable {
+                    color: white;
+                    opacity: .8;
+                    transform: translateY(2px);
+                }
             }
         }
 

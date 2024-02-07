@@ -133,9 +133,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     tone: elem.dataset.tone,
                     tonePitch: elem.dataset.tonePitch
                 },
+                tempo: elem.dataset.tempo,
                 noteValue: elem.dataset.noteValue,
                 rest: elem.dataset.rest,
-                tempo: elem.dataset.tempo,
+                octave: elem.dataset.octave,
+                velocity: elem.dataset.velocity,
+                noteShift: elem.dataset.noteShift,
+                detune: elem.dataset.detune,
+                loopStart: elem.dataset.loopStart,
+                loopBreak: elem.dataset.loopBreak,
+                loopEnd: elem.dataset.loopEnd,
+                polyStartEnd: elem.dataset.polyStartEnd,
+                otherAction: elem.dataset.otherAction,
                 elem: elem
             }));
         }
@@ -145,7 +154,10 @@ document.addEventListener('DOMContentLoaded', () => {
             let mmlText = '';
             this.#blocksData.forEach(block => {
                 const {tone, tonePitch} = block.tone;
-                mmlText += tonePitch || block.noteValue || block.rest || block.tempo || '';
+                mmlText += tonePitch || block.tempo || block.noteValue || block.rest
+                    || block.octave || block.velocity || block.noteShift || block.detune
+                    || block.loopStart || block.loopBreak || block.loopEnd || block.polyStartEnd
+                    || block.otherAction || '';
             });
             mml.append(mmlText);
         }
@@ -216,6 +228,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 ]
             },
+            tempo: {
+                title: 'テンポ設定',
+                inputs: [
+                    {
+                        label: 'テンポ指定(BPM)',
+                        type: 'number',
+                        name: 'tempo'
+                    }
+                ],
+                buttons: [
+                    {
+                        class: 'primaly',
+                        value: 'set-tempo',
+                        textContent: '確定'
+                    }
+                ]
+            },
             noteValue: {
                 title: '音価設定',
                 inputs: [
@@ -250,19 +279,104 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 ]
             },
-            tempo: {
-                title: 'テンポ設定',
+            octave: {
+                title: 'オクターブ設定',
                 inputs: [
                     {
-                        label: 'テンポ指定(BPM)',
+                        label: 'オクターブ位置',
                         type: 'number',
-                        name: 'tempo'
+                        name: 'octave'
                     }
                 ],
                 buttons: [
                     {
                         class: 'primaly',
-                        value: 'set-tempo',
+                        value: 'set-octave',
+                        textContent: '確定'
+                    }
+                ]
+            },
+            velocity: {
+                title: '音量設定',
+                inputs: [
+                    {
+                        label: '音量',
+                        type: 'number',
+                        name: 'velocity'
+                    }
+                ],
+                buttons: [
+                    {
+                        class: 'primaly',
+                        value: 'set-velocity',
+                        textContent: '確定'
+                    }
+                ]
+            },
+            noteShift: {
+                title: 'ノートシフト設定',
+                inputs: [
+                    {
+                        label: 'シフト量',
+                        type: 'number',
+                        name: 'note-shift'
+                    }
+                ],
+                buttons: [
+                    {
+                        class: 'primaly',
+                        value: 'set-note-shift',
+                        textContent: '確定'
+                    }
+                ]
+            },
+            detune: {
+                title: 'デチューン設定',
+                inputs: [
+                    {
+                        label: 'デチューン量',
+                        type: 'number',
+                        name: 'detune'
+                    }
+                ],
+                buttons: [
+                    {
+                        class: 'primaly',
+                        value: 'set-detune',
+                        textContent: '確定'
+                    }
+                ]
+            },
+            loop: {
+                title: 'ループ設定',
+                inputs: [
+                    {
+                        label: 'ループ回数',
+                        type: 'number',
+                        name: 'loop'
+                    }
+                ],
+                buttons: [
+                    {
+                        class: 'primaly',
+                        value: 'set-loop',
+                        textContent: '確定'
+                    }
+                ]
+            },
+            otherAction: {
+                title: 'その他の作用設定',
+                inputs: [
+                    {
+                        label: '任意のMML',
+                        type: 'text',
+                        name: 'other-action'
+                    }
+                ],
+                buttons: [
+                    {
+                        class: 'primaly',
+                        value: 'set-other-action',
                         textContent: '確定'
                     }
                 ]
@@ -278,15 +392,26 @@ document.addEventListener('DOMContentLoaded', () => {
                     case 'inputs':
                         def.inputs.forEach(inputDef => {
                             const input = document.createElement('input');
-                            let appendElem = input;
+                            let appendElem;
                             Object.entries(inputDef).forEach(entry => {
                                 if (entry[0] === 'label') {
                                     const label = document.createElement('label');
                                     label.textContent = entry[1];
                                     label.appendChild(input);
                                     appendElem = label;
+                                } else if (entry[0] === 'select') {
+                                    const select = document.createElement('select');
+                                    const selectOptionsDef = entry[1];
+                                    Object.entry(selectOptionsDef).forEach(entry => {
+                                        const option = document.createElement('option');
+                                        option.value = entry[0];
+                                        option.textContent = entry[1];
+                                        select.appendChild(option);
+                                    });
+                                    appendElem = select;
                                 } else {
                                     input.setAttribute(entry[0], entry[1]);
+                                    appendElem = input;
                                 }
                             });
                             dialogForm.inputs.appendChild(appendElem);
@@ -430,6 +555,56 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    const actionPromptSwitcher = async item => {
+        if ('tempo' in item.dataset) {
+            await dialogFormManager.prompt('tempo', {
+                'tempo': item.dataset.tempo.replace('t', '')
+            }, item);
+        } else if ('noteValue' in item.dataset) {
+            await dialogFormManager.prompt('noteValue', {
+                'note-value': item.dataset.noteValue.replace('l', '')
+            }, item);
+        } else if ('rest' in item.dataset) {
+            await dialogFormManager.prompt('rest', {
+                'rest': item.dataset.rest.replace('r', '')
+            }, item);
+        } else if ('octave' in item.dataset) {
+            await dialogFormManager.prompt('octave', {
+                'octave': item.dataset.octave.replace('o', '')
+            }, item);
+        } else if ('velocity' in item.dataset) {
+            await dialogFormManager.prompt('velocity', {
+                'velocity': item.dataset.velocity.replace('@v', '')
+            }, item);
+        } else if ('noteShift' in item.dataset) {
+            await dialogFormManager.prompt('noteShift', {
+                'note-shift': item.dataset.noteShift.replace('@ns', '')
+            }, item);
+        } else if ('detune' in item.dataset) {
+            await dialogFormManager.prompt('detune', {
+                'detune': item.dataset.detune.replace('@d', '')
+            }, item);
+        } else if ('loopEnd' in item.dataset) {
+            const loopStartElem = (() => {
+                let findTemp = item.parentElement;
+                do {
+                    findTemp = findTemp.previousElementSibling;
+                } while (findTemp && !'loopStart' in findTemp.firstElementChild.dataset);
+                return findTemp || null;
+            })();
+            if (loopStartElem) {
+                await dialogFormManager.prompt('loop', {
+                    'loop': loopStartElem.dataset.loopStart.replace('/:', '')
+                }, loopStartElem);
+            } else {
+                alert('ループ開始ブロックがありません。');
+            }
+        } else if ('otherAction' in item.dataset) {
+            await dialogFormManager.prompt('otherAction', {
+                'other-action': item.dataset.otherAction
+            }, item);
+        }
+    };
     let lastAddedButton = tones.querySelector('button');
     editor.addEventListener('click', async e => {
         const is = id => Boolean(e.target.closest('#' + id));
@@ -476,18 +651,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         if (isButton) {
-            if ('noteValue' in e.target.dataset) {
-                await dialogFormManager.prompt('noteValue', {
-                    'note-value': e.target.dataset.noteValue.replace('l', '')
-                }, e.target);
-            } else if ('rest' in e.target.dataset) {
-                await dialogFormManager.prompt('rest', {
-                    'rest': e.target.dataset.rest.replace('r', '')
-                }, e.target);
-            } else if ('tempo' in e.target.dataset) {
-                await dialogFormManager.prompt('tempo', {
-                    'tempo': e.target.dataset.tempo.replace('t', '')
-                }, e.target);
+            await actionPromptSwitcher(e.target);
+            if (is('action')) {
+                const ul = musicalScore.querySelector('ul');
+                const li = document.createElement('li');
+                const newItem = e.target.cloneNode(true);
+                li.appendChild(newItem);
+                ul.appendChild(li);
+                lastAddedButton = newItem;
             }
             block.blocksDataUpdate();
             block.exportMml(mml);
@@ -618,8 +789,107 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             dropEffect = dt.dropEffect;
         };
-        target.addEventListener('dragenter', dragEventHandler);
         target.addEventListener('dragover', dragEventHandler);
+        const dragenterEventHandler = e => {
+            const {from} = dragInfo;
+            const isButton =  e.target.tagName.toLowerCase() === 'button';
+            const addClass = () => e.target.classList.add('droppable');
+            switch (from) {
+                case tones:
+                    switch (target) {
+                        case tones:
+                            if (isButton) {
+                                addClass();                                
+                            }
+                            break;
+                        case action:
+                            break;
+                        case musicalScore:
+                            if (isButton) {
+                                addClass();                                
+                            }
+                            break;
+                    }
+                    break;
+                case action:
+                    switch (target) {
+                        case tones:
+                            break;
+                        case action:
+                            break;
+                        case musicalScore:
+                            if (isButton) {
+                                addClass();                                
+                            }
+                            break;
+                    }
+                    break;
+                case musicalScore:
+                    switch (target) {
+                        case tones:
+                            break;
+                        case action:
+                            break;
+                        case musicalScore:
+                            if (isButton) {
+                                addClass();                                
+                            }
+                            break;
+                    }
+                    break;
+            }
+        };
+        target.addEventListener('dragenter', dragenterEventHandler);
+        const dragleaveEventHandler = e => {
+            const {from} = dragInfo;
+            const isButton =  e.target.tagName.toLowerCase() === 'button';
+            const removeClass = () => e.target.classList.remove('droppable');
+            switch (from) {
+                case tones:
+                    switch (target) {
+                        case tones:
+                            if (isButton) {
+                                removeClass();                                
+                            }
+                            break;
+                        case action:
+                            break;
+                        case musicalScore:
+                            if (isButton) {
+                                removeClass();                                
+                            }
+                            break;
+                    }
+                    break;
+                case action:
+                    switch (target) {
+                        case tones:
+                            break;
+                        case action:
+                            break;
+                        case musicalScore:
+                            if (isButton) {
+                                removeClass();                                
+                            }
+                            break;
+                    }
+                    break;
+                case musicalScore:
+                    switch (target) {
+                        case tones:
+                            break;
+                        case action:
+                            break;
+                        case musicalScore:
+                            if (isButton) {
+                                removeClass();                                
+                            }
+                            break;
+                    }
+                    break;
+            }
+        };
+        target.addEventListener('dragleave', dragleaveEventHandler);
         target.addEventListener('drop', async e => {
             e.preventDefault();
             e.dataTransfer.dropEffect = e.dataTransfer.dropEffect !== 'none' ? e.dataTransfer.dropEffect : dropEffect;
@@ -635,19 +905,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const noteClassName = [...item.classList].find(name => name.includes('note-'));
                         newItem.classList.replace(noteClassName, getNonExistNoteClassName());
                     } else if (from === action) {
-                        if ('noteValue' in item.dataset) {
-                            await dialogFormManager.prompt('noteValue', {
-                                'note-value': item.dataset.noteValue.replace('l', '')
-                            }, e.target);
-                        } else if ('rest' in item.dataset) {
-                            await dialogFormManager.prompt('rest', {
-                                'rest': item.dataset.rest.replace('r', '')
-                            }, e.target);
-                        } else if ('tempo' in item.dataset) {
-                            await dialogFormManager.prompt('tempo', {
-                                'tempo': item.dataset.tempo.replace('t', '')
-                            }, e.target);
-                        }
+                        await actionPromptSwitcher(newItem);
                     }
                     li.appendChild(newItem);
                     newNode = li;
@@ -670,6 +928,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         });
+        const dragendEventHandler = e => {
+            [...document.getElementsByClassName('droppable')].forEach(elem => {
+                elem.classList.remove('droppable');
+            });
+        };
+        target.addEventListener('dragend', dragendEventHandler);
     });
 
     //---------------
@@ -747,14 +1011,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 flmml.play(submitTarget.dataset.tone + submitTarget.dataset.tonePitch);
                 break;
+            case 'set-tempo':
+                submitTarget.dataset.tempo = 't' + dialogForm.elements['tempo'].value;
+                break;
             case 'set-note-value':
                 submitTarget.dataset.noteValue = 'l' + dialogForm.elements['note-value'].value;
                 break;
             case 'set-rest':
                 submitTarget.dataset.rest = 'r' + dialogForm.elements['rest'].value;
                 break;
-            case 'set-tempo':
-                submitTarget.dataset.tempo = 't' + dialogForm.elements['tempo'].value;
+            case 'set-octave':
+                submitTarget.dataset.octave = 'o' + dialogForm.elements['octave'].value;
+                break;
+            case 'set-velocity':
+                submitTarget.dataset.velocity = '@v' + dialogForm.elements['velocity'].value;
+                break;
+            case 'set-note-shift':
+                submitTarget.dataset.noteShift = '@ns' + dialogForm.elements['note-shift'].value;
+                break;
+            case 'set-detune':
+                submitTarget.dataset.detune = '@d' + dialogForm.elements['detune'].value;
+                break;
+            case 'set-loop':
+                submitTarget.dataset.loopStart = '/:' + dialogForm.elements['loop'].value;
+                break;
+            case 'set-other-action':
+                submitTarget.dataset.otherAction = dialogForm.elements['other-action'].value;
+                submitTarget.textContent = submitTarget.dataset.otherAction;
                 break;
         }
         dialogFormManager.resolve();
