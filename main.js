@@ -587,13 +587,17 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if ('loopEnd' in item.dataset) {
             const findLoopStartElem = () => {
                 let findTemp = musicalScore.querySelector('li:last-child');
-                do {
-                    findTemp = findTemp?.previousElementSibling;
-                } while (findTemp && !('loopStart' in findTemp.firstElementChild.dataset));
+                while (findTemp && !('loopStart' in findTemp.firstElementChild.dataset)) {
+                    findTemp = findTemp.previousElementSibling;
+                };
                 return findTemp?.firstElementChild || null;
             };
             let loopStartElem = findLoopStartElem();
-            if (!loopStartElem) {
+            const loopStartCount = musicalScore.getElementsByClassName('loop-start').length;
+            const loopEndCount = musicalScore.getElementsByClassName('loop-end').length;
+            const enoughLoopEnds = loopStartCount === loopEndCount;
+            const parentMusicalScore = item.closest('#musical-score');
+            if (!loopStartElem || enoughLoopEnds && !parentMusicalScore) {
                 const ul = musicalScore.querySelector('ul');
                 const li = document.createElement('li');
                 const baseItem = action.querySelector('.loop-start');
@@ -602,7 +606,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 ul.appendChild(li);
                 loopStartElem = newItem;
             }
-            console.log(loopStartElem);
             await dialogFormManager.prompt('loop', {
                 'loop': loopStartElem.dataset.loopStart.replace('/:', '')
             }, loopStartElem);
