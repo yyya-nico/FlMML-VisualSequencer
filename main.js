@@ -585,20 +585,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 'detune': item.dataset.detune.replace('@d', '')
             }, item);
         } else if ('loopEnd' in item.dataset) {
-            const loopStartElem = (() => {
-                let findTemp = item.parentElement;
+            const findLoopStartElem = () => {
+                let findTemp = musicalScore.querySelector('li:last-child');
                 do {
-                    findTemp = findTemp.previousElementSibling;
-                } while (findTemp && !'loopStart' in findTemp.firstElementChild.dataset);
-                return findTemp || null;
-            })();
-            if (loopStartElem) {
-                await dialogFormManager.prompt('loop', {
-                    'loop': loopStartElem.dataset.loopStart.replace('/:', '')
-                }, loopStartElem);
-            } else {
-                alert('ループ開始ブロックがありません。');
+                    findTemp = findTemp?.previousElementSibling;
+                } while (findTemp && !('loopStart' in findTemp.firstElementChild.dataset));
+                return findTemp?.firstElementChild || null;
+            };
+            let loopStartElem = findLoopStartElem();
+            if (!loopStartElem) {
+                const ul = musicalScore.querySelector('ul');
+                const li = document.createElement('li');
+                const baseItem = action.querySelector('.loop-start');
+                const newItem = baseItem.cloneNode(true);
+                li.appendChild(newItem);
+                ul.appendChild(li);
+                loopStartElem = newItem;
             }
+            console.log(loopStartElem);
+            await dialogFormManager.prompt('loop', {
+                'loop': loopStartElem.dataset.loopStart.replace('/:', '')
+            }, loopStartElem);
         } else if ('otherAction' in item.dataset) {
             await dialogFormManager.prompt('otherAction', {
                 'other-action': item.dataset.otherAction
