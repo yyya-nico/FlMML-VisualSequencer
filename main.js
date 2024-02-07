@@ -169,11 +169,12 @@ document.addEventListener('DOMContentLoaded', () => {
             let noteValue = 4;
             let i = 0;
             const attachMotion = () => {
-                itemParents[i].firstElementChild.classList.add('motion');
-                i++;
                 if (i === itemParents.length) {
                     clearInterval(this.#rendInterval);
+                    return;
                 }
+                itemParents[i].firstElementChild.classList.add('motion');
+                i++;
             }
             attachMotion();
             this.#rendInterval = setInterval(attachMotion,
