@@ -926,7 +926,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (targetIsButton) {
                 const itemIndex = [...ul.children].indexOf(item.parentElement);
                 const targetIndex = [...ul.children].indexOf(e.target.parentElement);
-                const position = targetIndex < itemIndex ? 'beforebegin' : 'afterend';
+                const position = targetIndex < itemIndex || e.dataTransfer.dropEffect === 'copy' ? 'beforebegin' : 'afterend';
                 e.target.parentElement.insertAdjacentElement(position, newNode);
             } else {
                 ul.appendChild(newNode);
