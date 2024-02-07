@@ -273,6 +273,18 @@ header {
     @return hsl(math.random(360) 50 + math.random(25) + 0% 30 + math.random(50) + 0%);
 }
 
+@keyframes bounce {
+    0% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-10px);
+    }
+    100% {
+        transform: translateY(0);
+    }
+}
+
 .wrap {
     overflow: clip;
     height: contentAreaHeight(vh);
@@ -356,6 +368,10 @@ header {
                     color: white;
                     opacity: .8;
                     transform: translateY(2px);
+                }
+
+                &.motion {
+                    animation: .8s bounce ease-in-out;
                 }
             }
         }

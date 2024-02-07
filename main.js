@@ -120,6 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     class Block {
         #blocksData = [];
+        #rendInterval = null;
 
         constructor(areaElem) {
             this.areaElem = areaElem;
@@ -160,6 +161,27 @@ document.addEventListener('DOMContentLoaded', () => {
                     || block.otherAction || '';
             });
             mml.append(mmlText);
+        }
+
+        playRendering() {
+            const itemParents = musicalScore.querySelector('ul').children;
+            let tempo = 120;
+            let noteValue = 4;
+            let i = 0;
+            const attachMotion = () => {
+                itemParents[i].firstElementChild.classList.add('motion');
+                i++;
+                if (i === itemParents.length) {
+                    clearInterval(this.#rendInterval);
+                }
+            }
+            attachMotion();
+            this.#rendInterval = setInterval(attachMotion,
+                60 / tempo * noteValue / 4 * 1000);
+        }
+
+        stopRendering() {
+            clearInterval(this.#rendInterval);
         }
     }
 
@@ -469,12 +491,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const playHtml = createMIsHtml('play_arrow') + '再生';
     const stopHtml = createMIsHtml('stop') + '停止';
 
+    const playAnimationStart = () => {
+        block.playRendering();
+    };
     const compileHandler = () => {
         warnOut.innerHTML = flmml.getWarnings().replaceAll('\n','<br>');
     };
     flmml.addEventListener('compilecomplete', compileHandler);
     const completeHandler = () => {
         playBtn.innerHTML = playHtml;
+        flmml.removeEventListener('compilecomplete', playAnimationStart);
     };
     flmml.addEventListener('complete', completeHandler);
 
@@ -948,6 +974,10 @@ document.addEventListener('DOMContentLoaded', () => {
         target.addEventListener('dragend', dragendEventHandler);
     });
 
+    editor.addEventListener('animationend', e => {
+        e.target.classList.remove('motion');
+    });
+
     //---------------
     // Form Controls
     //---------------
@@ -1059,8 +1089,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const isPlaying = flmml.isPlaying();
         if (!isPlaying) {
             flmml.play(mml.getMml());
+            flmml.addEventListener('compilecomplete', playAnimationStart);
         } else {
             flmml.stop();
+            flmml.removeEventListener('compilecomplete', playAnimationStart);
+            block.stopRendering();
         }
         playBtn.innerHTML = !isPlaying ? stopHtml : playHtml;
     });
