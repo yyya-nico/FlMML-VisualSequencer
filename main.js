@@ -392,7 +392,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     case 'inputs':
                         def.inputs.forEach(inputDef => {
                             const input = document.createElement('input');
-                            let appendElem;
+                            let appendElem = input;
                             Object.entries(inputDef).forEach(entry => {
                                 if (entry[0] === 'label') {
                                     const label = document.createElement('label');
@@ -411,7 +411,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                     appendElem = select;
                                 } else {
                                     input.setAttribute(entry[0], entry[1]);
-                                    appendElem = input;
                                 }
                             });
                             dialogForm.inputs.appendChild(appendElem);
