@@ -164,8 +164,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         playRendering() {
-            const itemParents = musicalScore.querySelector('ul').children;
-            let tempo = 120;
+            const itemParents = [...musicalScore.querySelector('ul').children].filter(elem => 'tonePitch' in elem.firstElementChild.dataset || 'rest' in elem.firstElementChild.dataset);
+            let tempo = Number(musicalScore.querySelector('.tempo')?.dataset.tempo.replace('t', '')) || 120;
             let noteValue = 4;
             let i = 0;
             const attachMotion = () => {
