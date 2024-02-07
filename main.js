@@ -924,7 +924,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     break;
             }
             if (targetIsButton) {
-                ul.insertBefore(newNode, e.target.parentElement);
+                const itemIndex = [...ul.children].indexOf(item.parentElement);
+                const targetIndex = [...ul.children].indexOf(e.target.parentElement);
+                const position = targetIndex < itemIndex ? 'beforebegin' : 'afterend';
+                e.target.parentElement.insertAdjacentElement(position, newNode);
             } else {
                 ul.appendChild(newNode);
             }
