@@ -144,6 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 loopStart: elem.dataset.loopStart,
                 loopBreak: elem.dataset.loopBreak,
                 loopEnd: elem.dataset.loopEnd,
+                usingPoly: elem.dataset.usingPoly,
                 polyStartEnd: elem.dataset.polyStartEnd,
                 otherAction: elem.dataset.otherAction,
                 elem: elem
@@ -157,8 +158,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const {tone, tonePitch} = block.tone;
                 mmlText += tonePitch || block.tempo || block.noteValue || block.rest
                     || block.octave || block.velocity || block.noteShift || block.detune
-                    || block.loopStart || block.loopBreak || block.loopEnd || block.polyStartEnd
-                    || block.otherAction || '';
+                    || block.loopStart || block.loopBreak || block.loopEnd || block.usingPoly
+                    || block.polyStartEnd || block.otherAction || '';
             });
             mml.append(mmlText);
         }
@@ -436,6 +437,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 ]
             },
+            usingPoly: {
+                title: '和音設定',
+                inputs: [
+                    {
+                        label: '和音重ね数',
+                        type: 'number',
+                        name: 'using-poly'
+                    }
+                ],
+                buttons: [
+                    {
+                        class: 'primaly',
+                        value: 'set-using-poly',
+                        textContent: '確定'
+                    }
+                ]
+            },
             otherAction: {
                 title: 'その他の作用設定',
                 inputs: [
@@ -685,6 +703,10 @@ document.addEventListener('DOMContentLoaded', () => {
             await dialogFormManager.prompt('loop', {
                 'loop': loopStartElem.dataset.loopStart.replace('/:', '')
             }, loopStartElem);
+        } else if ('usingPoly' in item.dataset) {
+            await dialogFormManager.prompt('usingPoly', {
+                'using-poly': item.dataset.usingPoly.replace('#USING POLY ', '').replace('\n', '')
+            }, item);
         } else if ('otherAction' in item.dataset) {
             await dialogFormManager.prompt('otherAction', {
                 'other-action': item.dataset.otherAction
@@ -858,7 +880,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         e.target.dataset.noteShift = '@ns' + (noteShift + increase);
                     } else if ('detune' in e.target.dataset) {
                         const detune = Number(e.target.dataset.detune.replace('@d', ''));
-                        const increase = neverMinus();
+                        const increase = neverMinus(detune);
                         e.target.dataset.detune = '@d' + (detune + increase);
                     } else if ('loopEnd' in e.target.dataset) {
                         const findLoopStartElem = () => {
@@ -884,6 +906,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         const loop = Number(loopStartElem.dataset.loopStart.replace('/:', ''));
                         const increase = neverMinus(loop);
                         loopStartElem.dataset.loopStart = '/:' + (loop + increase);
+                    } else if ('usingPoly' in e.target.dataset) {
+                        const usingPoly = Number(e.target.dataset.usingPoly.replace('#USING POLY ', '').replace('\n', ''));
+                        const increase = neverMinus(usingPoly);
+                        e.target.dataset.usingPoly = '#USING POLY ' + (usingPoly + increase) + '\n';
                     }
                 }
                 lastTouchedButton = e.target;
@@ -1214,6 +1240,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
             case 'set-loop':
                 submitTarget.dataset.loopStart = '/:' + dialogForm.elements['loop'].value;
+                break;
+            case 'set-using-poly':
+                submitTarget.dataset.usingPoly = '#USING POLY ' + dialogForm.elements['using-poly'].value + '\n';
                 break;
             case 'set-other-action':
                 submitTarget.dataset.otherAction = dialogForm.elements['other-action'].value;
