@@ -285,6 +285,18 @@ header {
     }
 }
 
+@keyframes pop {
+    0% {
+        transform: scale(1);
+    }
+    40% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
 .wrap {
     overflow: clip;
     height: contentAreaHeight(vh);
@@ -320,6 +332,7 @@ header {
                 position: relative;
                 padding: 0;
                 width: 45px;
+                transition: .5s;
                 aspect-ratio: 1;
 
                 &:not(.material-icons) {
@@ -370,8 +383,16 @@ header {
                     transform: translateY(2px);
                 }
 
-                &.motion {
+                &.bounce {
                     animation: .8s bounce ease-in-out;
+                }
+
+                &.pop {
+                    animation: .4s pop ease-in-out;
+                }
+
+                &.done {
+                    opacity: .6;
                 }
             }
         }

@@ -15,6 +15,15 @@ const htmlspecialchars = unsafeText => {
         }[match]
         }
     );
-}
+};
 
-export {htmlspecialchars}
+const resetAnimation = (elem, token) => {
+    elem.classList.remove(token);
+    window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+            elem.classList.add(token);
+        });
+    });
+};
+
+export {htmlspecialchars, resetAnimation}

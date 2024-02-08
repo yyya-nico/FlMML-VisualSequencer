@@ -2,7 +2,7 @@ import './style.scss'
 import FlMMLWorkerLocation from './flmml-on-html5.worker.js?url'
 
 import {FlMML} from "flmml-on-html5";
-import {htmlspecialchars} from './utils';
+import {htmlspecialchars, resetAnimation} from './utils';
 
 const version = import.meta.env.VITE_APP_VER;
 
@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     class Block {
         #blocksData = [];
-        #rendInterval = null;
+        #rendTimeout = null;
 
         constructor(areaElem) {
             this.areaElem = areaElem;
@@ -164,25 +164,43 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         playRendering() {
-            const itemParents = [...musicalScore.querySelector('ul').children].filter(elem => 'tonePitch' in elem.firstElementChild.dataset || 'rest' in elem.firstElementChild.dataset);
-            let tempo = Number(musicalScore.querySelector('.tempo')?.dataset.tempo.replace('t', '')) || 120;
-            let noteValue = 4;
+            const data = this.#blocksData;
+            let tempo = 120;
+            let scoreNoteValue = 4;
             let i = 0;
             const attachMotion = () => {
-                if (i === itemParents.length) {
-                    clearInterval(this.#rendInterval);
+                const current = data[i];
+                if (!current || i >= current.length) {
                     return;
+                } else if (current.tone.tonePitch) {
+                    const currentNoteValue = Number(current.tone.tonePitch.replace(/[a-g]\+?/, '')) || scoreNoteValue;
+                    resetAnimation(current.elem, 'bounce');
+                    i++;
+                    this.#rendTimeout = setTimeout(attachMotion,
+                        60 / tempo * currentNoteValue / 4 * 1000);
+                } else if (current.rest) {
+                    const currentNoteValue = Number(current.rest.replace('r', '')) || scoreNoteValue;
+                    resetAnimation(current.elem, 'pop');
+                    i++;
+                    this.#rendTimeout = setTimeout(attachMotion,
+                        60 / tempo * currentNoteValue / 4 * 1000);
+                } else {
+                    current.tempo && (tempo = Number(current.tempo.replace('t', '')) || tempo);
+                    current.noteValue && (scoreNoteValue = Number(current.noteValue.replace('l', '')) || scoreNoteValue);
+                    resetAnimation(current.elem, 'pop');
+                    i++;
+                    attachMotion();
                 }
-                itemParents[i].firstElementChild.classList.add('motion');
-                i++;
+                current.elem.classList.add('done');
             }
             attachMotion();
-            this.#rendInterval = setInterval(attachMotion,
-                60 / tempo * noteValue / 4 * 1000);
         }
 
         stopRendering() {
-            clearInterval(this.#rendInterval);
+            this.#blocksData.forEach(block => {
+                block.elem.classList.remove('done');
+            });
+            clearTimeout(this.#rendTimeout);
         }
     }
 
@@ -247,6 +265,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     {
                         class: 'primaly',
                         value: 'set-tone',
+                        textContent: '確定'
+                    }
+                ]
+            },
+            tonePitch: {
+                title: '音価設定',
+                inputs: [
+                    {
+                        label: '音価(音の長さ)',
+                        type: 'number',
+                        name: 'tone-pitch'
+                    }
+                ],
+                buttons: [
+                    {
+                        class: 'primaly',
+                        value: 'set-tone-pitch',
                         textContent: '確定'
                     }
                 ]
@@ -501,6 +536,7 @@ document.addEventListener('DOMContentLoaded', () => {
     flmml.addEventListener('compilecomplete', compileHandler);
     const completeHandler = () => {
         playBtn.innerHTML = playHtml;
+        block.stopRendering();
         flmml.removeEventListener('compilecomplete', playAnimationStart);
     };
     flmml.addEventListener('complete', completeHandler);
@@ -641,47 +677,60 @@ document.addEventListener('DOMContentLoaded', () => {
             }, item);
         }
     };
-    let lastAddedButton = tones.querySelector('button');
+    let lastTouchedButton = tones.querySelector('button');
     editor.addEventListener('click', async e => {
         const is = id => Boolean(e.target.closest('#' + id));
         const isButton =  e.target.tagName.toLowerCase() === 'button';
         if (is('tones')) {
             if (isButton) {
-                dialogFormManager.prompt('tone', {
+                await dialogFormManager.prompt('tone', {
                     'tone-name': e.target.ariaLabel,
                     'tone-def': e.target.dataset.tone
                 }, e.target);
+                lastTouchedButton = e.target;
+                flmml.play(e.target.dataset.tone + e.target.dataset.tonePitch);
             } else {
                 const ul = tones.querySelector('ul');
                 const li = document.createElement('li');
                 const nonExistClassName = getNonExistNoteClassName();
                 const toneButton = `<button class="material-icons plain ${nonExistClassName}" aria-label="無調整" draggable="true" data-tone="" data-tone-pitch="c">music_note</button>`;
                 li.innerHTML = toneButton;
+                const newItem = li.firstElementChild;
                 await dialogFormManager.prompt('tone', {
-                    'tone-name': li.firstElementChild.ariaLabel,
-                    'tone-def': li.firstElementChild.dataset.tone
-                }, li.firstElementChild);
+                    'tone-name': newItem.ariaLabel,
+                    'tone-def': newItem.dataset.tone
+                }, newItem);
                 ul.appendChild(li);
-                lastAddedButton = li.firstElementChild;
+                lastTouchedButton = newItem;
+                flmml.play(newItem.dataset.tone + newItem.dataset.tonePitch);
             }
         } else if (is('action')) {
         } else if (is('musical-score')) {
             if (isButton) {
                 if ('tone' in e.target.dataset) {
                     flmml.play(e.target.dataset.tone + e.target.dataset.tonePitch);
+                    resetAnimation(e.target, 'bounce');
+                    e.ctrlKey && await dialogFormManager.prompt('tonePitch', {
+                        'tone-pitch': e.target.dataset.tonePitch.replace(/[a-f]\+?/, '')
+                    }, e.target);
+                    lastTouchedButton = e.target;
+                    block.blocksDataUpdate();
+                    block.exportMml(mml);
+                    flmml.play(e.target.dataset.tone + e.target.dataset.tonePitch);
                 }
             } else {
-                if (lastAddedButton) {
+                if (lastTouchedButton) {
                     const ul = musicalScore.querySelector('ul');
                     const li = document.createElement('li');
-                    const newItem = lastAddedButton.cloneNode(true);
+                    const newItem = lastTouchedButton.cloneNode(true);
                     li.appendChild(newItem);
                     ul.appendChild(li);
-                    lastAddedButton = newItem;
+                    lastTouchedButton = newItem;
                     block.blocksDataUpdate();
                     block.exportMml(mml);
                     if ('tonePitch' in newItem.dataset) {
                         flmml.play(newItem.dataset.tone + newItem.dataset.tonePitch);
+                        newItem.classList.add('bounce');
                     }
                 }
             }
@@ -694,7 +743,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const newItem = e.target.cloneNode(true);
                 li.appendChild(newItem);
                 ul.appendChild(li);
-                lastAddedButton = newItem;
+                lastTouchedButton = newItem;
             }
             block.blocksDataUpdate();
             block.exportMml(mml);
@@ -727,37 +776,39 @@ document.addEventListener('DOMContentLoaded', () => {
             const pitches = ['c','c+','d','d+','e','f','f+','g','g+','a','a+','b'];
             const octave = ['>', '<'];
             const currentPitch = e.target.dataset.tonePitch;
-            const currentPitchIndex = pitches.findIndex(pitch => currentPitch.replaceAll(octave[0], '').replaceAll(octave[1], '') === pitch);
+            const currentPitchIndex = pitches.findIndex(pitch => currentPitch.replace(/[><0-9]+/g, '') === pitch);
             const countStr = str => (currentPitch.match(new RegExp(str, 'g')) || []).length;
             const octaveCount = [
                 countStr(octave[0]),
                 countStr(octave[1])
             ]
             const octaveStr = octave[0].repeat(octaveCount[0]) + octave[1].repeat(octaveCount[1]);
+            const noteValue = (currentPitch.match(/[0-9]+/) || [''])[0];
             if (e.deltaY < 0) { // Up
                 if (currentPitchIndex === pitches.length - 1) {
                     if (octaveCount[0]) {
-                        e.target.dataset.tonePitch = octaveStr.substring(1) + pitches.at(0);
+                        e.target.dataset.tonePitch = octaveStr.substring(1) + pitches.at(0) + noteValue;
                     } else {
-                        e.target.dataset.tonePitch = octaveStr + octave[1] + pitches.at(0);
+                        e.target.dataset.tonePitch = octaveStr + octave[1] + pitches.at(0) + noteValue;
                     }
                 } else {
-                    e.target.dataset.tonePitch = octaveStr + pitches[currentPitchIndex + 1];
+                    e.target.dataset.tonePitch = octaveStr + pitches[currentPitchIndex + 1] + noteValue;
                 }
             } else if (e.deltaY > 0) { // Down
                 if (currentPitchIndex === 0) {
                     if (octaveCount[1]) {
-                        e.target.dataset.tonePitch = octaveStr.substring(1) + pitches.at(-1);
+                        e.target.dataset.tonePitch = octaveStr.substring(1) + pitches.at(-1) + noteValue;
                     } else {
-                        e.target.dataset.tonePitch = octaveStr + octave[0] + pitches.at(-1);
+                        e.target.dataset.tonePitch = octaveStr + octave[0] + pitches.at(-1) + noteValue;
                     }
                 } else {
-                    e.target.dataset.tonePitch = octaveStr + pitches[currentPitchIndex - 1];
+                    e.target.dataset.tonePitch = octaveStr + pitches[currentPitchIndex - 1] + noteValue;
                 }
             }
-            flmml.play(e.target.dataset.tone + e.target.dataset.tonePitch);
+            lastTouchedButton = e.target;
             block.blocksDataUpdate();
             block.exportMml(mml);
+            flmml.play(e.target.dataset.tone + e.target.dataset.tonePitch);
         }
     });
 
@@ -958,12 +1009,13 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 ul.appendChild(newNode);
             }
-            lastAddedButton = newNode.firstElementChild;
+            lastTouchedButton = newNode.firstElementChild;
             if (target === musicalScore) {
                 block.blocksDataUpdate();
                 block.exportMml(mml);
-                if ('tonePitch' in item.dataset) {
-                    flmml.play(item.dataset.tone + item.dataset.tonePitch);
+                if ('tonePitch' in lastTouchedButton.dataset) {
+                    flmml.play(lastTouchedButton.dataset.tone + lastTouchedButton.dataset.tonePitch);
+                    lastTouchedButton.classList.add('bounce');
                 }
             }
         });
@@ -976,7 +1028,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     editor.addEventListener('animationend', e => {
-        e.target.classList.remove('motion');
+        e.target.classList.remove('bounce');
+        e.target.classList.remove('pop');
     });
 
     //---------------
@@ -1052,7 +1105,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     elem.ariaLabel = dialogForm.elements['tone-name'].value;
                     elem.dataset.tone = dialogForm.elements['tone-def'].value;
                 });
-                flmml.play(submitTarget.dataset.tone + submitTarget.dataset.tonePitch);
+                break;
+            case 'set-tone-pitch':
+                submitTarget.dataset.tonePitch = submitTarget.dataset.tonePitch.replace(/[0-9]+/, '') + dialogForm.elements['tone-pitch'].value;
                 break;
             case 'set-tempo':
                 submitTarget.dataset.tempo = 't' + dialogForm.elements['tempo'].value;
@@ -1093,8 +1148,8 @@ document.addEventListener('DOMContentLoaded', () => {
             flmml.addEventListener('compilecomplete', playAnimationStart);
         } else {
             flmml.stop();
-            flmml.removeEventListener('compilecomplete', playAnimationStart);
             block.stopRendering();
+            flmml.removeEventListener('compilecomplete', playAnimationStart);
         }
         playBtn.innerHTML = !isPlaying ? stopHtml : playHtml;
     });
