@@ -1,2 +1,2 @@
-# FlMML-Sequencer
+# FlMML-VisualSequencer
 FlMMLをビジュアルで構築。
