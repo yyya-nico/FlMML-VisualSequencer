@@ -202,6 +202,20 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             clearTimeout(this.#rendTimeout);
         }
+
+        calcPoly() {
+            const polyBlocksData = this.#blocksData.filter(block => block.polyStartEnd);
+            polyBlocksData.forEach((block, i) => {
+                if (i % 2 === 0) {
+                    block.elem.dataset.polyStartEnd = '[';
+                    block.elem.textContent = '[';
+                } else {
+                    block.elem.dataset.polyStartEnd = ']';
+                    block.elem.textContent = ']';
+                }
+            });
+            this.blocksDataUpdate();
+        }
     }
 
     class History {
@@ -712,6 +726,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 ul.appendChild(li);
                 lastTouchedButton = newItem;
                 block.blocksDataUpdate();
+                block.calcPoly();
                 block.exportMml(mml);
             }
         } else if (is('musical-score')) {
@@ -738,6 +753,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     ul.appendChild(li);
                     lastTouchedButton = newItem;
                     block.blocksDataUpdate();
+                    block.calcPoly();
                     block.exportMml(mml);
                     if ('tonePitch' in newItem.dataset) {
                         flmml.play(newItem.dataset.tone + newItem.dataset.tonePitch);
@@ -762,6 +778,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
             block.blocksDataUpdate();
+            block.calcPoly();
             block.exportMml(mml);
         }
     });
@@ -1076,6 +1093,7 @@ document.addEventListener('DOMContentLoaded', () => {
             lastTouchedButton = newNode.firstElementChild;
             if (target === musicalScore) {
                 block.blocksDataUpdate();
+                block.calcPoly();
                 block.exportMml(mml);
                 if ('tonePitch' in lastTouchedButton.dataset) {
                     flmml.play(lastTouchedButton.dataset.tone + lastTouchedButton.dataset.tonePitch);
