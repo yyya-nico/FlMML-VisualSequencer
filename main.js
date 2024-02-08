@@ -168,6 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = this.#blocksData;
             let tempo = 120;
             let scoreNoteValue = 4;
+            let skip = false;
             let i = 0;
             const attachMotion = () => {
                 const current = data[i];
@@ -177,17 +178,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     const currentNoteValue = Number(current.tone.tonePitch.replace(/[a-g]\+?/, '')) || scoreNoteValue;
                     resetAnimation(current.elem, 'bounce');
                     i++;
-                    this.#rendTimeout = setTimeout(attachMotion,
-                        60 / tempo * currentNoteValue / 4 * 1000);
+                    const nextSiblingIsPolyEnd = current.elem.parentElement.nextSibling?.firstElementChild.dataset.polyStartEnd === ']';
+                    if (!skip || nextSiblingIsPolyEnd) {
+                        this.#rendTimeout = setTimeout(attachMotion,
+                            60 / tempo * 4 / currentNoteValue * 1000);
+                    } else {
+                        attachMotion();
+                    }
                 } else if (current.rest) {
                     const currentNoteValue = Number(current.rest.replace('r', '')) || scoreNoteValue;
                     resetAnimation(current.elem, 'pop');
                     i++;
                     this.#rendTimeout = setTimeout(attachMotion,
-                        60 / tempo * currentNoteValue / 4 * 1000);
+                        60 / tempo * 4 / currentNoteValue * 1000);
                 } else {
                     current.tempo && (tempo = Number(current.tempo.replace('t', '')) || tempo);
                     current.noteValue && (scoreNoteValue = Number(current.noteValue.replace('l', '')) || scoreNoteValue);
+                    current.polyStartEnd && (skip = current.polyStartEnd === '[');
                     resetAnimation(current.elem, 'pop');
                     i++;
                     attachMotion();
@@ -680,7 +687,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }, item);
         } else if ('loopEnd' in item.dataset) {
             const findLoopStartElem = () => {
-                let findTemp = musicalScore.querySelector('li:last-child');
+                let findTemp = item.parentElement;
                 while (findTemp && !('loopStart' in findTemp.firstElementChild.dataset)) {
                     findTemp = findTemp.previousElementSibling;
                 };
