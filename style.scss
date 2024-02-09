@@ -188,21 +188,21 @@ button {
     }
 
     &.primaly {
-        color: #333333;
-        background-color: #e4a13d;
+        color: #202020;
+        background-color: #bd842f;
 
         &:hover {
-            background-color: #ffc46b;
+            background-color: #e0aa58;
             color: #555555;
         }
     
         &:active {
-            background-color: #a56f1e;
+            background-color: #91611a;
             color: #111111;
         }
     
         &:disabled {
-            background-color: #816d4f;
+            background-color: #816d4e;
             color: #111111;
         }
     }
