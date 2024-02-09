@@ -784,7 +784,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }, loopStartElem);
         } else if ('usingPoly' in item.dataset) {
             await dialogFormManager.prompt('usingPoly', {
-                'using-poly': item.dataset.usingPoly.replace('#USING POLY ', '').replace('\n', '')
+                'using-poly': item.dataset.usingPoly.replace('#USING POLY ', '').replace(' force\n', '')
             }, item);
         } else if ('otherAction' in item.dataset) {
             await dialogFormManager.prompt('otherAction', {
@@ -1015,7 +1015,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else if ('usingPoly' in target.dataset) {
                         const usingPoly = Number(target.dataset.usingPoly.replace('#USING POLY ', '').replace('\n', ''));
                         const increase = neverMinus(usingPoly);
-                        target.dataset.usingPoly = '#USING POLY ' + (usingPoly + increase) + '\n';
+                        target.dataset.usingPoly = '#USING POLY ' + (usingPoly + increase) + ' force\n';
                     }
                 }
             }
@@ -1353,7 +1353,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 submitTarget.dataset.loopStart = '/:' + dialogForm.elements['loop'].value;
                 break;
             case 'set-using-poly':
-                submitTarget.dataset.usingPoly = '#USING POLY ' + dialogForm.elements['using-poly'].value + '\n';
+                submitTarget.dataset.usingPoly = '#USING POLY ' + dialogForm.elements['using-poly'].value + ' force\n';
                 break;
             case 'set-other-action':
                 submitTarget.dataset.otherAction = dialogForm.elements['other-action'].value;
