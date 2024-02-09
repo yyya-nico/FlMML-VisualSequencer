@@ -787,8 +787,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     'run': () => {
                         const toneName = dialogForm.elements['tone-name'];
                         toneName.insertAdjacentElement('afterend', picker);
-                        document.querySelector('emoji-picker')
-                            .addEventListener('emoji-click', e => toneName.value = e.detail.unicode);
+                        const pickerElem = document.querySelector('emoji-picker');
+                        toneName.addEventListener('focus', () => {
+                            pickerElem.classList.add('expaned');
+                        }, {once: true});
+                        pickerElem.addEventListener('emoji-click', e => toneName.value = e.detail.unicode);
                     }
                 }, e.target);
                 flmml.play(e.target.dataset.tone + e.target.dataset.tonePitch);

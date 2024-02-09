@@ -498,7 +498,7 @@ header {
                             transition: .5s;
                             --h-ref: 360px;
 
-                            &:focus {
+                            &.expaned {
                                 height: var(--h-ref);
                                 visibility: visible;
                                 opacity: 1;
@@ -507,12 +507,6 @@ header {
 
                         input {
                             width: 50%;
-
-                            &:focus + emoji-picker {
-                                height: var(--h-ref);
-                                visibility: visible;
-                                opacity: 1;
-                            }
                         }
                     }
                 }
