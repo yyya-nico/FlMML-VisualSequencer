@@ -308,7 +308,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         label: '音価(音の長さ)',
                         type: 'number',
                         name: 'tone-pitch',
-                        min: '0'
+                        min: '1',
+                        max: '384'
                     }
                 ],
                 buttons: [
@@ -344,7 +345,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         label: '音価(音の長さ)',
                         type: 'number',
                         name: 'note-value',
-                        min: '0'
+                        min: '1',
+                        max: '384'
                     }
                 ],
                 buttons: [
@@ -362,7 +364,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         label: '休符の長さ',
                         type: 'number',
                         name: 'rest',
-                        min: '0'
+                        min: '1',
+                        max: '384'
                     }
                 ],
                 buttons: [
@@ -380,7 +383,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         label: 'オクターブ位置',
                         type: 'number',
                         name: 'octave',
-                        min: '0'
+                        min: '0',
+                        max: '8'
                     }
                 ],
                 buttons: [
