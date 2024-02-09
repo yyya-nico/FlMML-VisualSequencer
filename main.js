@@ -570,7 +570,43 @@ document.addEventListener('DOMContentLoaded', () => {
     const block = new Block(musicalScore);
     const history = new History();
     const dialogFormManager = new DialogFormManager();
+    const ja = {
+        "categories": {
+            "custom": "カスタム",
+            "smileys-emotion": "スマイリーと感情",
+            "people-body": "人々と体",
+            "animals-nature": "動物と自然",
+            "food-drink": "食べ物と飲み物",
+            "travel-places": "旅行と場所",
+            "activities": "活動",
+            "objects": "オブジェクト",
+            "symbols": "シンボル",
+            "flags": "フラグ"
+        },
+        "categoriesLabel": "カテゴリー",
+        "emojiUnsupportedMessage": "お使いのブラウザはカラー絵文字に対応していません。",
+        "favoritesLabel": "お気に入り",
+        "loadingMessage": "読み込み中…",
+        "networkErrorMessage": "絵文字を読み込めませんでした。",
+        "regionLabel": "絵文字ピッカー",
+        "searchDescription": "検索結果が利用可能な場合、上下キーを押して選択し、Enter キーを押して選択します。",
+        "searchLabel": "検索",
+        "searchResultsLabel": "検索結果",
+        "skinToneDescription": "展開された状態で、上下キーを押して選択し、Enter キーを押して選択します。",
+        "skinToneLabel": "スキントーンを選択してください（現在のスキントーンは {skinTone} です）",
+        "skinTones": [
+            "デフォルト",
+            "ライト",
+            "ミディアムライト",
+            "ミディアム",
+            "ミディアムダーク",
+            "ダーク"
+        ],
+        "skinTonesLabel": "スキントーン"
+    }
+      
     const picker = new Picker({
+        i18n: ja,
         locale: 'ja'
     });
 
@@ -750,7 +786,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     'tone-def': e.target.dataset.tone,
                     'run': () => {
                         const toneName = dialogForm.elements['tone-name'];
-                        toneName.insertAdjacentElement('afterend', document.createElement('emoji-picker'));
+                        toneName.insertAdjacentElement('afterend', picker);
                         document.querySelector('emoji-picker')
                             .addEventListener('emoji-click', e => toneName.value = e.detail.unicode);
                     }
