@@ -1,7 +1,8 @@
 import './style.scss'
 import FlMMLWorkerLocation from './flmml-on-html5.worker.js?url'
 
-import {FlMML} from "flmml-on-html5";
+import {FlMML} from 'flmml-on-html5';
+import localForage from 'localforage';
 import {Picker} from 'emoji-picker-element';
 import {htmlspecialchars, resetAnimation} from './utils';
 
@@ -130,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
         blocksDataUpdate() {
             this.#blocksData = [...this.areaElem.getElementsByTagName('button')].map(elem => ({
                 label: elem.ariaLabel,
-                noteClassName: [...elem.classList].find(name => name.includes('note-')),
+                className: elem.className,
                 tone: {
                     tone: elem.dataset.tone,
                     tonePitch: elem.dataset.tonePitch
@@ -150,6 +151,65 @@ document.addEventListener('DOMContentLoaded', () => {
                 otherAction: elem.dataset.otherAction,
                 elem: elem
             }));
+        }
+
+        saveBlocksData() {
+            const modifiedData = this.#blocksData.map(block => delete block.elem && block);
+            localForage.setItem('BlocksData', modifiedData).catch(err => {
+                alert('セーブができませんでした。' + err);
+            });
+        }
+
+        checkSavedBlocksData() {
+            localForage.getItem('BlocksData').then(data => {
+                if (data) {
+                    this.#blocksData = data;
+                    this.parseBlocks();
+                    this.blocksDataUpdate();
+                    this.exportMml(mml);
+                }
+            });
+        }
+
+        parseBlocks() {
+            const data = this.#blocksData;
+            const ul = this.areaElem.querySelector('ul');
+            let noteCount = 1;
+            data.forEach(block => {
+                const li = document.createElement('li');
+                const toneButtonHTML = `<button class="material-icons plain note-${noteCount}" aria-label="無調整" draggable="true" data-tone="" data-tone-pitch="c">music_note</button>`;
+                const toneButton = (() => {
+                    const wrap = document.createElement('div');
+                    wrap.innerHTML = toneButtonHTML;
+                    return wrap.firstElementChild;
+                })();
+                const button = document.querySelector(`[class*="${block.className.replace(/ bounce| pop| done/g, '')}"]`)?.cloneNode(true) || toneButton;
+                block.label && (button.ariaLabel = block.label);
+                if (block.tone.tonePitch) {
+                    if (block.label !== '無調整') {
+                        button.classList.remove('material-icons');
+                        button.textContent = block.label;
+                    }
+                    noteCount++;
+                }
+                block.tone.tone && (button.dataset.tone = block.tone.tone);
+                block.tone.tonePitch && (button.dataset.tonePitch = block.tone.tonePitch);
+                block.tempo && (button.dataset.tempo = block.tempo);
+                block.noteValue && (button.dataset.noteValue = block.noteValue);
+                block.rest && (button.dataset.rest = block.rest);
+                block.octave && (button.dataset.octave = block.octave);
+                block.velocity && (button.dataset.velocity = block.velocity);
+                block.noteShift && (button.dataset.noteShift = block.noteShift);
+                block.detune && (button.dataset.detune = block.detune);
+                block.loopStart && (button.dataset.loopStart = block.loopStart);
+                block.loopBreak && (button.dataset.loopBreak = block.loopBreak);
+                block.loopEnd && (button.dataset.loopEnd = block.loopEnd);
+                block.usingPoly && (button.dataset.usingPoly = block.usingPoly);
+                block.polyStartEnd && (button.dataset.polyStartEnd = block.polyStartEnd);
+                block.otherAction && (button.dataset.otherAction = block.otherAction);
+                li.appendChild(button);
+                ul.appendChild(li);
+            });
         }
         
         exportMml(mml) {
@@ -609,6 +669,12 @@ document.addEventListener('DOMContentLoaded', () => {
     FlMML.prepare(`.editor`);
     const flmml = new FlMML({workerURL: FlMMLWorkerLocation});
     const mml = new Mml();
+    localForage.config({
+        name        : 'FlMML-VisualSequencer',
+        version     : 1.0,
+        storeName   : 'backups',
+        description : 'BlockData Object Backups'
+    });
     const block = new Block(musicalScore);
     const history = new History();
     const dialogFormManager = new DialogFormManager();
@@ -681,18 +747,13 @@ document.addEventListener('DOMContentLoaded', () => {
             mmlForm.rw.index.max = arr.length - 1;
             mmlForm.del.index.value > mmlForm.del.index.max && (mmlForm.del.index.value = mmlForm.del.index.max);
             mmlForm.rw.index.value > mmlForm.rw.index.max && (mmlForm.rw.index.value = mmlForm.rw.index.max);
-            localStorage.setItem('mmlArray', JSON.stringify(arr));
-        } else {
-            localStorage.removeItem('mmlArray');
         }
     };
     mml.onError = (error, reason) => {
         alert(error + '\n' + reason);
     };
-    const savedMmlArr = JSON.parse(localStorage.getItem('mmlArray'));
-    if (savedMmlArr) {
-        mml.setMmlArr(savedMmlArr);
-    }
+
+    block.checkSavedBlocksData();
 
     history.onPopstate = obj => {
         const data = obj.data;
@@ -863,6 +924,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 lastTouchedButton = newItem;
                 block.blocksDataUpdate();
                 block.calcPoly();
+                block.saveBlocksData();
                 block.exportMml(mml);
             }
         } else if (is('musical-score')) {
@@ -879,6 +941,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 lastTouchedButton = e.target;
                 block.blocksDataUpdate();
+                block.saveBlocksData();
                 block.exportMml(mml);
             } else {
                 if (lastTouchedButton) {
@@ -890,6 +953,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     lastTouchedButton = newItem;
                     block.blocksDataUpdate();
                     block.calcPoly();
+                    block.saveBlocksData();
                     block.exportMml(mml);
                     if ('tonePitch' in newItem.dataset) {
                         flmml.play(newItem.dataset.tone + newItem.dataset.tonePitch);
@@ -925,6 +989,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             block.blocksDataUpdate();
             block.calcPoly();
+            block.saveBlocksData();
             block.exportMml(mml);
         }
     });
@@ -1045,6 +1110,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             lastTouchedButton = target;
             block.blocksDataUpdate();
+            block.saveBlocksData();
             block.exportMml(mml);
         }
     });
@@ -1250,6 +1316,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (target === musicalScore) {
                 block.blocksDataUpdate();
                 block.calcPoly();
+                block.saveBlocksData();
                 block.exportMml(mml);
                 if ('tonePitch' in lastTouchedButton.dataset) {
                     flmml.play(lastTouchedButton.dataset.tone + lastTouchedButton.dataset.tonePitch);
