@@ -177,11 +177,15 @@ document.addEventListener('DOMContentLoaded', () => {
             let skip = false;
             let loopStart = -1, loopEnd = -1, remainingLoop = 0;
             let i = 0;
-            musicalScore.classList.add('no-op');
+            [tones, action, musicalScore].forEach(target => {
+                target.classList.add('no-op');
+            });
             const attachMotion = () => {
                 const current = data[i];
                 if (!current || i >= current.length) {
-                    musicalScore.classList.remove('no-op');
+                    [tones, action, musicalScore].forEach(target => {
+                        target.classList.remove('no-op');
+                    });
                     return;
                 } else if (current.tone.tonePitch) {
                     const currentNoteValue = Number(current.tone.tonePitch.replace(/[a-g]\+?/, '')) || scoreNoteValue;
@@ -231,7 +235,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         stopRendering() {
-            musicalScore.classList.remove('no-op');
+            [tones, action, musicalScore].forEach(target => {
+                target.classList.remove('no-op');
+            });
             this.#blocksData.forEach(block => {
                 block.elem.classList.remove('done');
             });
@@ -814,7 +820,9 @@ document.addEventListener('DOMContentLoaded', () => {
     editor.addEventListener('click', async e => {
         const is = id => Boolean(e.target.closest('#' + id));
         const isButton =  e.target.tagName.toLowerCase() === 'button';
-        if (is('tones')) {
+        if ([tones, action, musicalScore].some(target => target.classList.contains('no-op'))) {
+            return;
+        } else if (is('tones')) {
             if (isButton) {
                 lastTouchedButton = e.target;
                 await dialogFormManager.prompt('tone', {
@@ -858,9 +866,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 block.exportMml(mml);
             }
         } else if (is('musical-score')) {
-            if (musicalScore.classList.contains('no-op')) {
-                return;
-            } else if (isButton) {
+            if (isButton) {
                 if ('tone' in e.target.dataset) {
                     flmml.play(e.target.dataset.tone + e.target.dataset.tonePitch);
                     resetAnimation(e.target, 'bounce');
