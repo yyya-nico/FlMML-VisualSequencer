@@ -154,7 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         saveBlocksData() {
-            const modifiedData = this.#blocksData.map(block => delete block.elem && block);
+            const modifiedData = JSON.parse(JSON.stringify(this.#blocksData));
             localForage.setItem('BlocksData', modifiedData).catch(err => {
                 alert('セーブができませんでした。' + err);
             });
@@ -299,6 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 target.classList.remove('no-op');
             });
             this.#blocksData.forEach(block => {
+                console.log(block);
                 block.elem.classList.remove('done');
             });
             clearTimeout(this.#rendTimeout);
