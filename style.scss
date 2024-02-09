@@ -335,7 +335,6 @@ header {
                 position: relative;
                 padding: 0;
                 width: 45px;
-                transition: .5s;
                 aspect-ratio: 1;
 
                 &:not(.material-icons) {
@@ -396,6 +395,7 @@ header {
 
                 &.done {
                     opacity: .6;
+                    transition: .5s;
                 }
             }
         }

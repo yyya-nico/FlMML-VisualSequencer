@@ -175,6 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let tempo = 120;
             let scoreNoteValue = 4;
             let skip = false;
+            let loopStart = -1, loopEnd = -1, remainingLoop = 0;
             let i = 0;
             musicalScore.classList.add('no-op');
             const attachMotion = () => {
@@ -204,10 +205,27 @@ document.addEventListener('DOMContentLoaded', () => {
                     current.noteValue && (scoreNoteValue = Number(current.noteValue.replace('l', '')) || scoreNoteValue);
                     current.polyStartEnd && (skip = current.polyStartEnd === '[');
                     resetAnimation(current.elem, 'pop');
-                    i++;
+                    if (current.loopStart) {
+                        loopStart = i;
+                        !remainingLoop && loopStart > loopEnd && (remainingLoop = Number(current.loopStart.replace('/:', '')) || 1);
+                        i++;
+                    } else if (current.loopBreak) {
+                        !remainingLoop && (i = loopEnd);
+                    } else if (current.loopEnd) {
+                        loopEnd = i;
+                        if (remainingLoop) {
+                            i = loopStart;
+                            remainingLoop--;
+                        } else {
+                            i++;
+                        }
+                    } else {
+                        i++;
+                    }
+                    console.log(remainingLoop);
                     attachMotion();
                 }
-                current.elem.classList.add('done');
+                resetAnimation(current.elem, 'done');
             }
             attachMotion();
         }
