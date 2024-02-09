@@ -276,6 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         i++;
                     } else if (current.loopBreak) {
                         !remainingLoop && (i = loopEnd);
+                        i++;
                     } else if (current.loopEnd) {
                         loopEnd = i;
                         remainingLoop--;
