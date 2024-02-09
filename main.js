@@ -307,7 +307,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     {
                         label: '音価(音の長さ)',
                         type: 'number',
-                        name: 'tone-pitch'
+                        name: 'tone-pitch',
+                        min: '0'
                     }
                 ],
                 buttons: [
@@ -324,7 +325,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     {
                         label: 'テンポ指定(BPM)',
                         type: 'number',
-                        name: 'tempo'
+                        name: 'tempo',
+                        min: '0'
                     }
                 ],
                 buttons: [
@@ -341,7 +343,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     {
                         label: '音価(音の長さ)',
                         type: 'number',
-                        name: 'note-value'
+                        name: 'note-value',
+                        min: '0'
                     }
                 ],
                 buttons: [
@@ -358,7 +361,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     {
                         label: '休符の長さ',
                         type: 'number',
-                        name: 'rest'
+                        name: 'rest',
+                        min: '0'
                     }
                 ],
                 buttons: [
@@ -375,7 +379,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     {
                         label: 'オクターブ位置',
                         type: 'number',
-                        name: 'octave'
+                        name: 'octave',
+                        min: '0'
                     }
                 ],
                 buttons: [
@@ -392,7 +397,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     {
                         label: '音量',
                         type: 'number',
-                        name: 'velocity'
+                        name: 'velocity',
+                        min: '0',
+                        max: '127'
                     }
                 ],
                 buttons: [
@@ -443,7 +450,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     {
                         label: 'ループ回数',
                         type: 'number',
-                        name: 'loop'
+                        name: 'loop',
+                        min: '0'
                     }
                 ],
                 buttons: [
@@ -460,7 +468,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     {
                         label: '和音重ね数',
                         type: 'number',
-                        name: 'using-poly'
+                        name: 'using-poly',
+                        min: '1'
                     }
                 ],
                 buttons: [
