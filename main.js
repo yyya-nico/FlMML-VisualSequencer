@@ -954,39 +954,39 @@ document.addEventListener('DOMContentLoaded', () => {
                     flmml.play(target.dataset.tone + target.dataset.tonePitch);
                 } else {
                     const increaseBase = isPositive ? 1 : -1;
-                    const neverMinus = current => current + increaseBase < 0 ? 0 : increaseBase;
+                    const minmax = (current, min = -Infinity, max = Infinity) => current + increaseBase < min ? 0 : current + increaseBase > max ? 0 : increaseBase;
                     if (e.ctrlKey && 'tonePitch' in target.dataset) {
                         const noteValue = Number(target.dataset.tonePitch.replace(/[a-f]\+?/, ''));
-                        const increase = neverMinus(noteValue);
+                        const increase = minmax(noteValue, 1, 384);
                         target.dataset.tonePitch = target.dataset.tonePitch.replace(/[0-9]+/, '') + (noteValue + increase);
                         flmml.play(target.dataset.tone + target.dataset.tonePitch);
                     } else if ('tempo' in target.dataset) {
                         const tempo = Number(target.dataset.tempo.replace('t', ''));
-                        const increase = neverMinus(tempo);
+                        const increase = minmax(tempo, 0);
                         target.dataset.tempo = 't' + (tempo + increase * 10);
                     } else if ('noteValue' in target.dataset) {
                         const noteValue = Number(target.dataset.noteValue.replace('l', ''));
-                        const increase = neverMinus(noteValue);
+                        const increase = minmax(noteValue, 1, 384);
                         target.dataset.noteValue = 'l' + (noteValue + increase);
                     } else if ('rest' in target.dataset) {
                         const rest = Number(target.dataset.rest.replace('r', ''));
-                        const increase = neverMinus(rest);
+                        const increase = minmax(rest, 1, 384);
                         target.dataset.rest = 'r' + (rest + increase);
                     } else if ('octave' in target.dataset) {
                         const octave = Number(target.dataset.octave.replace('o', ''));
-                        const increase = neverMinus(octave);
+                        const increase = minmax(octave, 0, 8);
                         target.dataset.octave = 'o' + (octave + increase);
                     } else if ('velocity' in target.dataset) {
                         const velocity = Number(target.dataset.velocity.replace('@v', ''));
-                        const increase = neverMinus(velocity);
+                        const increase = minmax(velocity, 0, 127);
                         target.dataset.velocity = '@v' + (velocity + increase);
                     } else if ('noteShift' in target.dataset) {
                         const noteShift = Number(target.dataset.noteShift.replace('@ns', ''));
-                        const increase = neverMinus(noteShift);
+                        const increase = increaseBase;
                         target.dataset.noteShift = '@ns' + (noteShift + increase);
                     } else if ('detune' in target.dataset) {
                         const detune = Number(target.dataset.detune.replace('@d', ''));
-                        const increase = neverMinus(detune);
+                        const increase = increaseBase;
                         target.dataset.detune = '@d' + (detune + increase);
                     } else if ('loopEnd' in target.dataset) {
                         const findLoopStartElem = () => {
@@ -1010,11 +1010,11 @@ document.addEventListener('DOMContentLoaded', () => {
                             loopStartElem = newItem;
                         }
                         const loop = Number(loopStartElem.dataset.loopStart.replace('/:', ''));
-                        const increase = neverMinus(loop);
+                        const increase = minmax(loop, 0);
                         loopStartElem.dataset.loopStart = '/:' + (loop + increase);
                     } else if ('usingPoly' in target.dataset) {
                         const usingPoly = Number(target.dataset.usingPoly.replace('#USING POLY ', '').replace(' force\n', ''));
-                        const increase = neverMinus(usingPoly);
+                        const increase = minmax(usingPoly);
                         target.dataset.usingPoly = '#USING POLY ' + (usingPoly + increase) + ' force\n';
                     }
                 }
