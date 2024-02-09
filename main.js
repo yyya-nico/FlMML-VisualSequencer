@@ -272,15 +272,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     resetAnimation(current.elem, 'pop');
                     if (current.loopStart) {
                         loopStart = i;
-                        !remainingLoop && loopStart > loopEnd && (remainingLoop = Number(current.loopStart.replace('/:', '')) || 1);
+                        !remainingLoop && loopStart > loopEnd && (remainingLoop = Number(current.loopStart.replace('/:', '')) || 2);
                         i++;
                     } else if (current.loopBreak) {
                         !remainingLoop && (i = loopEnd);
                     } else if (current.loopEnd) {
                         loopEnd = i;
+                        remainingLoop--;
                         if (remainingLoop) {
                             i = loopStart;
-                            remainingLoop--;
                         } else {
                             i++;
                         }
