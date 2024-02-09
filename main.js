@@ -2,6 +2,7 @@ import './style.scss'
 import FlMMLWorkerLocation from './flmml-on-html5.worker.js?url'
 
 import {FlMML} from "flmml-on-html5";
+import { Picker } from 'emoji-picker-element';
 import {htmlspecialchars, resetAnimation} from './utils';
 
 const version = import.meta.env.VITE_APP_VER;
@@ -283,7 +284,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     {
                         label: '音の定義',
                         type: 'text',
-                        name: 'tone-def'
+                        name: 'tone-def',
+                        autofocus: ''
                     },
                 ],
                 buttons: [
@@ -496,7 +498,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             Object.entries(inputDef).forEach(entry => {
                                 if (entry[0] === 'label') {
                                     const label = document.createElement('label');
-                                    label.textContent = entry[1];
+                                    label.innerHTML = entry[1];
                                     label.appendChild(input);
                                     appendElem = label;
                                 } else if (entry[0] === 'select') {
@@ -539,7 +541,11 @@ document.addEventListener('DOMContentLoaded', () => {
             dialogForm.buttons.textContent = '';
             this.#createElems(type);
             for (const [name, value] of Object.entries(initVals)) {
-                dialogForm.elements[name].value = value;
+                if (name === 'run') {
+                    value();
+                } else {
+                    dialogForm.elements[name].value = value;
+                }
             }
             this.type = type;
         }
@@ -564,6 +570,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const block = new Block(musicalScore);
     const history = new History();
     const dialogFormManager = new DialogFormManager();
+    const picker = new Picker({
+        locale: 'ja'
+    });
 
     const createMIsHtml = name => `<span class="material-icons">${name}</span>`;
     const playHtml = createMIsHtml('play_arrow') + '再生';
@@ -738,7 +747,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 lastTouchedButton = e.target;
                 await dialogFormManager.prompt('tone', {
                     'tone-name': e.target.ariaLabel,
-                    'tone-def': e.target.dataset.tone
+                    'tone-def': e.target.dataset.tone,
+                    'run': () => {
+                        const toneName = dialogForm.elements['tone-name'];
+                        toneName.insertAdjacentElement('afterend', document.createElement('emoji-picker'));
+                        document.querySelector('emoji-picker')
+                            .addEventListener('emoji-click', e => toneName.value = e.detail.unicode);
+                    }
                 }, e.target);
                 flmml.play(e.target.dataset.tone + e.target.dataset.tonePitch);
             } else {
@@ -1245,6 +1260,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const buttonClassName = submitTarget.className;
                 document.querySelectorAll(`[class="${buttonClassName}"]`).forEach(elem => {
                     elem.ariaLabel = dialogForm.elements['tone-name'].value;
+                    elem.classList.remove('material-icons');
+                    elem.textContent = dialogForm.elements['tone-name'].value;                    
                     elem.dataset.tone = dialogForm.elements['tone-def'].value;
                 });
                 break;
