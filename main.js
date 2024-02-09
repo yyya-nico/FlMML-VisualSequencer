@@ -1013,7 +1013,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const increase = neverMinus(loop);
                         loopStartElem.dataset.loopStart = '/:' + (loop + increase);
                     } else if ('usingPoly' in target.dataset) {
-                        const usingPoly = Number(target.dataset.usingPoly.replace('#USING POLY ', '').replace('\n', ''));
+                        const usingPoly = Number(target.dataset.usingPoly.replace('#USING POLY ', '').replace(' force\n', ''));
                         const increase = neverMinus(usingPoly);
                         target.dataset.usingPoly = '#USING POLY ' + (usingPoly + increase) + ' force\n';
                     }
