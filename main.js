@@ -1260,8 +1260,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const buttonClassName = submitTarget.className;
                 document.querySelectorAll(`[class="${buttonClassName}"]`).forEach(elem => {
                     elem.ariaLabel = dialogForm.elements['tone-name'].value;
-                    elem.classList.remove('material-icons');
-                    elem.textContent = dialogForm.elements['tone-name'].value;                    
+                    if (!elem.classList.contains('material-icons') || dialogForm.elements['tone-name'].value !== '無調整') {
+                        elem.classList.remove('material-icons');
+                        elem.textContent = dialogForm.elements['tone-name'].value;
+                    }
                     elem.dataset.tone = dialogForm.elements['tone-def'].value;
                 });
                 break;
