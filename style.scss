@@ -204,7 +204,22 @@ button {
         &:disabled {
             background-color: #816d4f;
             color: #111111;
-            cursor: not-allowed;
+        }
+    }
+
+    &.danger {
+        color: #ef5555;
+
+        &:hover {
+            color: #ff7676;
+        }
+    
+        &:active {
+            color: #942727;
+        }
+    
+        &:disabled {
+            color: #522121;
         }
     }
 }
