@@ -286,7 +286,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else {
                         i++;
                     }
-                    console.log(remainingLoop);
                     attachMotion();
                 }
                 resetAnimation(current.elem, 'done');
@@ -299,7 +298,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 target.classList.remove('no-op');
             });
             this.#blocksData.forEach(block => {
-                console.log(block);
                 block.elem.classList.remove('done');
             });
             clearTimeout(this.#rendTimeout);
