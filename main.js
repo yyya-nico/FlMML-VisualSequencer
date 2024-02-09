@@ -208,7 +208,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 block.loopEnd && (button.dataset.loopEnd = block.loopEnd);
                 block.usingPoly && (button.dataset.usingPoly = block.usingPoly);
                 block.polyStartEnd && (button.dataset.polyStartEnd = block.polyStartEnd);
-                block.otherAction && (button.dataset.otherAction = block.otherAction);
+                if (block.otherAction) {
+                    button.dataset.otherAction = block.otherAction;
+                    button.textContent = block.otherAction;
+                }
                 li.appendChild(button);
                 ul.appendChild(li);
             });
