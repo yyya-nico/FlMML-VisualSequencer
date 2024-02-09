@@ -321,12 +321,15 @@ header {
         }
 
         #tones, #action, #musical-score {
-            min-height: 120px;
             padding: 10px;
             background-color: #7f7f7f1f;
             border: 1px solid gray;
             border-radius: 6px;
             user-select: none;
+
+            &.no-op {
+                pointer-events: none;
+            }
 
             button {
                 position: relative;
@@ -395,6 +398,11 @@ header {
                     opacity: .6;
                 }
             }
+        }
+
+        #tones, #musical-score {
+            min-height: 120px;
+            padding-bottom: 50px;
         }
 
         .mml-form {
