@@ -2,7 +2,7 @@ import './style.scss'
 import FlMMLWorkerLocation from './flmml-on-html5.worker.js?url'
 
 import {FlMML} from "flmml-on-html5";
-import { Picker } from 'emoji-picker-element';
+import {Picker} from 'emoji-picker-element';
 import {htmlspecialchars, resetAnimation} from './utils';
 
 const version = import.meta.env.VITE_APP_VER;
