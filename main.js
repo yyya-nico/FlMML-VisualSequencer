@@ -161,8 +161,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     || block.octave || block.velocity || block.noteShift || block.detune
                     || block.loopStart || block.loopBreak || block.loopEnd || block.usingPoly
                     || block.polyStartEnd || block.otherAction || '';
+                if (mmlText.includes('\n')) {
+                    mmlText = mmlText.replace('\n', '');
+                    mml.append(mmlText);
+                    mmlText = '';
+                }
             });
-            mml.append(mmlText);
+            mmlText && mml.append(mmlText);
         }
 
         playRendering() {
