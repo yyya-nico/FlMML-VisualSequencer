@@ -275,7 +275,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         !remainingLoop && loopStart > loopEnd && (remainingLoop = Number(current.loopStart.replace('/:', '')) || 2);
                         i++;
                     } else if (current.loopBreak) {
-                        !remainingLoop && (i = loopEnd);
+                        if (remainingLoop === 1) {
+                            i = loopEnd;
+                            remainingLoop--;
+                        }
                         i++;
                     } else if (current.loopEnd) {
                         loopEnd = i;
