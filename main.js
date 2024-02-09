@@ -36,6 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
     dialogForm.inputs = dialogForm.querySelector('.inputs');
     dialogForm.buttons = dialogForm.querySelector('.buttons');
     const playBtn = document.getElementById('play');
+    const clearBtn = document.getElementById('clear');
     const warnOut = document.getElementById('warn-out');
     const mmlOut = document.getElementById('mml');
     const copyBtn = document.getElementById('copy');
@@ -1464,6 +1465,13 @@ document.addEventListener('DOMContentLoaded', () => {
             flmml.removeEventListener('compilecomplete', playAnimationStart);
         }
         playBtn.innerHTML = !isPlaying ? stopHtml : playHtml;
+    });
+
+    clearBtn.addEventListener('click', () => {
+        if (confirm('音色と追加したブロックを全て消去しますか？')) {
+            tones.querySelector('ul').textContent = '';
+            musicalScore.querySelector('ul').textContent = '';
+        }
     });
 
     copyBtn.addEventListener('click', () => {
