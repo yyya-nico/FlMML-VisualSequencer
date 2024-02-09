@@ -735,11 +735,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const isButton =  e.target.tagName.toLowerCase() === 'button';
         if (is('tones')) {
             if (isButton) {
+                lastTouchedButton = e.target;
                 await dialogFormManager.prompt('tone', {
                     'tone-name': e.target.ariaLabel,
                     'tone-def': e.target.dataset.tone
                 }, e.target);
-                lastTouchedButton = e.target;
                 flmml.play(e.target.dataset.tone + e.target.dataset.tonePitch);
             } else {
                 const ul = tones.querySelector('ul');
