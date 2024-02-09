@@ -167,6 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     this.#blocksData = data;
                     this.parseBlocks();
                     this.blocksDataUpdate();
+                    this.calcPoly();
                     this.exportMml(mml);
                 }
             });
