@@ -1014,7 +1014,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         loopStartElem.dataset.loopStart = '/:' + (loop + increase);
                     } else if ('usingPoly' in target.dataset) {
                         const usingPoly = Number(target.dataset.usingPoly.replace('#USING POLY ', '').replace(' force\n', ''));
-                        const increase = minmax(usingPoly);
+                        const increase = minmax(usingPoly, 1);
                         target.dataset.usingPoly = '#USING POLY ' + (usingPoly + increase) + ' force\n';
                     }
                 }
