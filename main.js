@@ -818,11 +818,9 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const removeTarget = target.parentElement;
             const buttonClassName = target.className;
-            if (target === lastTouchedButton) {
-                lastTouchedButton = removeTarget?.previousElementSibling?.firstElementChild
-                                    || removeTarget?.nextElementSibling?.firstElementChild
-                                    || null;                
-            }
+            lastTouchedButton = removeTarget.previousElementSibling?.firstElementChild
+                                || removeTarget.nextElementSibling?.firstElementChild
+                                || null;
             removeTarget.remove();
             if (is('tones')) {
                 musicalScore.querySelectorAll(`[class="${buttonClassName}"]`).forEach(elem => {
