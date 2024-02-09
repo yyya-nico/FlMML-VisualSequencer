@@ -1304,6 +1304,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         elem.textContent = dialogForm.elements['tone-name'].value;
                     }
                     elem.dataset.tone = dialogForm.elements['tone-def'].value;
+                    document.querySelector('emoji-picker').classList.remove('expaned');
                 });
                 break;
             case 'set-tone-pitch':
