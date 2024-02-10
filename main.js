@@ -346,6 +346,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.#histArr[0].shift();
             }
             this.#histArr[1].length = 0;
+            // console.log(this.#histArr);
         }
 
         undo() {
@@ -355,6 +356,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 data
             });
             data && this.#histArr[1].unshift(data);
+            // console.log(this.#histArr);
         }
 
         redo() {
@@ -364,11 +366,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 data
             });
             data && this.#histArr[0].push(data);
+            // console.log(this.#histArr);
         }
 
         clear() {
             this.#histArr[0].length = 0;
             this.#histArr[1].length = 0;
+            // console.log(this.#histArr);
         }
     }
 
@@ -769,6 +773,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     history.onPopstate = obj => {
         const data = obj.data;
+        const is = id => Boolean(data.parent.closest('#' + id));
         switch (obj.reason) {
             case 'undo':
                 switch (data?.operation) { //元に戻す操作集
@@ -780,6 +785,53 @@ document.addEventListener('DOMContentLoaded', () => {
                         break;
                     case 'rewrite':
                         mml.rewrite(data.index, data.beforeMmlText);
+                        break;
+                    case 'copy':
+                        data.newElem.remove();
+                        if (is('musical-score')) {
+                            block.blocksDataUpdate();
+                            block.calcPoly();
+                            block.saveBlocksData();
+                            block.exportMml(mml);
+                        }
+                        break;
+                    case 'move':
+                        const position = data.fromIndex <= data.toIndex ? 'beforebegin' : 'afterend';
+                        data.parent.children[data.fromIndex].insertAdjacentElement(position, data.elem);
+                        if (is('musical-score')) {
+                            block.blocksDataUpdate();
+                            block.calcPoly();
+                            block.saveBlocksData();
+                            block.exportMml(mml);
+                        }
+                        break;
+                    case 'valueChange':
+                        data.target.dataset = data.beforeChange;
+                        block.blocksDataUpdate();
+                        block.saveBlocksData();
+                        block.exportMml(mml);
+                        break;
+                    case 'remove':
+                        data.parent.insertBefore(data.removedElem, data.parent.children[data.removedIndex]);
+                        if (is('tones')) { //TODO
+                        } else if (is('musical-score')) {
+                            block.blocksDataUpdate();
+                            block.calcPoly();
+                            block.saveBlocksData();
+                            block.exportMml(mml);
+                        }
+                        break;
+                    case 'clear':
+                        data.tonesChildren.forEach(li => {
+                            tones.querySelector('ul').appendChild(li);
+                        });
+                        data.musicalScoreChildren.forEach(li => {
+                            musicalScore.querySelector('ul').appendChild(li);
+                        });
+                        lastTouchedButton = data.lastTouchedButton;
+                        block.blocksDataUpdate();
+                        block.saveBlocksData();
+                        block.exportMml(mml);
                         break;
                 }
                 break;
@@ -793,6 +845,60 @@ document.addEventListener('DOMContentLoaded', () => {
                         break;
                     case 'rewrite':
                         mml.rewrite(data.index, data.afterMmlText);
+                        break;
+                    case 'copy':
+                        if (data.toIndex !== -1) {
+                            data.parent.insertBefore(data.newElem, data.parent.children[data.toIndex]);
+                        } else {
+                            data.parent.appendChild(data.newElem);
+                        }
+                        if (is('musical-score')) {
+                            block.blocksDataUpdate();
+                            block.calcPoly();
+                            block.saveBlocksData();
+                            block.exportMml(mml);
+                        }
+                        if ('tonePitch' in lastTouchedButton.dataset) {
+                            flmml.play(lastTouchedButton.dataset.tone + lastTouchedButton.dataset.tonePitch);
+                            lastTouchedButton.classList.add('bounce');
+                        }
+                        break;
+                    case 'move':
+                        const position = data.toIndex > data.fromIndex ? 'beforebegin' : 'afterend';
+                        data.parent.children[data.fromIndex].insertAdjacentElement(position, data.elem);
+                        if (is('musical-score')) {
+                            block.blocksDataUpdate();
+                            block.calcPoly();
+                            block.saveBlocksData();
+                            block.exportMml(mml);
+                        }
+                        break;
+                    case 'valueChange':
+                        data.target.dataset = data.afterChange;
+                        block.blocksDataUpdate();
+                        block.saveBlocksData();
+                        block.exportMml(mml);
+                        break;
+                    case 'remove':
+                        const buttonClassName = data.removedElem.className;
+                        data.removedElem.remove();
+                        if (is('tones')) {
+                            musicalScore.querySelectorAll(`[class="${buttonClassName}"]`).forEach(elem => {
+                                elem.parentElement.remove();
+                            });
+                        }
+                        block.blocksDataUpdate();
+                        block.calcPoly();
+                        block.saveBlocksData();
+                        block.exportMml(mml);
+                        break;
+                    case 'clear':
+                        tones.querySelector('ul').textContent = '';
+                        musicalScore.querySelector('ul').textContent = '';
+                        lastTouchedButton = null;
+                        block.blocksDataUpdate();
+                        block.saveBlocksData();
+                        block.exportMml(mml);
                         break;
                 }
                 break;
@@ -866,23 +972,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
                 return findTemp?.firstElementChild || null;
             };
-            let loopStartElem = findLoopStartElem();
+            item = findLoopStartElem();
             const loopStartCount = musicalScore.getElementsByClassName('loop-start').length;
             const loopEndCount = musicalScore.getElementsByClassName('loop-end').length;
             const enoughLoopEnds = loopStartCount === loopEndCount;
             const parentMusicalScore = item.closest('#musical-score');
-            if (!loopStartElem || enoughLoopEnds && !parentMusicalScore) {
+            if (!item || enoughLoopEnds && !parentMusicalScore) {
                 const ul = musicalScore.querySelector('ul');
                 const li = document.createElement('li');
                 const baseItem = action.querySelector('.loop-start');
                 const newItem = baseItem.cloneNode(true);
                 li.appendChild(newItem);
                 ul.appendChild(li);
-                loopStartElem = newItem;
+                item = newItem;
             }
             await dialogFormManager.prompt('loop', {
-                'loop': loopStartElem.dataset.loopStart.replace('/:', '')
-            }, loopStartElem);
+                'loop': item.dataset.loopStart.replace('/:', '')
+            }, item);
         } else if ('usingPoly' in item.dataset) {
             await dialogFormManager.prompt('usingPoly', {
                 'using-poly': item.dataset.usingPoly.replace('#USING POLY ', '').replace(' force\n', '')
@@ -926,6 +1032,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 ul.appendChild(li);
                 lastTouchedButton = newItem;
                 flmml.play(newItem.dataset.tone + newItem.dataset.tonePitch);
+                history.pushState({
+                    operation: 'copy',
+                    toIndex: -1,
+                    newElem: li,
+                    parent: ul
+                });
             }
         } else if (is('action')) {
             if (isButton) {
@@ -942,6 +1054,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 block.calcPoly();
                 block.saveBlocksData();
                 block.exportMml(mml);
+                history.pushState({
+                    operation: 'copy',
+                    toIndex: -1,
+                    newElem: li,
+                    parent: ul
+                });
             }
         } else if (is('musical-score')) {
             if (isButton) {
@@ -971,6 +1089,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     block.calcPoly();
                     block.saveBlocksData();
                     block.exportMml(mml);
+                    history.pushState({
+                        operation: 'copy',
+                        toIndex: -1,
+                        newElem: li,
+                        parent: ul
+                    });
                     if ('tonePitch' in newItem.dataset) {
                         flmml.play(newItem.dataset.tone + newItem.dataset.tonePitch);
                         newItem.classList.add('bounce');
@@ -994,9 +1118,16 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const removeTarget = target.parentElement;
             const buttonClassName = target.className;
+            const removeTargetIndex = [...parent(target).querySelector('ul').children].indexOf(removeTarget);
             lastTouchedButton = removeTarget.previousElementSibling?.firstElementChild
                                 || removeTarget.nextElementSibling?.firstElementChild
                                 || null;
+            history.pushState({
+                operation: 'remove',
+                removedElem: removeTarget,
+                removedIndex: removeTargetIndex,
+                parent: parent(target).querySelector('ul')
+            });
             removeTarget.remove();
             if (is('tones')) {
                 musicalScore.querySelectorAll(`[class="${buttonClassName}"]`).forEach(elem => {
@@ -1022,116 +1153,123 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             e.preventDefault();
-            if (target) {
-                if (!e.ctrlKey && 'tone' in target.dataset) {
-                    const pitches = ['c','c+','d','d+','e','f','f+','g','g+','a','a+','b'];
-                    const octave = ['>', '<'];
-                    const currentPitch = target.dataset.tonePitch;
-                    const currentPitchIndex = pitches.findIndex(pitch => currentPitch.replace(/[><0-9]+/g, '') === pitch);
-                    const countStr = str => (currentPitch.match(new RegExp(str, 'g')) || []).length;
-                    const octaveCount = [
-                        countStr(octave[0]),
-                        countStr(octave[1])
-                    ]
-                    const octaveStr = octave[0].repeat(octaveCount[0]) + octave[1].repeat(octaveCount[1]);
-                    const noteValue = (currentPitch.match(/[0-9]+/) || [''])[0];
-                    if (isPositive) { // Up
-                        if (currentPitchIndex === pitches.length - 1) {
-                            if (octaveCount[0]) {
-                                target.dataset.tonePitch = octaveStr.substring(1) + pitches.at(0) + noteValue;
-                            } else {
-                                target.dataset.tonePitch = octaveStr + octave[1] + pitches.at(0) + noteValue;
-                            }
+            let beforeChange = JSON.parse(JSON.stringify(target.dataset));
+            if (!e.ctrlKey && 'tone' in target.dataset) {
+                const pitches = ['c','c+','d','d+','e','f','f+','g','g+','a','a+','b'];
+                const octave = ['>', '<'];
+                const currentPitch = target.dataset.tonePitch;
+                const currentPitchIndex = pitches.findIndex(pitch => currentPitch.replace(/[><0-9]+/g, '') === pitch);
+                const countStr = str => (currentPitch.match(new RegExp(str, 'g')) || []).length;
+                const octaveCount = [
+                    countStr(octave[0]),
+                    countStr(octave[1])
+                ]
+                const octaveStr = octave[0].repeat(octaveCount[0]) + octave[1].repeat(octaveCount[1]);
+                const noteValue = (currentPitch.match(/[0-9]+/) || [''])[0];
+                if (isPositive) { // Up
+                    if (currentPitchIndex === pitches.length - 1) {
+                        if (octaveCount[0]) {
+                            target.dataset.tonePitch = octaveStr.substring(1) + pitches.at(0) + noteValue;
                         } else {
-                            target.dataset.tonePitch = octaveStr + pitches[currentPitchIndex + 1] + noteValue;
+                            target.dataset.tonePitch = octaveStr + octave[1] + pitches.at(0) + noteValue;
                         }
-                    } else { // Down
-                        if (currentPitchIndex === 0) {
-                            if (octaveCount[1]) {
-                                target.dataset.tonePitch = octaveStr.substring(1) + pitches.at(-1) + noteValue;
-                            } else {
-                                target.dataset.tonePitch = octaveStr + octave[0] + pitches.at(-1) + noteValue;
-                            }
-                        } else {
-                            target.dataset.tonePitch = octaveStr + pitches[currentPitchIndex - 1] + noteValue;
-                        }
+                    } else {
+                        target.dataset.tonePitch = octaveStr + pitches[currentPitchIndex + 1] + noteValue;
                     }
-                    flmml.play(target.dataset.tone + target.dataset.tonePitch);
-                } else {
-                    const increaseBase = isPositive ? 1 : -1;
-                    const minmax = (current, min = -Infinity, max = Infinity) => current + increaseBase < min ? 0 : current + increaseBase > max ? 0 : increaseBase;
-                    if (e.ctrlKey && 'tonePitch' in target.dataset) {
-                        const noteValue = Number(target.dataset.tonePitch.replace(/[a-f]\+?/, ''));
-                        const increase = minmax(noteValue, 0, 384);
-                        const newNoteValue = noteValue + increase !== 0 ? noteValue + increase : '';
-                        target.dataset.tonePitch = target.dataset.tonePitch.replace(/[0-9]+/, '') + newNoteValue;
-                        flmml.play(target.dataset.tone + target.dataset.tonePitch);
-                    } else if ('tempo' in target.dataset) {
-                        const tempo = Number(target.dataset.tempo.replace('t', ''));
-                        const increase = minmax(tempo, 0);
-                        target.dataset.tempo = 't' + (tempo + increase * 10);
-                    } else if ('noteValue' in target.dataset) {
-                        const noteValue = Number(target.dataset.noteValue.replace('l', ''));
-                        const increase = minmax(noteValue, 1, 384);
-                        target.dataset.noteValue = 'l' + (noteValue + increase);
-                    } else if ('rest' in target.dataset) {
-                        const rest = Number(target.dataset.rest.replace('r', ''));
-                        const increase = minmax(rest, 0, 384);
-                        const newRest = rest + increase !== 0 ? rest + increase : '';
-                        target.dataset.rest = 'r' + newRest;
-                    } else if ('octave' in target.dataset) {
-                        const octave = Number(target.dataset.octave.replace('o', ''));
-                        const increase = minmax(octave, 0, 8);
-                        target.dataset.octave = 'o' + (octave + increase);
-                    } else if ('velocity' in target.dataset) {
-                        const velocity = Number(target.dataset.velocity.replace('@v', ''));
-                        const increase = minmax(velocity, 0, 127);
-                        target.dataset.velocity = '@v' + (velocity + increase);
-                    } else if ('noteShift' in target.dataset) {
-                        const noteShift = Number(target.dataset.noteShift.replace('@ns', ''));
-                        const increase = increaseBase;
-                        target.dataset.noteShift = '@ns' + (noteShift + increase);
-                    } else if ('detune' in target.dataset) {
-                        const detune = Number(target.dataset.detune.replace('@d', ''));
-                        const increase = increaseBase;
-                        target.dataset.detune = '@d' + (detune + increase);
-                    } else if ('loopStart' in target.dataset) {
-                        const loop = Number(target.dataset.loopStart.replace('/:', ''));
-                        const increase = minmax(loop, -1);
-                        const newLoop = loop + increase !== -1 ? loop + increase : '';
-                        target.dataset.loopStart = '/:' + newLoop;
-                    } else if ('loopEnd' in target.dataset) {
-                        const findLoopStartElem = () => {
-                            let findTemp = target.parentElement;
-                            while (findTemp && !('loopStart' in findTemp.firstElementChild.dataset)) {
-                                findTemp = findTemp.previousElementSibling;
-                            };
-                            return findTemp?.firstElementChild || null;
-                        };
-                        let loopStartElem = findLoopStartElem();
-                        const loopStartCount = musicalScore.getElementsByClassName('loop-start').length;
-                        const loopEndCount = musicalScore.getElementsByClassName('loop-end').length;
-                        const enoughLoopEnds = loopStartCount === loopEndCount;
-                        if (!loopStartElem || enoughLoopEnds && !is('musical-score')) {
-                            const ul = musicalScore.querySelector('ul');
-                            const li = document.createElement('li');
-                            const baseItem = action.querySelector('.loop-start');
-                            const newItem = baseItem.cloneNode(true);
-                            li.appendChild(newItem);
-                            ul.appendChild(li);
-                            loopStartElem = newItem;
+                } else { // Down
+                    if (currentPitchIndex === 0) {
+                        if (octaveCount[1]) {
+                            target.dataset.tonePitch = octaveStr.substring(1) + pitches.at(-1) + noteValue;
+                        } else {
+                            target.dataset.tonePitch = octaveStr + octave[0] + pitches.at(-1) + noteValue;
                         }
-                        const loop = Number(loopStartElem.dataset.loopStart.replace('/:', ''));
-                        const increase = minmax(loop, -1);
-                        const newLoop = loop + increase !== -1 ? loop + increase : '';
-                        loopStartElem.dataset.loopStart = '/:' + newLoop;
-                    } else if ('usingPoly' in target.dataset) {
-                        const usingPoly = Number(target.dataset.usingPoly.replace('#USING POLY ', '').replace(' force\n', ''));
-                        const increase = minmax(usingPoly, 1);
-                        target.dataset.usingPoly = '#USING POLY ' + (usingPoly + increase) + ' force\n';
+                    } else {
+                        target.dataset.tonePitch = octaveStr + pitches[currentPitchIndex - 1] + noteValue;
                     }
                 }
+                flmml.play(target.dataset.tone + target.dataset.tonePitch);
+            } else {
+                const increaseBase = isPositive ? 1 : -1;
+                const minmax = (current, min = -Infinity, max = Infinity) => current + increaseBase < min ? 0 : current + increaseBase > max ? 0 : increaseBase;
+                if (e.ctrlKey && 'tonePitch' in target.dataset) {
+                    const noteValue = Number(target.dataset.tonePitch.replace(/[a-f]\+?/, ''));
+                    const increase = minmax(noteValue, 0, 384);
+                    const newNoteValue = noteValue + increase !== 0 ? noteValue + increase : '';
+                    target.dataset.tonePitch = target.dataset.tonePitch.replace(/[0-9]+/, '') + newNoteValue;
+                    flmml.play(target.dataset.tone + target.dataset.tonePitch);
+                } else if ('tempo' in target.dataset) {
+                    const tempo = Number(target.dataset.tempo.replace('t', ''));
+                    const increase = minmax(tempo, 0);
+                    target.dataset.tempo = 't' + (tempo + increase * 10);
+                } else if ('noteValue' in target.dataset) {
+                    const noteValue = Number(target.dataset.noteValue.replace('l', ''));
+                    const increase = minmax(noteValue, 1, 384);
+                    target.dataset.noteValue = 'l' + (noteValue + increase);
+                } else if ('rest' in target.dataset) {
+                    const rest = Number(target.dataset.rest.replace('r', ''));
+                    const increase = minmax(rest, 0, 384);
+                    const newRest = rest + increase !== 0 ? rest + increase : '';
+                    target.dataset.rest = 'r' + newRest;
+                } else if ('octave' in target.dataset) {
+                    const octave = Number(target.dataset.octave.replace('o', ''));
+                    const increase = minmax(octave, 0, 8);
+                    target.dataset.octave = 'o' + (octave + increase);
+                } else if ('velocity' in target.dataset) {
+                    const velocity = Number(target.dataset.velocity.replace('@v', ''));
+                    const increase = minmax(velocity, 0, 127);
+                    target.dataset.velocity = '@v' + (velocity + increase);
+                } else if ('noteShift' in target.dataset) {
+                    const noteShift = Number(target.dataset.noteShift.replace('@ns', ''));
+                    const increase = increaseBase;
+                    target.dataset.noteShift = '@ns' + (noteShift + increase);
+                } else if ('detune' in target.dataset) {
+                    const detune = Number(target.dataset.detune.replace('@d', ''));
+                    const increase = increaseBase;
+                    target.dataset.detune = '@d' + (detune + increase);
+                } else if ('loopStart' in target.dataset) {
+                    const loop = Number(target.dataset.loopStart.replace('/:', ''));
+                    const increase = minmax(loop, -1);
+                    const newLoop = loop + increase !== -1 ? loop + increase : '';
+                    target.dataset.loopStart = '/:' + newLoop;
+                } else if ('loopEnd' in target.dataset) {
+                    const findLoopStartElem = () => {
+                        let findTemp = target.parentElement;
+                        while (findTemp && !('loopStart' in findTemp.firstElementChild.dataset)) {
+                            findTemp = findTemp.previousElementSibling;
+                        };
+                        return findTemp?.firstElementChild || null;
+                    };
+                    target = findLoopStartElem();
+                    const loopStartCount = musicalScore.getElementsByClassName('loop-start').length;
+                    const loopEndCount = musicalScore.getElementsByClassName('loop-end').length;
+                    const enoughLoopEnds = loopStartCount === loopEndCount;
+                    if (!target || enoughLoopEnds && !is('musical-score')) {
+                        const ul = musicalScore.querySelector('ul');
+                        const li = document.createElement('li');
+                        const baseItem = action.querySelector('.loop-start');
+                        const newItem = baseItem.cloneNode(true);
+                        li.appendChild(newItem);
+                        ul.appendChild(li);
+                        target = newItem;
+                    }
+                    beforeChange = JSON.parse(JSON.stringify(target.dataset))
+                    const loop = Number(target.dataset.loopStart.replace('/:', ''));
+                    const increase = minmax(loop, -1);
+                    const newLoop = loop + increase !== -1 ? loop + increase : '';
+                    target.dataset.loopStart = '/:' + newLoop;
+                } else if ('usingPoly' in target.dataset) {
+                    const usingPoly = Number(target.dataset.usingPoly.replace('#USING POLY ', '').replace(' force\n', ''));
+                    const increase = minmax(usingPoly, 1);
+                    target.dataset.usingPoly = '#USING POLY ' + (usingPoly + increase) + ' force\n';
+                }
             }
+            const afterChange = JSON.parse(JSON.stringify(target.dataset));
+            history.pushState({
+                operation: 'valueChange',
+                target,
+                beforeChange,
+                afterChange
+            });
             lastTouchedButton = target;
             block.blocksDataUpdate();
             block.saveBlocksData();
@@ -1312,6 +1450,8 @@ document.addEventListener('DOMContentLoaded', () => {
             e.dataTransfer.dropEffect = e.dataTransfer.dropEffect !== 'none' ? e.dataTransfer.dropEffect : dropEffect;
             const {from, item} = dragInfo;
             const ul = e.target.closest('#tones, #musical-score').querySelector('ul');
+            const itemIndex = [...ul.children].indexOf(item.parentElement);
+            const targetIndex = [...ul.children].indexOf(e.target.parentElement);
             const targetIsButton =  e.target.tagName.toLowerCase() === 'button';
             let newNode;
             switch (e.dataTransfer.dropEffect) {
@@ -1332,8 +1472,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     break;
             }
             if (targetIsButton) {
-                const itemIndex = [...ul.children].indexOf(item.parentElement);
-                const targetIndex = [...ul.children].indexOf(e.target.parentElement);
                 const position = e.dataTransfer.dropEffect === 'copy' || targetIndex < itemIndex ? 'beforebegin' : 'afterend';
                 e.target.parentElement.insertAdjacentElement(position, newNode);
             } else {
@@ -1349,6 +1487,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     flmml.play(lastTouchedButton.dataset.tone + lastTouchedButton.dataset.tonePitch);
                     lastTouchedButton.classList.add('bounce');
                 }
+            }
+            switch (e.dataTransfer.dropEffect) {
+                case 'copy':
+                    history.pushState({
+                        operation: 'copy',
+                        toIndex: targetIndex,
+                        newElem: newNode,
+                        parent: ul
+                    });
+                    break;
+                case 'move':
+                    history.pushState({
+                        operation: 'move',
+                        fromIndex: itemIndex,
+                        toIndex: targetIndex,
+                        elem: newNode,
+                        parent: ul
+                    });
+                    break;
             }
         });
         const dragendEventHandler = e => {
@@ -1496,6 +1653,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     clearBtn.addEventListener('click', () => {
         if (confirm('音色と追加したブロックを全て消去しますか？')) {
+            history.pushState({
+                operation: 'clear',
+                tonesChildren: [...tones.querySelector('ul').children],
+                musicalScoreChildren: [...musicalScore.querySelector('ul').children],
+                lastTouchedButton
+            });
             tones.querySelector('ul').textContent = '';
             musicalScore.querySelector('ul').textContent = '';
             lastTouchedButton = null;
