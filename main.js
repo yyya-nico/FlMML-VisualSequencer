@@ -1139,7 +1139,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    let dragInfo = null;
+    let dragInfo = {};
     editor.addEventListener('dragstart', e => {
         const editorSectionElem = e.target.nodeType === 1/* ELEMENT */ && e.target.closest('#tones, #action, #musical-score');
         dragInfo = {
@@ -1151,7 +1151,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let dropEffect = null;
     [tones, action, musicalScore].forEach(target => {
         const dragEventHandler = e => {
-            const {from} = dragInfo;
+            const {from = null} = dragInfo;
             const dt = e.dataTransfer;
             switch (from) {
                 case tones:
@@ -1205,7 +1205,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         target.addEventListener('dragover', dragEventHandler);
         const dragenterEventHandler = e => {
-            const {from} = dragInfo;
+            const {from = null} = dragInfo;
             const isButton =  e.target.tagName.toLowerCase() === 'button';
             const addClass = () => e.target.classList.add('droppable');
             switch (from) {
@@ -1255,7 +1255,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         target.addEventListener('dragenter', dragenterEventHandler);
         const dragleaveEventHandler = e => {
-            const {from} = dragInfo;
+            const {from = null} = dragInfo;
             const isButton =  e.target.tagName.toLowerCase() === 'button';
             const removeClass = () => e.target.classList.remove('droppable');
             switch (from) {
@@ -1306,6 +1306,9 @@ document.addEventListener('DOMContentLoaded', () => {
         target.addEventListener('dragleave', dragleaveEventHandler);
         target.addEventListener('drop', async e => {
             e.preventDefault();
+            if (e.dataTransfer.items.length) {
+                return;                
+            }
             e.dataTransfer.dropEffect = e.dataTransfer.dropEffect !== 'none' ? e.dataTransfer.dropEffect : dropEffect;
             const {from, item} = dragInfo;
             const ul = e.target.closest('#tones, #musical-score').querySelector('ul');
