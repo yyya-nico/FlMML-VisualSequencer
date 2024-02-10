@@ -124,6 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
     class Block {
         #blocksData = [];
         #rendTimeout = null;
+        #saveDelayTimer = null;
 
         constructor(areaElem) {
             this.areaElem = areaElem;
@@ -155,10 +156,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         saveBlocksData() {
-            const modifiedData = JSON.parse(JSON.stringify(this.#blocksData));
-            localForage.setItem('BlocksData', modifiedData).catch(err => {
-                alert('セーブができませんでした。' + err);
-            });
+            clearTimeout(this.#saveDelayTimer);
+            this.#saveDelayTimer = setTimeout(() => {
+                const modifiedData = JSON.parse(JSON.stringify(this.#blocksData));
+                localForage.setItem('BlocksData', modifiedData)/* .then(() => console.log('saved')) */.catch(err => {
+                    alert('セーブができませんでした。' + err);
+                });
+            }, 1000);
         }
 
         checkSavedBlocksData() {
