@@ -86,6 +86,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        getMmlLine(i) {
+            return this.#mml[i];
+        }
+
         insert(i, str) {
             const valid = Object.hasOwn(this.#mml, i) || i === 0;
             if (valid) {
@@ -101,13 +105,23 @@ document.addEventListener('DOMContentLoaded', () => {
             this.#changeHandler(this.getMmlArr(), this.getMml());
         }
 
+        appendToStr(i, str) {
+            const valid = Object.hasOwn(this.#mml, i);
+            if (valid) {
+                this.#mml[i] += str;
+                this.#changeHandler(this.getMmlArr(), this.getMml());
+            } else {
+                this.append(str);
+            }
+        }
+
         rewrite(i, str) {
             const valid = Object.hasOwn(this.#mml, i);
             if (valid) {
                 this.#mml[i] = str;
                 this.#changeHandler(this.getMmlArr(), this.getMml());
             } else {
-                this.#errorHandler('範囲外の書き換え指定', `範囲${this.#mml.length - 1}までのところ、${i}`);
+                this.append(str);
             }
         }
 
@@ -223,20 +237,46 @@ document.addEventListener('DOMContentLoaded', () => {
         
         exportMml(mml) {
             mml.setMmlArr([]);
-            let mmlText = '';
+            let lineIndex = 0;
+            let toneArr = this.#blocksData.filter(block => block.tone.tone !== undefined).map(block => block.tone.tone);
+            let toneSet = new Set(toneArr);
+            let toneAppended = false;
             this.#blocksData.forEach(block => {
                 const {tone, tonePitch} = block.tone;
-                mmlText += tonePitch || block.tempo || block.noteValue || block.rest
-                    || block.octave || block.velocity || block.noteShift || block.detune
-                    || block.loopStart || block.loopBreak || block.loopEnd || block.usingPoly
-                    || block.polyStartEnd || block.otherAction || '';
-                if (mmlText.includes('\n')) {
-                    mmlText = mmlText.replace('\n', '');
-                    mml.append(mmlText);
-                    mmlText = '';
+                if (tone !== undefined) {
+                    const toneIndex = [...toneSet].indexOf(tone);
+                    if (!toneAppended) {
+                        [...toneSet].forEach((tone, i) => {
+                            tone !== '' && mml.appendToStr(lineIndex + i, tone + ' ');
+                        });
+                        toneAppended = true;
+                    }
+                    [...toneSet].forEach((_, i) => {
+                        let mmlText = tonePitch || block.tempo || block.noteValue || block.rest
+                            || block.octave || block.velocity || block.noteShift || block.detune
+                            || block.loopStart || block.loopBreak || block.loopEnd || block.usingPoly
+                            || block.polyStartEnd || block.otherAction || '';
+                        if (i !== toneIndex) {
+                            const noteValue = (/[0-9]+/.exec(mmlText) || [''])[0];
+                            mmlText = 'r' + noteValue;
+                        }
+                        mml.appendToStr(lineIndex + i, mmlText);
+                    });
+                } else {
+                    mml.appendToStr(lineIndex, tonePitch || block.tempo || block.noteValue || block.rest
+                        || block.octave || block.velocity || block.noteShift || block.detune
+                        || block.loopStart || block.loopBreak || block.loopEnd || block.usingPoly
+                        || block.polyStartEnd || block.otherAction || '');
+                    if (mml.getMmlLine(lineIndex).includes('\n')) {
+                        const mmlText = mml.getMmlLine(lineIndex).replace('\n', '');
+                        mml.rewrite(lineIndex, mmlText);
+                        lineIndex++;
+                    }
                 }
             });
-            mmlText && mml.append(mmlText);
+            [...toneSet].forEach((_, i) => {
+                mml.appendToStr(lineIndex + i, ';');
+            });
         }
 
         playRendering() {
