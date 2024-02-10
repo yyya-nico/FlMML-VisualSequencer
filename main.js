@@ -809,6 +809,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         for (const [name, value] of Object.entries(data.beforeChange)) {
                             data.target.dataset[name] = value;
                         }
+                        if ('tone' in data.target.dataset) {
+                            flmml.play(data.target.dataset.tone + data.target.dataset.tonePitch);
+                        }
                         block.blocksDataUpdate();
                         block.saveBlocksData();
                         block.exportMml(mml);
@@ -878,6 +881,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     case 'valueChange':
                         for (const [name, value] of Object.entries(data.afterChange)) {
                             data.target.dataset[name] = value;
+                        }
+                        if ('tone' in data.target.dataset) {
+                            flmml.play(data.target.dataset.tone + data.target.dataset.tonePitch);
                         }
                         block.blocksDataUpdate();
                         block.saveBlocksData();
@@ -1070,10 +1076,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 if ('tone' in e.target.dataset) {
                     flmml.play(e.target.dataset.tone + e.target.dataset.tonePitch);
                     resetAnimation(e.target, 'bounce');
-                    e.ctrlKey && await dialogFormManager.prompt('tonePitch', {
-                        'tone-pitch': e.target.dataset.tonePitch.replace(/[a-f]\+?/, '')
-                    }, e.target);
-                    flmml.play(e.target.dataset.tone + e.target.dataset.tonePitch);
+                    if (e.ctrlKey) {
+                        await dialogFormManager.prompt('tonePitch', {
+                            'tone-pitch': e.target.dataset.tonePitch.replace(/[a-f]\+?/, '')
+                        }, e.target);
+                        flmml.play(e.target.dataset.tone + e.target.dataset.tonePitch);
+                    }
                 } else {
                     await actionPromptSwitcher(e.target);
                 }
