@@ -346,7 +346,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.#histArr[0].shift();
             }
             this.#histArr[1].length = 0;
-            // console.log(this.#histArr);
+            console.log(this.#histArr);
         }
 
         undo() {
@@ -356,7 +356,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 data
             });
             data && this.#histArr[1].unshift(data);
-            // console.log(this.#histArr);
+            console.log(this.#histArr);
         }
 
         redo() {
@@ -366,13 +366,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 data
             });
             data && this.#histArr[0].push(data);
-            // console.log(this.#histArr);
+            console.log(this.#histArr);
         }
 
         clear() {
             this.#histArr[0].length = 0;
             this.#histArr[1].length = 0;
-            // console.log(this.#histArr);
+            console.log(this.#histArr);
         }
     }
 
@@ -1587,6 +1587,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     dialogForm.addEventListener('submit', e => {
         const submitTarget = dialogFormManager.submitTarget;
+        const beforeChange = JSON.parse(JSON.stringify(submitTarget.dataset));
         switch (e.submitter.value) {
             case 'set-tone':
                 const buttonClassName = submitTarget.className;
@@ -1634,6 +1635,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 submitTarget.dataset.otherAction = dialogForm.elements['other-action'].value;
                 submitTarget.textContent = submitTarget.dataset.otherAction;
                 break;
+        }
+        const afterChange = JSON.parse(JSON.stringify(submitTarget.dataset));
+        if (beforeChange !== afterChange) {
+            history.pushState({
+                operation: 'valueChange',
+                target: submitTarget,
+                beforeChange,
+                afterChange
+            });
         }
         dialogFormManager.resolve();
     });
