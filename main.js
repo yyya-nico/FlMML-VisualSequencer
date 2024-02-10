@@ -1098,7 +1098,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         target.dataset.loopStart = '/:' + newLoop;
                     } else if ('loopEnd' in target.dataset) {
                         const findLoopStartElem = () => {
-                            let findTemp = musicalScore.querySelector('li:last-child');
+                            let findTemp = target.parentElement;
                             while (findTemp && !('loopStart' in findTemp.firstElementChild.dataset)) {
                                 findTemp = findTemp.previousElementSibling;
                             };
