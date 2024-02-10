@@ -806,7 +806,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                         break;
                     case 'valueChange':
-                        data.target.dataset = data.beforeChange;
+                        for (const [name, value] of Object.entries(data.beforeChange)) {
+                            data.target.dataset[name] = value;
+                        }
                         block.blocksDataUpdate();
                         block.saveBlocksData();
                         block.exportMml(mml);
@@ -874,7 +876,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                         break;
                     case 'valueChange':
-                        data.target.dataset = data.afterChange;
+                        for (const [name, value] of Object.entries(data.afterChange)) {
+                            data.target.dataset[name] = value;
+                        }
                         block.blocksDataUpdate();
                         block.saveBlocksData();
                         block.exportMml(mml);
