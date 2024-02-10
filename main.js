@@ -1498,6 +1498,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (confirm('音色と追加したブロックを全て消去しますか？')) {
             tones.querySelector('ul').textContent = '';
             musicalScore.querySelector('ul').textContent = '';
+            lastTouchedButton = null;
+            block.blocksDataUpdate();
+            block.saveBlocksData();
+            block.exportMml(mml);
         }
     });
 
