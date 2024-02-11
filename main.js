@@ -209,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let noteCount = 1;
             data.forEach(block => {
                 const li = document.createElement('li');
-                const toneButtonHTML = `<button class="material-icons plain note note-${noteCount}" aria-label="無調整" draggable="true" data-tone="" data-tone-pitch="c">music_note</button>`;
+                const toneButtonHTML = `<button class="material-icons note note-${noteCount}" aria-label="無調整" draggable="true" data-tone="" data-tone-pitch="c">music_note</button>`;
                 const toneButton = (() => {
                     const wrap = document.createElement('div');
                     wrap.innerHTML = toneButtonHTML;
@@ -304,6 +304,81 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         importMml(mml) {
+            const mmlArr = mml.getMmlArr();
+            const regex = /@.* |[><]*?[a-g]\+?[0-9]*|t[0-9]+|l[0-9]+|r[0-9]*|o[0-8]|@v[0-9]+|@ns[0-9]+|@d[0-9]+|\/:[0-9]*|:\/|\/|#USING POLY [0-9]+ force|\[|\]|.*/g;
+            /* tone.tone|tone.tonePitch|tempo|noteValue|rest|octave|velocity|noteShift|detune|loopStart|loopEnd|loopBreak|usingPoly|polyStartEnd|otherAction */
+            const data = [];
+            let noteCount = 0;
+            mmlArr.forEach(mmlTextLine => {
+                const matched = mmlTextLine.match(regex);
+                let toneCache = '';
+                (matched || []).forEach(str => {
+                    if (!str) {
+                        return;                        
+                    }
+                    const obj = {};
+                    obj.tone = {};
+                    if (str.startsWith('@')) {
+                        toneCache = str.trim();
+                        noteCount++;
+                        return;
+                    } else if (/^[><]*?[a-g]\+?[0-9]*$/.test(str)) {
+                        obj.label = '無調整';
+                        obj.className = `material-icons note note-${noteCount}`;
+                        obj.tone.tone = toneCache;
+                        obj.tone.tonePitch = str;
+                    } else if (str.startsWith('t')) {
+                        obj.className = 'material-icons tempo';
+                        obj.tempo = str;
+                    } else if (str.startsWith('l')) {
+                        obj.className = 'material-icons note-value';
+                        obj.noteValue = str;
+                    } else if (str.startsWith('r')) {
+                        obj.className = 'material-icons rest';
+                        obj.rest = str;
+                    } else if (str.startsWith('o')) {
+                        obj.className = 'material-icons octave';
+                        obj.octave = str;
+                    } else if (str.startsWith('@v')) {
+                        obj.className = 'material-icons velocity';
+                        obj.velocity = str;
+                    } else if (str.startsWith('@ns')) {
+                        obj.className = 'material-icons note-shift';
+                        obj.noteShift = str;
+                    } else if (str.startsWith('@d')) {
+                        obj.className = 'material-icons detune';
+                        obj.detune = str;
+                    } else if (str.startsWith('/:')) {
+                        obj.className = 'loop-start';
+                        obj.loopStart = str;
+                    } else if (str.startsWith(':/')) {
+                        obj.className = 'material-icons loop-end';
+                        obj.loopEnd = str;
+                    } else if (str.startsWith('/')) {
+                        obj.className = 'loop-break';
+                        obj.loopBreak = str;
+                    } else if (str.startsWith('#USING POLY ')) {
+                        obj.className = 'using-poly';
+                        obj.usingPoly = str;
+                    } else if (str.startsWith('[') || str.startsWith(']')) {
+                        obj.className = 'poly-start-end';
+                        obj.polyStartEnd = str;
+                    } else if (str.startsWith(';')) {
+                        return;
+                    } else {
+                        obj.className = 'other-action';
+                        obj.otherAction = str;
+                    }
+                    data.push(obj);
+                });
+            });
+            this.tonesElem.querySelector('ul').textContent = '';
+            this.areaElem.querySelector('ul').textContent = '';
+            lastTouchedButton = null;
+            this.#blocksData = data;
+            this.parseBlocks();
+            this.blocksDataUpdate();
+            this.calcPoly();
         }
 
         playRendering() {
@@ -1157,7 +1232,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const ul = tones.querySelector('ul');
                 const li = document.createElement('li');
                 const nonExistClassName = getNonExistNoteClassName();
-                const toneButton = `<button class="material-icons plain note ${nonExistClassName}" aria-label="無調整" draggable="true" data-tone="" data-tone-pitch="c">music_note</button>`;
+                const toneButton = `<button class="material-icons note ${nonExistClassName}" aria-label="無調整" draggable="true" data-tone="" data-tone-pitch="c">music_note</button>`;
                 li.innerHTML = toneButton;
                 const newItem = li.firstElementChild;
                 ul.appendChild(li);
@@ -1848,7 +1923,7 @@ document.addEventListener('DOMContentLoaded', () => {
         inputFile.onchange = () => {
             fr.onload = () => {
                 mml.setMml(fr.result);
-                history.clear();
+                block.importMml(mml);
             };
             fr.readAsText(inputFile.files[0]);
         }
