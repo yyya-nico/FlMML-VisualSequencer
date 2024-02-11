@@ -9,7 +9,7 @@ FlMMLをビジュアルで構築。
 * [emoji-picker-element](https://github.com/nolanlawson/emoji-picker-element/) Apache-2.0 license
 
 ## For Developers
-```sh
+```
 git clone https://github.com/yyya-nico/FlMML-VisualSequencer.git
 cd ./FlMML-VisualSequencer
 npm install
