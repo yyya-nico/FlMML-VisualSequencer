@@ -437,8 +437,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (current.loopStart) {
                         loopStart = i;
                         if (!remainingLoop && loopStart > loopEnd) {
-                            remainingLoop = Number(current.loopStart.replace('/:', ''));
-                            remainingLoop === '' && (remainingLoop = 2);
+                            remainingLoop = current.loopStart.replace('/:', '');
+                            remainingLoop === '' ? (remainingLoop = 2) : (remainingLoop = Number(remainingLoop));
                             if (!remainingLoop) {
                                 jump = true;
                                 nest++;
