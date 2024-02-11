@@ -297,7 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                     return;
                 } else if (current.tone.tonePitch) {
-                    const currentNoteValue = Number(current.tone.tonePitch.replace(/[a-g]\+?/, '')) || scoreNoteValue;
+                    const currentNoteValue = Number(current.tone.tonePitch.replace(/[><]*[a-g]\+?/, '')) || scoreNoteValue;
                     resetAnimation(current.elem, 'bounce');
                     i++;
                     const nextSiblingIsPolyEnd = current.elem.parentElement.nextSibling?.firstElementChild.dataset.polyStartEnd === ']';
@@ -1222,7 +1222,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     resetAnimation(e.target, 'bounce');
                     if (e.ctrlKey) {
                         await dialogFormManager.prompt('tonePitch', {
-                            'tone-pitch': e.target.dataset.tonePitch.replace(/[a-f]\+?/, '')
+                            'tone-pitch': e.target.dataset.tonePitch.replace(/[><]*[a-g]\+?/, '')
                         }, e.target);
                         flmml.play(e.target.dataset.tone + absoluteOctaveMml + currentRelativeOctave + e.target.dataset.tonePitch);
                     }
@@ -1399,7 +1399,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const increaseBase = isPositive ? 1 : -1;
                 const minmax = (current, min = -Infinity, max = Infinity) => current + increaseBase < min ? 0 : current + increaseBase > max ? 0 : increaseBase;
                 if (e.ctrlKey && 'tonePitch' in target.dataset) {
-                    const noteValue = Number(target.dataset.tonePitch.replace(/[><]*[a-f]\+?/, ''));
+                    const noteValue = Number(target.dataset.tonePitch.replace(/[><]*[a-g]\+?/, ''));
                     const increase = minmax(noteValue, 0, 384);
                     const newNoteValue = noteValue + increase !== 0 ? noteValue + increase : '';
                     target.dataset.tonePitch = target.dataset.tonePitch.replace(/[0-9]+/, '') + newNoteValue;
