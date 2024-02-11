@@ -197,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let noteCount = 1;
             data.forEach(block => {
                 const li = document.createElement('li');
-                const toneButtonHTML = `<button class="material-icons plain note-${noteCount}" aria-label="無調整" draggable="true" data-tone="" data-tone-pitch="c">music_note</button>`;
+                const toneButtonHTML = `<button class="material-icons plain note note-${noteCount}" aria-label="無調整" draggable="true" data-tone="" data-tone-pitch="c">music_note</button>`;
                 const toneButton = (() => {
                     const wrap = document.createElement('div');
                     wrap.innerHTML = toneButtonHTML;
@@ -1076,7 +1076,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const ul = tones.querySelector('ul');
                 const li = document.createElement('li');
                 const nonExistClassName = getNonExistNoteClassName();
-                const toneButton = `<button class="material-icons plain ${nonExistClassName}" aria-label="無調整" draggable="true" data-tone="" data-tone-pitch="c">music_note</button>`;
+                const toneButton = `<button class="material-icons plain note ${nonExistClassName}" aria-label="無調整" draggable="true" data-tone="" data-tone-pitch="c">music_note</button>`;
                 li.innerHTML = toneButton;
                 const newItem = li.firstElementChild;
                 ul.appendChild(li);
