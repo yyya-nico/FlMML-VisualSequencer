@@ -1121,6 +1121,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }, e.target);
                 flmml.play(e.target.dataset.tone + e.target.dataset.tonePitch);
+                block.blocksDataUpdate();
+                block.saveBlocksData();
+                block.exportMml(mml);
             } else {
                 const ul = tones.querySelector('ul');
                 const li = document.createElement('li');
