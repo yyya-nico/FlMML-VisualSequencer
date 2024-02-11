@@ -359,7 +359,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         obj.loopBreak = str;
                     } else if (str.startsWith('#USING POLY ')) {
                         obj.className = 'using-poly';
-                        obj.usingPoly = str;
+                        obj.usingPoly = str + '\n';
                     } else if (str.startsWith('[') || str.startsWith(']')) {
                         obj.className = 'poly-start-end';
                         obj.polyStartEnd = str;
