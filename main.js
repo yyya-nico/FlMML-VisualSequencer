@@ -150,7 +150,8 @@ document.addEventListener('DOMContentLoaded', () => {
         #rendTimeout = null;
         #saveDelayTimer = null;
 
-        constructor(areaElem) {
+        constructor(tones, areaElem) {
+            this.tonesElem = tones;
             this.areaElem = areaElem;
         }
 
@@ -204,6 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
         parseBlocks() {
             const data = this.#blocksData;
             const ul = this.areaElem.querySelector('ul');
+            const tonesUl  = this.tonesElem.querySelector('ul');
             let noteCount = 1;
             data.forEach(block => {
                 const li = document.createElement('li');
@@ -213,17 +215,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     wrap.innerHTML = toneButtonHTML;
                     return wrap.firstElementChild;
                 })();
-                const button = document.querySelector(`[class*="${block.className.replace(/ bounce| pop| done/g, '')}"]`)?.cloneNode(true) || toneButton;
+                const copySourceCandidate = document.querySelector(`[class*="${block.className.replace(/ bounce| pop| done/g, '')}"]`);
+                const button = copySourceCandidate?.cloneNode(true) || toneButton;
                 block.label && (button.ariaLabel = block.label);
                 if (block.tone.tonePitch) {
                     if (block.label !== '無調整') {
                         button.classList.remove('material-icons');
                         button.textContent = block.label;
                     }
+                    button.dataset.tone = block.tone.tone;
+                    if (copySourceCandidate) {
+                        copySourceCandidate.replaceWith(button.cloneNode(true));
+                    } else {
+                        tonesUl.appendChild(button.cloneNode(true));
+                    }
+                    button.dataset.tonePitch = block.tone.tonePitch
                     noteCount++;
                 }
-                block.tone.tone && (button.dataset.tone = block.tone.tone);
-                block.tone.tonePitch && (button.dataset.tonePitch = block.tone.tonePitch);
                 block.tempo && (button.dataset.tempo = block.tempo);
                 block.noteValue && (button.dataset.noteValue = block.noteValue);
                 block.rest && (button.dataset.rest = block.rest);
@@ -293,6 +301,9 @@ document.addEventListener('DOMContentLoaded', () => {
             [...toneSet].forEach((_, i) => {
                 mml.appendToStr(lineIndex + i, ';');
             });
+        }
+        
+        importMml(mml) {
         }
 
         playRendering() {
@@ -766,7 +777,7 @@ document.addEventListener('DOMContentLoaded', () => {
         storeName   : 'backups',
         description : 'BlockData Object Backups'
     });
-    const block = new Block(musicalScore);
+    const block = new Block(tones, musicalScore);
     const history = new History();
     const dialogFormManager = new DialogFormManager();
     const ja = {
