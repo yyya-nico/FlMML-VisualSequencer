@@ -268,7 +268,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             || block.polyStartEnd || block.otherAction || '';
                         if (i !== toneIndex) {
                             const noteValue = (/[0-9]+/.exec(mmlText) || [''])[0];
-                            console.log(noteValue);
                             mmlText = 'r' + noteValue;
                         }
                         mml.appendToStr(lineIndex + i, mmlText);
@@ -300,7 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = this.#blocksData;
             let tempo = 120;
             let scoreNoteValue = 4;
-            let skip = false;
+            let skip = false, jump = false;
             let loopStart = -1, loopEnd = -1, remainingLoop = 0;
             let i = 0;
             [tones, action, musicalScore].forEach(target => {
@@ -313,6 +312,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         target.classList.remove('no-op');
                     });
                     return;
+                } else if (jump) {
+                    if (current.loopEnd) {
+                        resetAnimation(current.elem, 'pop');
+                        jump = false;
+                    }
+                    i++;
+                    attachMotion();
                 } else if (current.tone.tonePitch) {
                     const currentNoteValue = Number(current.tone.tonePitch.replace(/[><]*[a-g]\+?/, '')) || scoreNoteValue;
                     resetAnimation(current.elem, 'bounce');
@@ -337,7 +343,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     resetAnimation(current.elem, 'pop');
                     if (current.loopStart) {
                         loopStart = i;
-                        !remainingLoop && loopStart > loopEnd && (remainingLoop = Number(current.loopStart.replace('/:', '')) || 2);
+                        if (!remainingLoop && loopStart > loopEnd) {
+                            remainingLoop = Number(current.loopStart.replace('/:', ''));
+                            remainingLoop === '' && (remainingLoop = 2);
+                            if (!remainingLoop) {
+                                jump = true;
+                            }
+                        };
                         i++;
                     } else if (current.loopBreak) {
                         if (remainingLoop === 1) {
