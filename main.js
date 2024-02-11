@@ -1175,7 +1175,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 return '';
                             }
                         })();
-                        flmml.play(absoluteOctaveMml + newItem.dataset.tone + currentRelativeOctave + newItem.dataset.tonePitch);
+                        flmml.play(newItem.dataset.tone + absoluteOctaveMml + currentRelativeOctave + newItem.dataset.tonePitch);
                         newItem.classList.add('bounce');
                     }
                 }
@@ -1290,7 +1290,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         target.dataset.tonePitch = octaveStr + pitches[currentPitchIndex - 1] + noteValue;
                     }
                 }
-                flmml.play(absoluteOctaveMml + currentRelativeOctave + target.dataset.tone + target.dataset.tonePitch);
+                flmml.play(target.dataset.tone +absoluteOctaveMml + currentRelativeOctave +  target.dataset.tonePitch);
             } else {
                 const increaseBase = isPositive ? 1 : -1;
                 const minmax = (current, min = -Infinity, max = Infinity) => current + increaseBase < min ? 0 : current + increaseBase > max ? 0 : increaseBase;
@@ -1614,7 +1614,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             return '';
                         }
                     })();
-                    flmml.play(absoluteOctaveMml + lastTouchedButton.dataset.tone + currentRelativeOctave + lastTouchedButton.dataset.tonePitch);
+                    flmml.play(lastTouchedButton.dataset.tone + absoluteOctaveMml + currentRelativeOctave + lastTouchedButton.dataset.tonePitch);
                     lastTouchedButton.classList.add('bounce');
                 }
             }
