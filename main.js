@@ -314,7 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 } else if (jump) {
                     if (current.loopStart) {
-                        nest++;                        
+                        nest++;
                     } else if (current.loopEnd) {
                         nest--;
                         if (!nest) {
@@ -353,6 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             remainingLoop === '' && (remainingLoop = 2);
                             if (!remainingLoop) {
                                 jump = true;
+                                nest++;
                             }
                         };
                         i++;
