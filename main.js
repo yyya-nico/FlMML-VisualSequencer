@@ -299,7 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = this.#blocksData;
             let tempo = 120;
             let scoreNoteValue = 4;
-            let skip = false, jump = false;
+            let skip = false, jump = false, nest = 0;
             let loopStart = -1, loopEnd = -1, remainingLoop = 0;
             let i = 0;
             [tones, action, musicalScore].forEach(target => {
@@ -313,9 +313,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                     return;
                 } else if (jump) {
-                    if (current.loopEnd) {
-                        resetAnimation(current.elem, 'pop');
-                        jump = false;
+                    if (current.loopStart) {
+                        nest++;                        
+                    } else if (current.loopEnd) {
+                        nest--;
+                        if (!nest) {
+                            resetAnimation(current.elem, 'pop');
+                            jump = false;
+                        }
                     }
                     i++;
                     attachMotion();
