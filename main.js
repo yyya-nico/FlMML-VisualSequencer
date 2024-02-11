@@ -1148,7 +1148,26 @@ document.addEventListener('DOMContentLoaded', () => {
                         parent: ul
                     });
                     if ('tonePitch' in newItem.dataset) {
-                        flmml.play(newItem.dataset.tone + newItem.dataset.tonePitch);
+                        newItem.dataset.tonePitch = newItem.dataset.tonePitch.replace(/[><]+/, '');
+                        const concatAllOctave = [...musicalScore.querySelector('ul').children]
+                                                    .filter(li => 'tonePitch' in li.firstElementChild.dataset)
+                                                    .map(li => {
+                                                        const pitch = li.firstElementChild.dataset.tonePitch;
+                                                        return (pitch.match(/[><]+/) || [''])[0];
+                                                    }).join('');
+                        const octave = ['>', '<'];
+                        const countStr = (target, str) => (target.match(new RegExp(str, 'g')) || []).length;
+                        const currentRelativeOctave = (() => {
+                            const relativeOctaveNum = -countStr(concatAllOctave, octave[0]) + countStr(concatAllOctave, octave[1]) + octaveCount[0] - octaveCount[1];
+                            if (relativeOctaveNum < 0) {
+                                return octave[0].repeat(relativeOctaveNum);
+                            } else if (relativeOctaveNum > 0) {
+                                return octave[1].repeat(relativeOctaveNum);
+                            } else {
+                                return '';
+                            }
+                        })();
+                        flmml.play(newItem.dataset.tone + currentRelativeOctave + newItem.dataset.tonePitch);
                         newItem.classList.add('bounce');
                     }
                 }
@@ -1211,11 +1230,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 const octave = ['>', '<'];
                 const currentPitch = target.dataset.tonePitch;
                 const currentPitchIndex = pitches.findIndex(pitch => currentPitch.replace(/[><0-9]+/g, '') === pitch);
-                const countStr = str => (currentPitch.match(new RegExp(str, 'g')) || []).length;
+                const countStr = (target, str) => (target.match(new RegExp(str, 'g')) || []).length;
                 const octaveCount = [
-                    countStr(octave[0]),
-                    countStr(octave[1])
-                ]
+                    countStr(currentPitch, octave[0]),
+                    countStr(currentPitch, octave[1])
+                ];
+                const concatAllOctave = [...musicalScore.querySelector('ul').children]
+                                            .filter(li => 'tonePitch' in li.firstElementChild.dataset)
+                                            .map(li => {
+                                                const pitch = li.firstElementChild.dataset.tonePitch;
+                                                return (pitch.match(/[><]+/) || [''])[0];
+                                            }).join('');
+                const currentRelativeOctave = (() => {
+                    const relativeOctaveNum = -countStr(concatAllOctave, octave[0]) + countStr(concatAllOctave, octave[1]) + octaveCount[0] - octaveCount[1];
+                    if (relativeOctaveNum < 0) {
+                        return octave[0].repeat(relativeOctaveNum);
+                    } else if (relativeOctaveNum > 0) {
+                        return octave[1].repeat(relativeOctaveNum);
+                    } else {
+                        return '';
+                    }
+                })();
                 const octaveStr = octave[0].repeat(octaveCount[0]) + octave[1].repeat(octaveCount[1]);
                 const noteValue = (currentPitch.match(/[0-9]+/) || [''])[0];
                 if (isPositive) { // Up
@@ -1239,7 +1274,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         target.dataset.tonePitch = octaveStr + pitches[currentPitchIndex - 1] + noteValue;
                     }
                 }
-                flmml.play(target.dataset.tone + target.dataset.tonePitch);
+                flmml.play(currentRelativeOctave + target.dataset.tone + target.dataset.tonePitch);
             } else {
                 const increaseBase = isPositive ? 1 : -1;
                 const minmax = (current, min = -Infinity, max = Infinity) => current + increaseBase < min ? 0 : current + increaseBase > max ? 0 : increaseBase;
@@ -1536,7 +1571,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 block.saveBlocksData();
                 block.exportMml(mml);
                 if ('tonePitch' in lastTouchedButton.dataset) {
-                    flmml.play(lastTouchedButton.dataset.tone + lastTouchedButton.dataset.tonePitch);
+                    lastTouchedButton.dataset.tonePitch = lastTouchedButton.dataset.tonePitch.replace(/[><]+/, '');
+                    const concatAllOctave = [...musicalScore.querySelector('ul').children]
+                                                .filter(li => 'tonePitch' in li.firstElementChild.dataset)
+                                                .map(li => {
+                                                    const pitch = li.firstElementChild.dataset.tonePitch;
+                                                    return (pitch.match(/[><]+/) || [''])[0];
+                                                }).join('');      
+                    const octave = ['>', '<'];
+                    const countStr = (target, str) => (target.match(new RegExp(str, 'g')) || []).length;
+                    const currentRelativeOctave = (() => {
+                        const relativeOctaveNum = -countStr(concatAllOctave, octave[0]) + countStr(concatAllOctave, octave[1]);
+                        if (relativeOctaveNum < 0) {
+                            return octave[0].repeat(relativeOctaveNum);
+                        } else if (relativeOctaveNum > 0) {
+                            return octave[1].repeat(relativeOctaveNum);
+                        } else {
+                            return '';
+                        }
+                    })();
+                    flmml.play(lastTouchedButton.dataset.tone + currentRelativeOctave + lastTouchedButton.dataset.tonePitch);
                     lastTouchedButton.classList.add('bounce');
                 }
             }
