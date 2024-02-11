@@ -204,7 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         parseBlocks() {
             const data = this.#blocksData;
-            console.log(data);
+            // console.log(data);
             const ul = this.areaElem.querySelector('ul');
             const tonesUl  = this.tonesElem.querySelector('ul');
             let noteCount = 1;
