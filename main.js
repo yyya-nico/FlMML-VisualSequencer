@@ -1149,6 +1149,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                     if ('tonePitch' in newItem.dataset) {
                         newItem.dataset.tonePitch = newItem.dataset.tonePitch.replace(/[><]+/, '');
+                        const findOctaveElem = () => {
+                            let findTemp = newItem.parentElement;
+                            while (findTemp && !('octave' in findTemp.firstElementChild.dataset)) {
+                                findTemp = findTemp.previousElementSibling;
+                            };
+                            return findTemp?.firstElementChild || null;
+                        };
+                        const absoluteOctaveMml = findOctaveElem()?.dataset.octave || '';
                         const concatAllOctave = [...musicalScore.querySelector('ul').children]
                                                     .filter(li => 'tonePitch' in li.firstElementChild.dataset)
                                                     .map(li => {
@@ -1167,7 +1175,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 return '';
                             }
                         })();
-                        flmml.play(newItem.dataset.tone + currentRelativeOctave + newItem.dataset.tonePitch);
+                        flmml.play(absoluteOctaveMml + newItem.dataset.tone + currentRelativeOctave + newItem.dataset.tonePitch);
                         newItem.classList.add('bounce');
                     }
                 }
@@ -1226,6 +1234,14 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             let beforeChange = JSON.parse(JSON.stringify(target.dataset));
             if (!e.ctrlKey && 'tone' in target.dataset) {
+                const findOctaveElem = () => {
+                    let findTemp = target.parentElement;
+                    while (findTemp && !('octave' in findTemp.firstElementChild.dataset)) {
+                        findTemp = findTemp.previousElementSibling;
+                    };
+                    return findTemp?.firstElementChild || null;
+                };
+                const absoluteOctaveMml = findOctaveElem()?.dataset.octave || '';
                 const pitches = ['c','c+','d','d+','e','f','f+','g','g+','a','a+','b'];
                 const octave = ['>', '<'];
                 const currentPitch = target.dataset.tonePitch;
@@ -1274,7 +1290,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         target.dataset.tonePitch = octaveStr + pitches[currentPitchIndex - 1] + noteValue;
                     }
                 }
-                flmml.play(currentRelativeOctave + target.dataset.tone + target.dataset.tonePitch);
+                flmml.play(absoluteOctaveMml + currentRelativeOctave + target.dataset.tone + target.dataset.tonePitch);
             } else {
                 const increaseBase = isPositive ? 1 : -1;
                 const minmax = (current, min = -Infinity, max = Infinity) => current + increaseBase < min ? 0 : current + increaseBase > max ? 0 : increaseBase;
@@ -1572,6 +1588,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 block.exportMml(mml);
                 if ('tonePitch' in lastTouchedButton.dataset) {
                     lastTouchedButton.dataset.tonePitch = lastTouchedButton.dataset.tonePitch.replace(/[><]+/, '');
+                    const findOctaveElem = () => {
+                        let findTemp = lastTouchedButton.parentElement;
+                        while (findTemp && !('octave' in findTemp.firstElementChild.dataset)) {
+                            findTemp = findTemp.previousElementSibling;
+                        };
+                        return findTemp?.firstElementChild || null;
+                    };
+                    const absoluteOctaveMml = findOctaveElem()?.dataset.octave || '';
                     const concatAllOctave = [...musicalScore.querySelector('ul').children]
                                                 .filter(li => 'tonePitch' in li.firstElementChild.dataset)
                                                 .map(li => {
@@ -1590,7 +1614,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             return '';
                         }
                     })();
-                    flmml.play(lastTouchedButton.dataset.tone + currentRelativeOctave + lastTouchedButton.dataset.tonePitch);
+                    flmml.play(absoluteOctaveMml + lastTouchedButton.dataset.tone + currentRelativeOctave + lastTouchedButton.dataset.tonePitch);
                     lastTouchedButton.classList.add('bounce');
                 }
             }
