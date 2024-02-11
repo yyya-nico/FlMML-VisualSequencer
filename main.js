@@ -1158,7 +1158,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const octave = ['>', '<'];
                         const countStr = (target, str) => (target.match(new RegExp(str, 'g')) || []).length;
                         const currentRelativeOctave = (() => {
-                            const relativeOctaveNum = -countStr(concatAllOctave, octave[0]) + countStr(concatAllOctave, octave[1]) + octaveCount[0] - octaveCount[1];
+                            const relativeOctaveNum = -countStr(concatAllOctave, octave[0]) + countStr(concatAllOctave, octave[1]);
                             if (relativeOctaveNum < 0) {
                                 return octave[0].repeat(relativeOctaveNum);
                             } else if (relativeOctaveNum > 0) {
