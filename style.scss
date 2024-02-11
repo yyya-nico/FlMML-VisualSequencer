@@ -391,6 +391,7 @@ header {
                     font-weight: 400;
                     line-height: 15px;
                     white-space: nowrap;
+                    text-transform: uppercase;
                 }
 
                 &.tempo::after {
@@ -477,7 +478,6 @@ header {
         #musical-score {
             button {
                 &.note::after {
-                    text-transform: uppercase;
                     content: attr(data-tone-pitch);
                 }
             }
