@@ -204,6 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         parseBlocks() {
             const data = this.#blocksData;
+            console.log(data);
             const ul = this.areaElem.querySelector('ul');
             const tonesUl  = this.tonesElem.querySelector('ul');
             let noteCount = 1;
@@ -252,7 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 ul.appendChild(li);
             });
         }
-        
+
         exportMml(mml) {
             mml.setMmlArr([]);
             let lineIndex = 0;
@@ -302,7 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 mml.appendToStr(lineIndex + i, ';');
             });
         }
-        
+
         importMml(mml) {
             const mmlArr = mml.getMmlArr();
             const regex = /@.* |[><]*?[a-g]\+?[0-9]*|t[0-9]+|l[0-9]+|r[0-9]*|o[0-8]|@v[0-9]+|@ns[0-9]+|@d[0-9]+|\/:[0-9]*|:\/|\/|#USING POLY [0-9]+ force|\[|\]|.*/g;
@@ -314,7 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 let toneCache = '';
                 (matched || []).forEach(str => {
                     if (!str) {
-                        return;                        
+                        return;
                     }
                     const obj = {};
                     obj.tone = {};
@@ -324,6 +325,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         return;
                     } else if (/^[><]*?[a-g]\+?[0-9]*$/.test(str)) {
                         obj.label = '無調整';
+                        !noteCount && noteCount++;
                         obj.className = `material-icons note note-${noteCount}`;
                         obj.tone.tone = toneCache;
                         obj.tone.tonePitch = str;
@@ -500,7 +502,7 @@ document.addEventListener('DOMContentLoaded', () => {
         set onPopstate(fn) {
             this.#popstateHandler = fn;
         }
-        
+
         pushState(obj) {
             this.#histArr[0].push(obj);
             if (this.#histArr[0].length > this.#maxArrLength) {
@@ -889,7 +891,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ],
         "skinTonesLabel": "スキントーン"
     }
-      
+
     const picker = new Picker({
         i18n: ja,
         locale: 'ja'
@@ -1356,7 +1358,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const isPositive = e.deltaY < 0;
         let target = isButton ? e.target : lastTouchedButton?.closest('#musical-score') && lastTouchedButton;
         if (!target) {
-            return;            
+            return;
         } else if (is('musical-score')) {
             if (musicalScore.classList.contains('no-op')) {
                 return;
@@ -1560,14 +1562,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     switch (target) {
                         case tones:
                             if (isButton) {
-                                addClass();                                
+                                addClass();
                             }
                             break;
                         case action:
                             break;
                         case musicalScore:
                             if (isButton) {
-                                addClass();                                
+                                addClass();
                             }
                             break;
                     }
@@ -1580,7 +1582,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             break;
                         case musicalScore:
                             if (isButton) {
-                                addClass();                                
+                                addClass();
                             }
                             break;
                     }
@@ -1593,7 +1595,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             break;
                         case musicalScore:
                             if (isButton) {
-                                addClass();                                
+                                addClass();
                             }
                             break;
                     }
@@ -1610,14 +1612,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     switch (target) {
                         case tones:
                             if (isButton) {
-                                removeClass();                                
+                                removeClass();
                             }
                             break;
                         case action:
                             break;
                         case musicalScore:
                             if (isButton) {
-                                removeClass();                                
+                                removeClass();
                             }
                             break;
                     }
@@ -1630,7 +1632,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             break;
                         case musicalScore:
                             if (isButton) {
-                                removeClass();                                
+                                removeClass();
                             }
                             break;
                     }
@@ -1643,7 +1645,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             break;
                         case musicalScore:
                             if (isButton) {
-                                removeClass();                                
+                                removeClass();
                             }
                             break;
                     }
@@ -1654,7 +1656,7 @@ document.addEventListener('DOMContentLoaded', () => {
         target.addEventListener('drop', async e => {
             e.preventDefault();
             if (e.dataTransfer.items.length) {
-                return;                
+                return;
             }
             e.dataTransfer.dropEffect = e.dataTransfer.dropEffect !== 'none' ? e.dataTransfer.dropEffect : dropEffect;
             const {from, item} = dragInfo;
