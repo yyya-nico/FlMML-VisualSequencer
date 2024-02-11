@@ -1168,7 +1168,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const currentRelativeOctave = (() => {
                             const relativeOctaveNum = -countStr(concatAllOctave, octave[0]) + countStr(concatAllOctave, octave[1]);
                             if (relativeOctaveNum < 0) {
-                                return octave[0].repeat(relativeOctaveNum);
+                                return octave[0].repeat(-relativeOctaveNum);
                             } else if (relativeOctaveNum > 0) {
                                 return octave[1].repeat(relativeOctaveNum);
                             } else {
@@ -1260,7 +1260,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const currentRelativeOctave = (() => {
                     const relativeOctaveNum = -countStr(concatAllOctave, octave[0]) + countStr(concatAllOctave, octave[1]) + octaveCount[0] - octaveCount[1];
                     if (relativeOctaveNum < 0) {
-                        return octave[0].repeat(relativeOctaveNum);
+                        return octave[0].repeat(-relativeOctaveNum);
                     } else if (relativeOctaveNum > 0) {
                         return octave[1].repeat(relativeOctaveNum);
                     } else {
@@ -1607,7 +1607,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const currentRelativeOctave = (() => {
                         const relativeOctaveNum = -countStr(concatAllOctave, octave[0]) + countStr(concatAllOctave, octave[1]);
                         if (relativeOctaveNum < 0) {
-                            return octave[0].repeat(relativeOctaveNum);
+                            return octave[0].repeat(-relativeOctaveNum);
                         } else if (relativeOctaveNum > 0) {
                             return octave[1].repeat(relativeOctaveNum);
                         } else {
