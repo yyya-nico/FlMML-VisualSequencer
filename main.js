@@ -1123,7 +1123,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } else if (is('action')) {
             if (isButton) {
-                if (!('rest' in e.target.dataset)) {
+                if ('otherAction' in e.target.dataset) {
                     await actionPromptSwitcher(e.target);
                 }
                 const ul = musicalScore.querySelector('ul');
@@ -1546,7 +1546,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (target === tones) {
                         const noteClassName = [...item.classList].find(name => name.includes('note-'));
                         newItem.classList.replace(noteClassName, getNonExistNoteClassName());
-                    } else if (from === action && !('rest' in newItem.dataset)) {
+                    } else if (from === action && 'otherAction' in newItem.dataset) {
                         await actionPromptSwitcher(newItem);
                     }
                     li.appendChild(newItem);
