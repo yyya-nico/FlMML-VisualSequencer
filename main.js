@@ -1352,9 +1352,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    editor.addEventListener('wheel', e => {
+    let lastY = null, ignoneTouch = false;
+    const wheelHandler = e => {
         const is = id => Boolean(e.target.closest('#' + id));
         const isButton =  e.target.tagName.toLowerCase() === 'button';
+        if (e.type == 'touchmove') {
+            const touchY = e.touches[0].pageY;
+            if (ignoneTouch) {
+                e.preventDefault();
+                return;
+            } else if (touchY - lastY < -20) {
+                e.deltaY = -1;
+            } else if (touchY - lastY > 20) {
+                e.deltaY = 1;
+            } else {
+                e.preventDefault();
+                return;
+            }
+            console.log(touchY - lastY);
+            lastY = touchY;
+            ignoneTouch = true;
+            setTimeout(() => ignoneTouch = false, 50);
+
+        }
         const isPositive = e.deltaY < 0;
         let target = isButton ? e.target : lastTouchedButton?.closest('#musical-score') && lastTouchedButton;
         if (!target) {
@@ -1486,7 +1506,9 @@ document.addEventListener('DOMContentLoaded', () => {
             block.saveBlocksData();
             block.exportMml(mml);
         }
-    });
+    }
+    editor.addEventListener('wheel', wheelHandler);
+    editor.addEventListener('touchmove', wheelHandler);
 
     let dragInfo = {};
     editor.addEventListener('dragstart', e => {
