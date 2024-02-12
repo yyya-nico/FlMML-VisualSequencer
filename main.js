@@ -750,6 +750,92 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 ]
             },
+            metaData: {
+                title: 'メタデータ設定',
+                inputs: [
+                    {
+                        label: '定義選択',
+                        select: {
+                            '#TITLE {desc}\n': 'タイトル',
+                            '#ARTIST {desc}\n': 'アーティスト',
+                            '#COMMENT {desc}\n': 'コメント',
+                            '#CODING {desc}\n': '作成者',
+                            '#PRAGMA {desc}\n': 'PRAGMA',
+                            '#OCTAVE REVERSE\n': '相対オクターブ反転',
+                            '#VELOCITY REVERSE\n': '相対ベロシティ反転',
+                            '#WAV9 {n},{desc}\n': '@9 波形データ',
+                            '#WAV10 {n},{desc}\n': '@10 波形データ',
+                            '#WAV13 {n},{desc}\n': '@13 波形データ',
+                            '#OPM@{n} {{desc}}\n': '@14 OPM音色データ',
+                            '#OPN@{n} {{desc}}\n': '@14 OPN音色データ',
+                            '#FMGAIN {n}\n': '@14 音量利得',
+                            '#USING POLY {n} force\n': '和音利用宣言',
+                        },
+                        name: 'select-meta-data'
+                    },
+                    {
+                        label: '数',
+                        type: 'number',
+                        name: 'number'
+                    },
+                    {
+                        label: '文字列',
+                        type: 'text',
+                        name: 'text'
+                    },
+                ],
+                buttons: [
+                    {
+                        class: 'primaly',
+                        value: 'set-meta-data',
+                        textContent: '確定'
+                    }
+                ]
+            },
+            macroDef: {
+                title: 'マクロ定義設定',
+                inputs: [
+                    {
+                        label: '名前(+引数)',
+                        type: 'text',
+                        name: 'macro-def-name'
+                    },
+                    {
+                        label: '内容',
+                        type: 'text',
+                        name: 'macro-def-desc'
+                    },
+                ],
+                buttons: [
+                    {
+                        class: 'primaly',
+                        value: 'set-macro-def',
+                        textContent: '確定'
+                    }
+                ]
+            },
+            macroUse: {
+                title: 'マクロ使用設定',
+                inputs: [
+                    {
+                        label: '名前',
+                        type: 'text',
+                        name: 'macro-use-name'
+                    },
+                    {
+                        label: '引数(あれば)',
+                        type: 'text',
+                        name: 'macro-use-arg'
+                    },
+                ],
+                buttons: [
+                    {
+                        class: 'primaly',
+                        value: 'set-macro-use',
+                        textContent: '確定'
+                    }
+                ]
+            },
             otherAction: {
                 title: 'その他の作用設定',
                 inputs: [
@@ -787,14 +873,15 @@ document.addEventListener('DOMContentLoaded', () => {
                                     appendElem = label;
                                 } else if (entry[0] === 'select') {
                                     const select = document.createElement('select');
+                                    select.name = inputDef.name;
                                     const selectOptionsDef = entry[1];
-                                    Object.entry(selectOptionsDef).forEach(entry => {
+                                    Object.entries(selectOptionsDef).forEach(entry => {
                                         const option = document.createElement('option');
                                         option.value = entry[0];
                                         option.textContent = entry[1];
                                         select.appendChild(option);
                                     });
-                                    appendElem = select;
+                                    input.replaceWith(select);
                                 } else {
                                     input.setAttribute(entry[0], entry[1]);
                                 }
@@ -1203,6 +1290,8 @@ document.addEventListener('DOMContentLoaded', () => {
             await dialogFormManager.prompt('usingPoly', {
                 'using-poly': item.dataset.usingPoly.replace('#USING POLY ', '').replace(' force\n', '')
             }, item);
+        } else if ('metaData' in item.dataset) {
+            await dialogFormManager.prompt('metaData', {}, item);
         } else if ('otherAction' in item.dataset) {
             await dialogFormManager.prompt('otherAction', {
                 'other-action': item.dataset.otherAction
