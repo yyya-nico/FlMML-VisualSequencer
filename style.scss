@@ -646,3 +646,9 @@ header {
         }
     }
 }
+
+@media screen and (width < 768px) {
+    .wrap {
+        padding-right: 40px;
+    }    
+}
