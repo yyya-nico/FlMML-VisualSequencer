@@ -399,9 +399,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const attachMotion = () => {
                 const current = data[i];
                 if (!current || i >= current.length) {
-                    [tones, action, musicalScore].forEach(target => {
-                        target.classList.remove('no-op');
-                    });
                     return;
                 } else if (jump) {
                     if (current.loopStart) {
