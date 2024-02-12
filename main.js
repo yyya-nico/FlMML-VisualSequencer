@@ -1353,6 +1353,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     let lastY = null, ignoneTouch = false;
+    editor.addEventListener('touchstart', e => {
+        const touchY = e.touches[0].pageY;
+        lastY = touchY;
+    });
     const wheelHandler = e => {
         const is = id => Boolean(e.target.closest('#' + id));
         const isButton =  e.target.tagName.toLowerCase() === 'button';
@@ -1506,7 +1510,7 @@ document.addEventListener('DOMContentLoaded', () => {
             block.saveBlocksData();
             block.exportMml(mml);
         }
-    }
+    };
     editor.addEventListener('wheel', wheelHandler);
     editor.addEventListener('touchmove', wheelHandler);
 
