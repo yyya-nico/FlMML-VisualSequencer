@@ -1,9 +1,11 @@
 import './style.scss'
+import 'mobile-drag-drop/default.css'
 import FlMMLWorkerLocation from './flmml-on-html5.worker.js?url'
 
 import {FlMML} from 'flmml-on-html5';
 import localForage from 'localforage';
 import {Picker} from 'emoji-picker-element';
+import {polyfill} from 'mobile-drag-drop';
 import {htmlspecialchars, resetAnimation} from './utils';
 
 const version = import.meta.env.VITE_APP_VER;
@@ -896,6 +898,7 @@ document.addEventListener('DOMContentLoaded', () => {
         i18n: ja,
         locale: 'ja'
     });
+    polyfill();
 
     const createMIsHtml = name => `<span class="material-icons">${name}</span>`;
     const playHtml = createMIsHtml('play_arrow') + '再生';
