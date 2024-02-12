@@ -311,9 +311,13 @@ header {
     overflow: clip;
     height: contentAreaHeight(vh);
     height: contentAreaHeight(dvh);
-    padding: 20px 40px;
+    padding: 20px 10px;
     overflow-y: auto;
     scroll-behavior: smooth;
+
+    @media (pointer: coarse) {
+        padding: 20px 40px;
+    }
 
     >* {
         width: 100%;
@@ -633,6 +637,25 @@ header {
             justify-content: flex-end;
         }
 
+        &.for-mobile {
+            display: none;
+            position: sticky;
+            bottom: 0;
+            left: 0;
+            z-index: 1;
+
+            &.show {
+                display: flex;
+            }
+
+            button {
+                width: 120px;
+                box-shadow: 0 1px 6px 3px #111111;
+                aspect-ratio: 4 / 3;
+                user-select: none;
+            }
+        }
+
         button {
             display: flex;
             justify-content: center;
@@ -643,7 +666,9 @@ header {
 }
 
 @media screen and (width < 768px) {
-    .wrap {
-        padding-left: 10px;
-    }    
+    @media (pointer: coarse) {
+        .wrap {
+            padding-left: 10px;
+        }
+    }
 }
