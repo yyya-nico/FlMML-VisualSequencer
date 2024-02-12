@@ -16,11 +16,6 @@
 }
 
 html,
-body {
-    overscroll-behavior: contain;
-}
-
-html,
 html * {
     scrollbar-color: var(--scrollbarHandle) transparent;
     scrollbar-width: thin
