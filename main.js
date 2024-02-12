@@ -1355,10 +1355,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    let lastY = null, ignoneTouch = false;
+    let lastY = null, ignoneTouch = false, dragJudgementTimer = null, doNotDrag = false;
     editor.addEventListener('touchstart', e => {
         const touchY = e.touches[0].pageY;
         lastY = touchY;
+        doNotDrag = true;
+        dragJudgementTimer = setTimeout(() => {
+            ignoneTouch = true;
+            doNotDrag = false;
+        }, 500);
     });
     const wheelHandler = e => {
         const is = id => Boolean(e.target.closest('#' + id));
@@ -1370,8 +1375,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             } else if (touchY - lastY < -20) {
                 e.deltaY = -1;
+                clearTimeout(dragJudgementTimer);
             } else if (touchY - lastY > 20) {
                 e.deltaY = 1;
+                clearTimeout(dragJudgementTimer);
             } else {
                 e.preventDefault();
                 return;
@@ -1517,6 +1524,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     editor.addEventListener('wheel', wheelHandler);
     editor.addEventListener('touchmove', wheelHandler);
+    editor.addEventListener('touchend', () => {
+        ignoneTouch = false;
+        doNotDrag = false;
+    });
 
     let dragInfo = {};
     editor.addEventListener('dragstart', e => {
@@ -1530,6 +1541,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let dropEffect = null;
     [tones, action, musicalScore].forEach(target => {
         const dragEventHandler = e => {
+            if (doNotDrag) {
+                return;
+            }
             const {from = null} = dragInfo;
             const dt = e.dataTransfer;
             switch (from) {
@@ -1584,6 +1598,9 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         target.addEventListener('dragover', dragEventHandler);
         const dragenterEventHandler = e => {
+            if (doNotDrag) {
+                return;
+            }
             const {from = null} = dragInfo;
             const isButton =  e.target.tagName.toLowerCase() === 'button';
             const addClass = () => e.target.classList.add('droppable');
@@ -1592,6 +1609,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     switch (target) {
                         case tones:
                             if (isButton) {
+                                e.preventDefault(); // polyfill用
                                 addClass();
                             }
                             break;
@@ -1599,6 +1617,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             break;
                         case musicalScore:
                             if (isButton) {
+                                e.preventDefault(); // polyfill用
                                 addClass();
                             }
                             break;
@@ -1612,6 +1631,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             break;
                         case musicalScore:
                             if (isButton) {
+                                e.preventDefault(); // polyfill用
                                 addClass();
                             }
                             break;
@@ -1625,6 +1645,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             break;
                         case musicalScore:
                             if (isButton) {
+                                e.preventDefault(); // polyfill用
                                 addClass();
                             }
                             break;
@@ -1634,6 +1655,9 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         target.addEventListener('dragenter', dragenterEventHandler);
         const dragleaveEventHandler = e => {
+            if (doNotDrag) {
+                return;
+            }
             const {from = null} = dragInfo;
             const isButton =  e.target.tagName.toLowerCase() === 'button';
             const removeClass = () => e.target.classList.remove('droppable');
@@ -1685,7 +1709,10 @@ document.addEventListener('DOMContentLoaded', () => {
         target.addEventListener('dragleave', dragleaveEventHandler);
         target.addEventListener('drop', async e => {
             e.preventDefault();
-            if (e.dataTransfer.items.length) {
+            if (doNotDrag) {
+                return;
+            }
+            if (e.dataTransfer.items?.length) { // ?はpolyfill用
                 return;
             }
             e.dataTransfer.dropEffect = e.dataTransfer.dropEffect !== 'none' ? e.dataTransfer.dropEffect : dropEffect;
