@@ -1498,12 +1498,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
             const afterChange = JSON.parse(JSON.stringify(target.dataset));
-            history.pushState({
-                operation: 'valueChange',
-                target,
-                beforeChange,
-                afterChange
-            });
+            if (beforeChange !== afterChange) {
+                history.pushState({
+                    operation: 'valueChange',
+                    target,
+                    beforeChange,
+                    afterChange
+                });
+            }
             lastTouchedButton = target;
             block.blocksDataUpdate();
             block.saveBlocksData();
