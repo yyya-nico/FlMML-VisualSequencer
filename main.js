@@ -1608,16 +1608,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 case tones:
                     switch (target) {
                         case tones:
+                            e.preventDefault(); // polyfill用
                             if (isButton) {
-                                e.preventDefault(); // polyfill用
                                 addClass();
                             }
                             break;
                         case action:
                             break;
                         case musicalScore:
+                            e.preventDefault(); // polyfill用
                             if (isButton) {
-                                e.preventDefault(); // polyfill用
                                 addClass();
                             }
                             break;
@@ -1630,8 +1630,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         case action:
                             break;
                         case musicalScore:
+                            e.preventDefault(); // polyfill用
                             if (isButton) {
-                                e.preventDefault(); // polyfill用
                                 addClass();
                             }
                             break;
@@ -1644,8 +1644,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         case action:
                             break;
                         case musicalScore:
+                            e.preventDefault(); // polyfill用
                             if (isButton) {
-                                e.preventDefault(); // polyfill用
                                 addClass();
                             }
                             break;
