@@ -1373,7 +1373,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 e.preventDefault();
                 return;
             }
-            console.log(touchY - lastY);
             lastY = touchY;
             ignoneTouch = true;
             setTimeout(() => ignoneTouch = false, 50);
