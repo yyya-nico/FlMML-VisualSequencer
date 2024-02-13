@@ -528,9 +528,8 @@ header {
         }
 
         #dialog {
-            overflow-y: auto;
-            max-height: 90%;
-            margin: auto;
+            all: revert;
+            bottom: calc(100dvh - var(--vvh, 100dvh));
             padding: 0;
             border: 0;
             border-radius: 6px;

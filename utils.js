@@ -26,4 +26,11 @@ const resetAnimation = (elem, token) => {
     });
 };
 
-export {htmlspecialchars, resetAnimation}
+const useVisualViewportToCss = () => {
+    const vv = window.visualViewport;
+    const setVvh = () => document.documentElement.style.setProperty('--vvh', `${vv.height}px`);     
+    vv.addEventListener("resize", setVvh);
+    setVvh();
+};
+
+export {htmlspecialchars, resetAnimation, useVisualViewportToCss}

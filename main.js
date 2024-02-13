@@ -6,7 +6,7 @@ import {FlMML} from 'flmml-on-html5';
 import localForage from 'localforage';
 import {Picker} from 'emoji-picker-element';
 import {polyfill} from 'mobile-drag-drop';
-import {htmlspecialchars, resetAnimation} from './utils';
+import {htmlspecialchars, resetAnimation, useVisualViewportToCss} from './utils';
 
 const version = import.meta.env.VITE_APP_VER;
 
@@ -978,12 +978,12 @@ document.addEventListener('DOMContentLoaded', () => {
         ],
         "skinTonesLabel": "スキントーン"
     }
-
     const picker = new Picker({
         i18n: ja,
         locale: 'ja'
     });
     polyfill();
+    useVisualViewportToCss();
 
     const createMIsHtml = name => `<span class="material-icons">${name}</span>`;
     const playHtml = createMIsHtml('play_arrow') + '再生';
@@ -1461,7 +1461,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.type == 'touchmove') {
             const touchY = [...e.touches].at(-1).pageY;
             if (ignoneTouch) {
-                e.preventDefault();
+                e.cancelable && e.preventDefault();
                 return;
             } else if (touchY - lastY < -20) {
                 e.deltaY = -1;
@@ -1470,7 +1470,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 e.deltaY = 1;
                 clearTimeout(dragJudgementTimer);
             } else {
-                e.preventDefault();
+                e.cancelable && e.preventDefault();
                 return;
             }
             lastY = touchY;
