@@ -284,7 +284,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     if (block.noteValue || block.loopStart || block.loopBreak || block.loopEnd) {
                         [...toneSet].forEach((_, i) => {
-                            mml.appendToStr(lineIndex + i, block.loopStart || block.loopBreak || block.loopEnd || '');
+                            mml.appendToStr(lineIndex + i, block.noteValue || block.loopStart || block.loopBreak || block.loopEnd || '');
                         });
                     } else {
                         mml.appendToStr(lineIndex, tonePitch || block.tempo || block.noteValue || block.rest
