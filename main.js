@@ -274,10 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         toneAppended = true;
                     }
                     [...toneSet].forEach((_, i) => {
-                        let mmlText = tonePitch || block.tempo || block.noteValue || block.rest
-                            || block.octave || block.velocity || block.noteShift || block.detune
-                            || block.loopStart || block.loopBreak || block.loopEnd || block.usingPoly
-                            || block.polyStartEnd || block.otherAction || '';
+                        let mmlText = tonePitch || '';
                         if (i !== toneIndex) {
                             const noteValue = (/[0-9]+/.exec(mmlText) || [''])[0];
                             mmlText = 'r' + noteValue;
@@ -285,7 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         mml.appendToStr(lineIndex + i, mmlText);
                     });
                 } else {
-                    if (block.loopStart || block.loopBreak || block.loopEnd) {
+                    if (block.noteValue || block.loopStart || block.loopBreak || block.loopEnd) {
                         [...toneSet].forEach((_, i) => {
                             mml.appendToStr(lineIndex + i, block.loopStart || block.loopBreak || block.loopEnd || '');
                         });
