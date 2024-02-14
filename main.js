@@ -421,7 +421,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     i++;
                     attachMotion();
                 } else if (current.tone.tonePitch) {
-                    const currentNoteValue = Number((current.tone.tonePitch.match(/[0-9]+]/) || [''])[0]) || scoreNoteValue;
+                    const currentNoteValue = Number((current.tone.tonePitch.match(/[0-9]+/) || [scoreNoteValue])[0]);
                     resetAnimation(current.elem, 'bounce');
                     i++;
                     if (!skip) {
@@ -1653,7 +1653,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                         beforeChange = JSON.parse(JSON.stringify(target.dataset));
                     }
-                    const repeat = Number((target.dataset.repeatStartEnd.match(/[0-9]+/) || [''])[0] || -1);
+                    const repeat = Number((target.dataset.repeatStartEnd.match(/[0-9]+/) || [-1])[0]);
                     const increase = minmax(repeat, -1);
                     const newRepeat = repeat + increase !== -1 ? repeat + increase : '';
                     target.dataset.repeatStartEnd = '/:' + newRepeat;
