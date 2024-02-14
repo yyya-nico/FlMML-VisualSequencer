@@ -1558,7 +1558,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const increase = increaseBase;
                     target.dataset.detune = '@d' + (detune + increase);
                 } else if ('loopStart' in target.dataset) {
-                    const loop = Number(target.dataset.loopStart.replace('/:', ''));
+                    const loop = Number(target.dataset.loopStart.replace('/:', '') || -1);
                     const increase = minmax(loop, -1);
                     const newLoop = loop + increase !== -1 ? loop + increase : '';
                     target.dataset.loopStart = '/:' + newLoop;
