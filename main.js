@@ -437,9 +437,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else if (current.polyStartEnd) {
                     skip = current.polyStartEnd === '[';
                     resetAnimation(current.elem, 'pop');
+                    const previousNoteValue = Number((data[i - 1].tone.tonePitch?.match(/[0-9]+/) || [scoreNoteValue])[0]);
                     i++;
                     if (!skip) {
-                        delayAttachMotion(scoreNoteValue);
+                        delayAttachMotion(previousNoteValue);
                     } else {
                         attachMotion();
                     }
