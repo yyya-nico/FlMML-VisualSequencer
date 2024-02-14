@@ -447,10 +447,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     current.tempo && (tempo = Number(current.tempo.replace('t', '')) || tempo);
                     current.noteValue && (scoreNoteValue = Number(current.noteValue.replace('l', '')) || scoreNoteValue);
                     resetAnimation(current.elem, 'pop');
-                    if (current.repeatStartEnd.startsWith('/:')) {
+                    if (current.repeatStartEnd?.startsWith('/:')) {
                         repeatStart[++nest] = i;
                         if (!repeatEnd[nest] || repeatStart[nest] > repeatEnd[nest]) {
-                            remainingRepeat[nest] = current.repeatStart.replace('/:', '');
+                            remainingRepeat[nest] = current.repeatStartEnd.replace('/:', '');
                             remainingRepeat[nest] = remainingRepeat[nest] === '' ? 2 : Number(remainingRepeat[nest]);
                             if (!remainingRepeat[nest]) {
                                 jump = nest;
