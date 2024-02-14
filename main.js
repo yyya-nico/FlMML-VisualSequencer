@@ -421,7 +421,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     i++;
                     attachMotion();
                 } else if (current.tone.tonePitch) {
-                    const currentNoteValue = Number(current.tone.tonePitch.replace(/[><]*[a-g]\+?/, '')) || scoreNoteValue;
+                    const currentNoteValue = Number((current.tone.tonePitch.match(/[0-9]+]/) || [''])[0]) || scoreNoteValue;
                     resetAnimation(current.elem, 'bounce');
                     i++;
                     if (!skip) {
@@ -1434,7 +1434,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         newItem.classList.remove('material-icons');
                         newItem.ariaLabel = 'リピート開始';
                         newItem.textContent = '◆';
-                        newItem.dataset.repeatStartEnd = '/:' + (newItem.dataset.repeatStartEnd.match(/[0-9]+/) || '');
+                        newItem.dataset.repeatStartEnd = '/:' + (newItem.dataset.repeatStartEnd.match(/[0-9]+/) || [''])[0];
                     }
                     li.appendChild(newItem);
                     ul.appendChild(li);
@@ -1596,7 +1596,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const increaseBase = isPositive ? 1 : -1;
                 const minmax = (current, min = -Infinity, max = Infinity) => current + increaseBase < min ? 0 : current + increaseBase > max ? 0 : increaseBase;
                 if (ctrlKey && 'tonePitch' in target.dataset) {
-                    const noteValue = Number(target.dataset.tonePitch.match(/[0-9]+/));
+                    const noteValue = Number((target.dataset.tonePitch.match(/[0-9]+/) || [''])[0]);
                     const increase = minmax(noteValue, 0, 384);
                     const newNoteValue = noteValue + increase !== 0 ? noteValue + increase : '';
                     target.dataset.tonePitch = target.dataset.tonePitch.replace(/[0-9]+/, '') + newNoteValue;
@@ -1653,7 +1653,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                         beforeChange = JSON.parse(JSON.stringify(target.dataset));
                     }
-                    const repeat = Number(target.dataset.repeatStartEnd.match(/[0-9]+/) || -1);
+                    const repeat = Number((target.dataset.repeatStartEnd.match(/[0-9]+/) || [''])[0] || -1);
                     const increase = minmax(repeat, -1);
                     const newRepeat = repeat + increase !== -1 ? repeat + increase : '';
                     target.dataset.repeatStartEnd = '/:' + newRepeat;
@@ -1895,7 +1895,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         newItem.classList.remove('material-icons');
                         newItem.ariaLabel = 'リピート開始';
                         newItem.textContent = '◆';
-                        newItem.dataset.repeatStartEnd = '/:' + (newItem.dataset.repeatStartEnd.match(/[0-9]+/) || '');
+                        newItem.dataset.repeatStartEnd = '/:' + (newItem.dataset.repeatStartEnd.match(/[0-9]+/) || [''])[0];
                     } 
                     li.appendChild(newItem);
                     newNode = li;
