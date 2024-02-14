@@ -387,8 +387,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = this.#blocksData;
             let tempo = 120;
             let scoreNoteValue = 4;
-            let skip = false, jump = false, nest = 0;
-            let loopStart = -1, loopEnd = -1, remainingLoop = 0;
+            let skip = false, jump = -1, nest = -1;
+            const loopStart = [], loopEnd = [], remainingLoop = [];
             let i = 0;
             [tones, action, musicalScore].forEach(target => {
                 target.classList.add('no-op');
@@ -401,15 +401,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 const current = data[i];
                 if (!current || i >= current.length) {
                     return;
-                } else if (jump) {
+                } else if (jump !== -1) {
                     if (current.loopStart) {
                         nest++;
                     } else if (current.loopEnd) {
-                        nest--;
-                        if (!nest) {
+                        if (nest === jump) {
                             resetAnimation(current.elem, 'pop');
-                            jump = false;
+                            jump = -1;
                         }
+                        nest--;
                     }
                     i++;
                     attachMotion();
@@ -427,39 +427,62 @@ document.addEventListener('DOMContentLoaded', () => {
                     resetAnimation(current.elem, 'pop');
                     i++;
                     delayAttachMotion(currentNoteValue);
+                } else if (current.polyStartEnd) {
+                    skip = current.polyStartEnd === '[';
+                    resetAnimation(current.elem, 'pop');
+                    i++;
+                    if (!skip) {
+                        delayAttachMotion(scoreNoteValue);
+                    } else {
+                        attachMotion();
+                    }
                 } else {
                     current.tempo && (tempo = Number(current.tempo.replace('t', '')) || tempo);
                     current.noteValue && (scoreNoteValue = Number(current.noteValue.replace('l', '')) || scoreNoteValue);
-                    current.polyStartEnd && (skip = current.polyStartEnd === '[');
                     resetAnimation(current.elem, 'pop');
                     if (current.loopStart) {
-                        loopStart = i;
-                        if (!remainingLoop && loopStart > loopEnd) {
-                            remainingLoop = current.loopStart.replace('/:', '');
-                            remainingLoop === '' ? (remainingLoop = 2) : (remainingLoop = Number(remainingLoop));
-                            if (!remainingLoop) {
-                                jump = true;
-                                nest++;
+                        loopStart[++nest] = i;
+                        if (!loopEnd[nest] || loopStart[nest] > loopEnd[nest]) {
+                            remainingLoop[nest] = current.loopStart.replace('/:', '');
+                            remainingLoop[nest] = remainingLoop[nest] === '' ? 2 : Number(remainingLoop[nest]);
+                            if (!remainingLoop[nest]) {
+                                jump = nest;
                             }
-                        };
-                        i++;
+                        }
                     } else if (current.loopBreak) {
-                        if (remainingLoop === 1) {
-                            i = loopEnd;
-                            remainingLoop--;
+                        if (remainingLoop[nest] === 1) {
+                            if (!loopEnd[nest] || loopStart[nest] > loopEnd[nest]) {
+                                let tempNest = nest;
+                                loopEnd[nest] = data.findIndex((block, i) => {
+                                    if (i > loopStart[nest]) {
+                                        console.log(tempNest);
+                                        if (block.loopStart) {
+                                            tempNest++;                                            
+                                        } else if (block.loopEnd) {
+                                            if (tempNest === nest) {
+                                                return true;
+                                            }
+                                            tempNest--;
+                                        }
+                                    }
+                                });
+                            }
+                            i = loopEnd[nest];
+                            attachMotion();
+                            return;
                         }
-                        i++;
                     } else if (current.loopEnd) {
-                        loopEnd = i;
-                        remainingLoop--;
-                        if (remainingLoop) {
-                            i = loopStart;
-                        } else {
-                            i++;
+                        loopEnd[nest] = i;
+                        remainingLoop[nest]--;
+                        if (remainingLoop[nest]) {
+                            i = loopStart[nest];
+                            nest--;
+                            attachMotion();
+                            return;
                         }
-                    } else {
-                        i++;
+                        nest--;
                     }
+                    i++;
                     attachMotion();
                 }
                 resetAnimation(current.elem, 'done');
