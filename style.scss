@@ -421,8 +421,8 @@ header {
                     content: attr(data-detune);
                 }
 
-                &.loop-start::after {
-                    content: attr(data-loop-start);
+                &.repeat-start-end::after {
+                    content: attr(data-repeat-start-end);
                 }
 
                 &:hover {
