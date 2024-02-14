@@ -1547,7 +1547,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const increaseBase = isPositive ? 1 : -1;
                 const minmax = (current, min = -Infinity, max = Infinity) => current + increaseBase < min ? 0 : current + increaseBase > max ? 0 : increaseBase;
                 if (ctrlKey && 'tonePitch' in target.dataset) {
-                    const noteValue = Number(target.dataset.tonePitch.replace(/[><]*[a-g]\+?/, ''));
+                    const noteValue = Number(target.dataset.tonePitch.match(/[0-9]+/));
                     const increase = minmax(noteValue, 0, 384);
                     const newNoteValue = noteValue + increase !== 0 ? noteValue + increase : '';
                     target.dataset.tonePitch = target.dataset.tonePitch.replace(/[0-9]+/, '') + newNoteValue;
