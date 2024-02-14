@@ -1286,7 +1286,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (item.dataset.repeatStartEnd === ':/') {
                 const findRepeatStartElem = () => {
                     let findTemp = item.parentElement;
-                    while (findTemp && !(findTemp.firstElementChild.dataset.repeatStartEnd.startsWith('/:'))) {
+                    while (findTemp && !(findTemp.firstElementChild.dataset.repeatStartEnd?.startsWith('/:'))) {
                         findTemp = findTemp.previousElementSibling;
                     };
                     return findTemp?.firstElementChild || null;
@@ -1634,7 +1634,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (target.dataset.repeatStartEnd === ':/') {
                         const findRepeatStartElem = () => {
                             let findTemp = target.parentElement;
-                            while (findTemp && !(findTemp.firstElementChild.dataset.repeatStartEnd.startsWith('/:'))) {
+                            while (findTemp && !(findTemp.firstElementChild.dataset.repeatStartEnd?.startsWith('/:'))) {
                                 findTemp = findTemp.previousElementSibling;
                             };
                             return findTemp?.firstElementChild || null;
