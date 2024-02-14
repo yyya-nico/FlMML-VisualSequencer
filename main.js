@@ -1887,15 +1887,16 @@ document.addEventListener('DOMContentLoaded', () => {
                         const noteClassName = [...item.classList].find(name => name.includes('note-'));
                         newItem.classList.replace(noteClassName, getNonExistNoteClassName());
                     } else if (from === action) {
-                        if ('repeatStartEnd' in newItem.dataset) {
-                            newItem.classList.remove('material-icons');
-                            newItem.ariaLabel = 'リピート開始';
-                            newItem.textContent = '◆';
-                            newItem.dataset.repeatStartEnd = '/:' + (newItem.dataset.repeatStartEnd.match(/[0-9]+/) || '');
-                        } else if ('otherAction' in newItem.dataset) {
+                        if ('otherAction' in newItem.dataset) {
                             await actionPromptSwitcher(newItem);
                         }
                     }
+                    if ('repeatStartEnd' in newItem.dataset) {
+                        newItem.classList.remove('material-icons');
+                        newItem.ariaLabel = 'リピート開始';
+                        newItem.textContent = '◆';
+                        newItem.dataset.repeatStartEnd = '/:' + (newItem.dataset.repeatStartEnd.match(/[0-9]+/) || '');
+                    } 
                     li.appendChild(newItem);
                     newNode = li;
                     break;
@@ -1940,7 +1941,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                     break;
             }
-            if (from === action && 'repeatStartEnd' in lastTouchedButton.dataset) {
+            if (e.dataTransfer.dropEffect === 'copy' && 'repeatStartEnd' in lastTouchedButton.dataset) {
                 const li = document.createElement('li')
                 const newItem = item.cloneNode(true);
                 newItem.classList.add('material-icons');
