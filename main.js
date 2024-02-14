@@ -393,6 +393,10 @@ document.addEventListener('DOMContentLoaded', () => {
             [tones, action, musicalScore].forEach(target => {
                 target.classList.add('no-op');
             });
+            const delayAttachMotion = noteValue => {
+                this.#rendTimeout = setTimeout(attachMotion,
+                    60 / tempo * 4 / noteValue * 1000);
+            };
             const attachMotion = () => {
                 const current = data[i];
                 if (!current || i >= current.length) {
@@ -413,10 +417,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     const currentNoteValue = Number(current.tone.tonePitch.replace(/[><]*[a-g]\+?/, '')) || scoreNoteValue;
                     resetAnimation(current.elem, 'bounce');
                     i++;
-                    const nextSiblingIsPolyEnd = current.elem.parentElement.nextSibling?.firstElementChild.dataset.polyStartEnd === ']';
-                    if (!skip || nextSiblingIsPolyEnd) {
-                        this.#rendTimeout = setTimeout(attachMotion,
-                            60 / tempo * 4 / currentNoteValue * 1000);
+                    if (!skip) {
+                        delayAttachMotion(currentNoteValue);
                     } else {
                         attachMotion();
                     }
@@ -424,8 +426,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const currentNoteValue = Number(current.rest.replace('r', '')) || scoreNoteValue;
                     resetAnimation(current.elem, 'pop');
                     i++;
-                    this.#rendTimeout = setTimeout(attachMotion,
-                        60 / tempo * 4 / currentNoteValue * 1000);
+                    delayAttachMotion(currentNoteValue);
                 } else {
                     current.tempo && (tempo = Number(current.tempo.replace('t', '')) || tempo);
                     current.noteValue && (scoreNoteValue = Number(current.noteValue.replace('l', '')) || scoreNoteValue);
