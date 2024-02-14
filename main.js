@@ -1594,20 +1594,19 @@ document.addEventListener('DOMContentLoaded', () => {
                         };
                         return findTemp?.firstElementChild || null;
                     };
-                    target = findLoopStartElem();
-                    const loopStartCount = musicalScore.getElementsByClassName('loop-start').length;
-                    const loopEndCount = musicalScore.getElementsByClassName('loop-end').length;
-                    const enoughLoopEnds = loopStartCount === loopEndCount;
-                    if (!target || enoughLoopEnds && !is('musical-score')) {
+                    const loopStart = findLoopStartElem();
+                    if (!loopStart) {
                         const ul = musicalScore.querySelector('ul');
                         const li = document.createElement('li');
                         const baseItem = action.querySelector('.loop-start');
                         const newItem = baseItem.cloneNode(true);
                         li.appendChild(newItem);
-                        ul.appendChild(li);
+                        ul.insertBefore(li, target.parentElement);
                         target = newItem;
+                    } else {
+                        target = loopStart;
                     }
-                    beforeChange = JSON.parse(JSON.stringify(target.dataset))
+                    beforeChange = JSON.parse(JSON.stringify(target.dataset));
                     const loop = Number(target.dataset.loopStart.replace('/:', ''));
                     const increase = minmax(loop, -1);
                     const newLoop = loop + increase !== -1 ? loop + increase : '';
