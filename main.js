@@ -1619,7 +1619,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
             const afterChange = JSON.parse(JSON.stringify(target.dataset));
-            if (beforeChange !== afterChange) {
+            if (JSON.stringify(beforeChange) !== JSON.stringify(afterChange)) {
                 history.pushState({
                     operation: 'valueChange',
                     target,
@@ -2018,7 +2018,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
         }
         const afterChange = JSON.parse(JSON.stringify(submitTarget.dataset));
-        if (beforeChange !== afterChange) {
+        if (JSON.stringify(beforeChange) !== JSON.stringify(afterChange)) {
             history.pushState({
                 operation: 'valueChange',
                 target: submitTarget,
