@@ -409,7 +409,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!current || i >= current.length) {
                     return;
                 } else if (jump !== -1) {
-                    if (current.repeatStartEnd.startsWith('/:')) {
+                    if (current.repeatStartEnd?.startsWith('/:')) {
                         nest++;
                     } else if (current.repeatStartEnd === ':/') {
                         if (nest === jump) {
