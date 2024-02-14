@@ -219,7 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     wrap.innerHTML = toneButtonHTML;
                     return wrap.firstElementChild;
                 })();
-                const copySourceCandidate = document.querySelector(`[class*="${block.className.replace(/ bounce| pop| done/g, '')}"]`);
+                const copySourceCandidate = document.querySelector(`[class*="${block.className.replace(/ droppable| bounce| pop| done/g, '')}"]`);
                 const button = copySourceCandidate?.cloneNode(true) || toneButton;
                 block.label && (button.ariaLabel = block.label);
                 if (block.tone.tonePitch) {
