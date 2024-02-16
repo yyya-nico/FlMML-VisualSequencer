@@ -289,15 +289,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         mml.appendToStr(lineIndex + i, mmlText);
                     });
                 } else {
-                    if (block.noteValue || block.repeatStartEnd || block.repeatBreak) {
+                    if (block.noteValue || block.repeatStartEnd || block.repeatBreak || block.polyStartEnd) {
                         [...toneSet].forEach((_, i) => {
-                            mml.appendToStr(lineIndex + i, block.noteValue || block.repeatStartEnd || block.repeatBreak || '');
+                            mml.appendToStr(lineIndex + i, block.noteValue || block.repeatStartEnd || block.repeatBreak || block.polyStartEnd || '');
                         });
                     } else {
-                        mml.appendToStr(lineIndex, tonePitch || block.tempo || block.noteValue || block.rest
-                            || block.octave || block.velocity || block.noteShift || block.detune
-                            || block.repeatStartEnd || block.repeatBreak || block.usingPoly
-                            || block.polyStartEnd || block.otherAction || '');
+                        mml.appendToStr(lineIndex, tonePitch || block.tempo || block.rest || block.octave
+                            || block.velocity || block.noteShift || block.detune || block.usingPoly
+                            || block.otherAction || '');
                         if (mml.getMmlLine(lineIndex).includes('\n')) {
                             const mmlText = mml.getMmlLine(lineIndex).replace('\n', '');
                             mml.rewrite(lineIndex, mmlText);
