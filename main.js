@@ -292,6 +292,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (block.noteValue || block.repeatStartEnd || block.repeatBreak || block.polyStartEnd) {
                         [...toneSet].forEach((_, i) => {
                             mml.appendToStr(lineIndex + i, block.noteValue || block.repeatStartEnd || block.repeatBreak || block.polyStartEnd || '');
+                            if (block.polyStartEnd === ']') {
+                                const targetStr = mml.getMmlLine(lineIndex + i).match(/\[(.+?)\]/);
+                                if (targetStr) {
+                                    const matched = targetStr[1].matchAll(/r([0-9]*)/g);
+                                    if (matched) {
+                                        const nums = [...matched].map(arr => arr[1]);
+                                        const maxNoteValue = Math.max(0, ...nums);
+                                        const mmlText = mml.getMmlLine(lineIndex + i).replace(/\[(r[0-9]*)(?!\]).+?\]/, `r${maxNoteValue ? maxNoteValue : ''}`);
+                                        mml.rewrite(lineIndex + i, mmlText);
+                                    }
+                                }
+                            }
                         });
                     } else {
                         mml.appendToStr(lineIndex, tonePitch || block.tempo || block.rest || block.octave
