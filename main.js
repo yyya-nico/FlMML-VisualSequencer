@@ -476,6 +476,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 });
                             }
                             i = repeatEnd[nest];
+                            resetAnimation(current.elem, 'done');
                             attachMotion();
                             return;
                         }
@@ -485,6 +486,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             repeatEnd[nest] = i;
                             i = repeatStart[nest];
                             nest--;
+                            resetAnimation(current.elem, 'done');
                             attachMotion();
                             return;
                         }
