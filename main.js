@@ -1376,6 +1376,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     newItem.classList.remove('material-icons');
                     newItem.ariaLabel = 'リピート開始';
                     newItem.textContent = '◆';
+                    newItem.dataset.repeatStartEnd = '/:';
                 }
                 li.appendChild(newItem);
                 ul.appendChild(li);
