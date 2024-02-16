@@ -450,7 +450,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     resetAnimation(current.elem, 'pop');
                     if (current.repeatStartEnd?.startsWith('/:')) {
                         repeatStart[++nest] = i;
-                        if (!repeatEnd[nest] || repeatStart[nest] > repeatEnd[nest]) {
+                        if (!repeatEnd[nest]) {
                             remainingRepeat[nest] = current.repeatStartEnd.replace('/:', '');
                             remainingRepeat[nest] = remainingRepeat[nest] === '' ? 2 : Number(remainingRepeat[nest]);
                             if (!remainingRepeat[nest]) {
@@ -459,7 +459,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     } else if (current.repeatBreak) {
                         if (remainingRepeat[nest] === 1) {
-                            if (!repeatEnd[nest] || repeatStart[nest] > repeatEnd[nest]) {
+                            if (!repeatEnd[nest]) {
                                 let tempNest = nest;
                                 repeatEnd[nest] = data.findIndex((block, i) => {
                                     if (i > repeatStart[nest]) {
@@ -480,14 +480,15 @@ document.addEventListener('DOMContentLoaded', () => {
                             return;
                         }
                     } else if (current.repeatStartEnd === ':/') {
-                        repeatEnd[nest] = i;
                         remainingRepeat[nest]--;
                         if (remainingRepeat[nest]) {
+                            repeatEnd[nest] = i;
                             i = repeatStart[nest];
                             nest--;
                             attachMotion();
                             return;
                         }
+                        repeatEnd[nest] = null;
                         nest--;
                     }
                     i++;
