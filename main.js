@@ -476,8 +476,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                 });
                             }
                             i = repeatEnd[nest];
-                            resetAnimation(current.elem, 'done');
                             attachMotion();
+                            resetAnimation(current.elem, 'done');
                             return;
                         }
                     } else if (current.repeatStartEnd === ':/') {
@@ -486,8 +486,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             repeatEnd[nest] = i;
                             i = repeatStart[nest];
                             nest--;
-                            resetAnimation(current.elem, 'done');
                             attachMotion();
+                            resetAnimation(current.elem, 'done');
                             return;
                         }
                         repeatEnd[nest] = null;
