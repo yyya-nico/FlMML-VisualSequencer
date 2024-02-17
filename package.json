@@ -16,6 +16,6 @@
   "dependencies": {
     "emoji-picker-element": "^1.21.0",
     "localforage": "^1.10.0",
-    "mobile-drag-drop": "^3.0.0-rc.0"
+    "mobile-drag-drop": "^2.3.0-rc.2"
   }
 }
