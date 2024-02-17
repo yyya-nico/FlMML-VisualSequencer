@@ -1532,7 +1532,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    let lastY = null, ignoneTouch = false;
+    let lastY = null, ignoneTouch = false, dragJudgementTimer = null;
+    editor.addEventListener('touchstart', e => {
+        const touchY = [...e.touches].at(-1).pageY;
+        lastY = touchY;
+        dragJudgementTimer = setTimeout(() => {
+            ignoneTouch = true;
+        }, 500);
+    });
     const wheelHandler = e => {
         const ctrlKey = e.ctrlKey || ctrlBtn.pressed;
         const is = id => Boolean(e.target.closest('#' + id));
@@ -1544,8 +1551,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             } else if (touchY - lastY < -20) {
                 e.deltaY = -1;
+                clearTimeout(dragJudgementTimer);
             } else if (touchY - lastY > 20) {
                 e.deltaY = 1;
+                clearTimeout(dragJudgementTimer);
             } else {
                 e.cancelable && e.preventDefault();
                 return;
