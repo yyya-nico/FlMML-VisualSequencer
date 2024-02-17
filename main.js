@@ -1025,7 +1025,9 @@ document.addEventListener('DOMContentLoaded', () => {
         i18n: ja,
         locale: 'ja'
     });
-    polyfill();
+    polyfill({
+        holdToDrag: 500
+    });
     useVisualViewportToCss();
 
     const createMIsHtml = name => `<span class="material-icons">${name}</span>`;
@@ -1530,16 +1532,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    let lastY = null, ignoneTouch = false, dragJudgementTimer = null, doNotDrag = false;
-    editor.addEventListener('touchstart', e => {
-        const touchY = [...e.touches].at(-1).pageY;
-        lastY = touchY;
-        doNotDrag = true;
-        dragJudgementTimer = setTimeout(() => {
-            ignoneTouch = true;
-            doNotDrag = false;
-        }, 500);
-    });
+    let lastY = null, ignoneTouch = false;
     const wheelHandler = e => {
         const ctrlKey = e.ctrlKey || ctrlBtn.pressed;
         const is = id => Boolean(e.target.closest('#' + id));
@@ -1551,10 +1544,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             } else if (touchY - lastY < -20) {
                 e.deltaY = -1;
-                clearTimeout(dragJudgementTimer);
             } else if (touchY - lastY > 20) {
                 e.deltaY = 1;
-                clearTimeout(dragJudgementTimer);
             } else {
                 e.cancelable && e.preventDefault();
                 return;
@@ -1698,7 +1689,6 @@ document.addEventListener('DOMContentLoaded', () => {
     editor.addEventListener('touchmove', wheelHandler);
     editor.addEventListener('touchend', () => {
         ignoneTouch = false;
-        doNotDrag = false;
     });
 
     let dragInfo = {};
@@ -1713,9 +1703,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let dropEffect = null;
     [tones, action, musicalScore].forEach(target => {
         const dragEventHandler = e => {
-            if (doNotDrag) {
-                return;
-            }
             const ctrlKey = e.ctrlKey || ctrlBtn.pressed;
             const {from = null} = dragInfo;
             const dt = e.dataTransfer;
@@ -1771,9 +1758,6 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         target.addEventListener('dragover', dragEventHandler);
         const dragenterEventHandler = e => {
-            if (doNotDrag) {
-                return;
-            }
             const {from = null} = dragInfo;
             const isButton =  e.target.tagName.toLowerCase() === 'button';
             const addClass = () => e.target.classList.add('droppable');
@@ -1828,9 +1812,6 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         target.addEventListener('dragenter', dragenterEventHandler);
         const dragleaveEventHandler = e => {
-            if (doNotDrag) {
-                return;
-            }
             const {from = null} = dragInfo;
             const isButton =  e.target.tagName.toLowerCase() === 'button';
             const removeClass = () => e.target.classList.remove('droppable');
@@ -1882,9 +1863,6 @@ document.addEventListener('DOMContentLoaded', () => {
         target.addEventListener('dragleave', dragleaveEventHandler);
         target.addEventListener('drop', async e => {
             e.preventDefault();
-            if (doNotDrag) {
-                return;
-            }
             if (e.dataTransfer.items?.length) { // ?はpolyfill用
                 return;
             }
