@@ -1026,7 +1026,8 @@ document.addEventListener('DOMContentLoaded', () => {
         locale: 'ja'
     });
     polyfill({
-        holdToDrag: 500
+        holdToDrag: 500,
+        dragStartConditionOverride: e => true
     });
     useVisualViewportToCss();
 
@@ -2178,19 +2179,33 @@ document.addEventListener('DOMContentLoaded', () => {
     if (navigator.maxTouchPoints >= 2) {
         document.querySelector('.for-mobile').classList.add('show');
     }
-    document.addEventListener('touchstart', e => {
-        if (e.touches.length >= 2) {
-            e.preventDefault();            
-        }
-    }, {passive: false});
-    ctrlBtn.addEventListener('pointerdown', e => {
-        if (e.isPrimary) {
+    ctrlBtn.pressedTrue = e => {
+        if (e.targetTouches.length === e.changedTouches.length) {
             ctrlBtn.pressed = true;
+            ctrlBtn.addEventListener('touchmove', ctrlBtn.touchMoveHandler);
+            ctrlBtn.addEventListener('touchend', ctrlBtn.pressedFalse);
+            ctrlBtn.addEventListener('touchcancel', ctrlBtn.pressedFalse);
+            console.log('pressed:', ctrlBtn.pressed);
         }
-    });
-    ctrlBtn.addEventListener('pointerup', e => {
-        if (e.isPrimary) {
+    };
+    ctrlBtn.pressedFalse = e => {
+        if (!e.targetTouches.length || e.targetTouches.length === e.changedTouches.length) {
             ctrlBtn.pressed = false;
+            console.log('pressed:', ctrlBtn.pressed);
+            console.log('event:', e.type);
         }
-    });
+    };
+    ctrlBtn.touchMoveHandler = e => {
+        const outOfButton = [...e.touches].every(touch => {
+            const elem = document.elementFromPoint(touch.clientX, touch.clientY);
+            return elem !== ctrlBtn;
+        });
+        if (outOfButton) {
+            ctrlBtn.pressedFalse(e);
+            ctrlBtn.removeEventListener('touchmove', ctrlBtn.touchMoveHandler);
+            ctrlBtn.removeEventListener('touchend', ctrlBtn.pressedFalse);
+            ctrlBtn.removeEventListener('touchcancel', ctrlBtn.pressedFalse);
+        }
+    };
+    ctrlBtn.addEventListener('touchstart', ctrlBtn.pressedTrue);
 });
