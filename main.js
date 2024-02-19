@@ -326,7 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         importMml(mml) {
             const mmlArr = mml.getMmlArr();
-            const regex = /@.* |[><]*?[a-g]\+?[0-9]*|t[0-9]+|l[0-9]+|r[0-9]*|o[0-8]|@v[0-9]+|@ns[0-9]+|@d[0-9]+|\/:[0-9]*|:\/|\/|#USING POLY [0-9]+ force|\[|\]|.*/g;
+            const regex = /@.* |[><]*?[a-g]\+?[0-9]*\.*|t[0-9]+|l[0-9]+\.*|r[0-9]*\.*|o[0-8]|@v[0-9]+|@ns[0-9]+|@d[0-9]+|\/:[0-9]*|:\/|\/|#USING POLY [0-9]+ force|\[|\]|.*/g;
             /* tone.tone|tone.tonePitch|tempo|noteValue|rest|octave|velocity|noteShift|detune|repeatStart|repeatEnd|repeatBreak|usingPoly|polyStartEnd|otherAction */
             const data = [];
             let noteCount = 0;
@@ -343,7 +343,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         toneCache = str.trim();
                         noteCount++;
                         return;
-                    } else if (/^[><]*?[a-g]\+?[0-9]*$/.test(str)) {
+                    } else if (/^[><]*?[a-g]\+?[0-9]*\.*$/.test(str)) {
                         obj.label = '無調整';
                         !noteCount && noteCount++;
                         obj.className = `material-icons note note-${noteCount}`;
@@ -629,6 +629,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         name: 'tone-pitch',
                         min: '1',
                         max: '384'
+                    },
+                    {
+                        label: '付点の数',
+                        type: 'number',
+                        name: 'point',
+                        min: '0'
                     }
                 ],
                 buttons: [
@@ -666,6 +672,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         name: 'note-value',
                         min: '1',
                         max: '384'
+                    },
+                    {
+                        label: '付点の数',
+                        type: 'number',
+                        name: 'point',
+                        min: '0'
                     }
                 ],
                 buttons: [
@@ -685,6 +697,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         name: 'rest',
                         min: '1',
                         max: '384'
+                    },
+                    {
+                        label: '付点の数',
+                        type: 'number',
+                        name: 'point',
+                        min: '0'
                     }
                 ],
                 buttons: [
@@ -1294,11 +1312,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }, item);
         } else if ('noteValue' in item.dataset) {
             await dialogFormManager.prompt('noteValue', {
-                'note-value': item.dataset.noteValue.replace('l', '')
+                'note-value': (item.dataset.noteValue.match(/[0-9]+/) || [''])[0],
+                'point': (item.dataset.noteValue.match(/\.+/) || [''])[0].length
             }, item);
         } else if ('rest' in item.dataset) {
             await dialogFormManager.prompt('rest', {
-                'rest': item.dataset.rest.replace('r', '')
+                'rest': (item.dataset.rest.match(/[0-9]+/) || [''])[0],
+                'point': (item.dataset.rest.match(/\.+/) || [''])[0].length
             }, item);
         } else if ('octave' in item.dataset) {
             await dialogFormManager.prompt('octave', {
@@ -1449,9 +1469,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     resetAnimation(e.target, 'bounce');
                     if (ctrlKey) {
                         await dialogFormManager.prompt('tonePitch', {
-                            'tone-pitch': e.target.dataset.tonePitch.replace(/[><]*[a-g]\+?/, '')
+                            'tone-pitch': (e.target.dataset.tonePitch.match(/[0-9]+/) || [''])[0],
+                            'point': (e.target.dataset.tonePitch.match(/\.+/) || [''])[0].length
                         }, e.target);
-                        flmml.play(e.target.dataset.tone + absoluteOctaveMml + currentRelativeOctave + e.target.dataset.tonePitch);
+                        playMusicNote(e.target);
                     }
                 } else {
                     await actionPromptSwitcher(e.target);
@@ -1630,23 +1651,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 const minmax = (current, min = -Infinity, max = Infinity) => current + increaseBase < min ? 0 : current + increaseBase > max ? 0 : increaseBase;
                 if (ctrlKey && 'tonePitch' in target.dataset) {
                     const noteValue = Number((target.dataset.tonePitch.match(/[0-9]+/) || [''])[0]);
+                    const points = '.'.repeat((target.dataset.tonePitch.match(/\.+/) || [''])[0].length);
                     const increase = minmax(noteValue, 0, 384);
                     const newNoteValue = noteValue + increase !== 0 ? noteValue + increase : '';
-                    target.dataset.tonePitch = target.dataset.tonePitch.replace(/[0-9]+/, '') + newNoteValue;
+                    target.dataset.tonePitch = target.dataset.tonePitch.replace(/[0-9]+/, '') + newNoteValue + points;
                     playMusicNote(target);
                 } else if ('tempo' in target.dataset) {
                     const tempo = Number(target.dataset.tempo.replace('t', ''));
                     const increase = minmax(tempo, 0);
                     target.dataset.tempo = 't' + (tempo + increase * 10);
                 } else if ('noteValue' in target.dataset) {
-                    const noteValue = Number(target.dataset.noteValue.replace('l', ''));
+                    const noteValue = Number((target.dataset.noteValue.match(/[0-9]+/) || [''])[0]);
                     const increase = minmax(noteValue, 1, 384);
-                    target.dataset.noteValue = 'l' + (noteValue + increase);
+                    target.dataset.noteValue = target.dataset.noteValue.replace(/[0-9]+/, noteValue + increase);
                 } else if ('rest' in target.dataset) {
-                    const rest = Number(target.dataset.rest.replace('r', ''));
+                    const rest = Number((target.dataset.rest.match(/[0-9]+/) || [''])[0]);
+                    const points = '.'.repeat((target.dataset.rest.match(/\.+/) || [''])[0].length);
                     const increase = minmax(rest, 0, 384);
                     const newRest = rest + increase !== 0 ? rest + increase : '';
-                    target.dataset.rest = 'r' + newRest;
+                    target.dataset.rest = 'r' + newRest + points;
                 } else if ('octave' in target.dataset) {
                     const octave = Number(target.dataset.octave.replace('o', ''));
                     const increase = minmax(octave, 0, 8);
@@ -2075,16 +2098,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 break;
             case 'set-tone-pitch':
-                submitTarget.dataset.tonePitch = submitTarget.dataset.tonePitch.replace(/[0-9]+/, '') + dialogForm.elements['tone-pitch'].value;
+                submitTarget.dataset.tonePitch = submitTarget.dataset.tonePitch.match(/[a-g]\+?/)[0] + dialogForm.elements['tone-pitch'].value + '.'.repeat(dialogForm.elements['point'].value);
                 break;
             case 'set-tempo':
                 submitTarget.dataset.tempo = 't' + dialogForm.elements['tempo'].value;
                 break;
             case 'set-note-value':
-                submitTarget.dataset.noteValue = 'l' + dialogForm.elements['note-value'].value;
+                submitTarget.dataset.noteValue = 'l' + dialogForm.elements['note-value'].value + '.'.repeat(dialogForm.elements['point'].value);
                 break;
             case 'set-rest':
-                submitTarget.dataset.rest = 'r' + dialogForm.elements['rest'].value;
+                submitTarget.dataset.rest = 'r' + dialogForm.elements['rest'].value + '.'.repeat(dialogForm.elements['point'].value);
                 break;
             case 'set-octave':
                 submitTarget.dataset.octave = 'o' + dialogForm.elements['octave'].value;
