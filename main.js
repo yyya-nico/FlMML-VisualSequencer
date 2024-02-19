@@ -150,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     class Block {
         #blocksData = [];
-        #rendTimeout = null;
+        #rAF = null;
         #saveDelayTimer = null;
 
         constructor(tones, areaElem) {
@@ -407,13 +407,24 @@ document.addEventListener('DOMContentLoaded', () => {
             let scoreNoteValue = 4;
             let skip = false, jump = -1, nest = -1;
             const repeatStart = [], repeatEnd = [], remainingRepeat = [];
+            const start = performance.now();
+            let totalDelay = 0;
             let i = 0;
             [tones, action, musicalScore].forEach(target => {
                 target.classList.add('no-op');
             });
             const delayAttachMotion = noteValue => {
-                this.#rendTimeout = setTimeout(attachMotion,
-                    60 / tempo * 4 / noteValue * 1000);
+                const repeatFunc = timeStamp => {
+                    const elapsed = timeStamp - start;
+                    const delay = 60 / tempo * 4 / noteValue * 1000;
+                    if (elapsed < totalDelay + delay) {
+                        this.#rAF = requestAnimationFrame(repeatFunc);
+                    } else {
+                        totalDelay += delay;
+                        attachMotion();
+                    }
+                }
+                this.#rAF = requestAnimationFrame(repeatFunc);
             };
             const attachMotion = () => {
                 const current = data[i];
@@ -519,7 +530,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.#blocksData.forEach(block => {
                 block.elem.classList.remove('done');
             });
-            clearTimeout(this.#rendTimeout);
+            cancelAnimationFrame(this.#rAF);
         }
 
         calcPoly() {
