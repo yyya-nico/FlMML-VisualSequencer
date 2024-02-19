@@ -1209,7 +1209,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         break;
                     case 'move':
                         const position = data.toIndex > data.fromIndex ? 'beforebegin' : 'afterend';
-                        data.parent.children[data.fromIndex].insertAdjacentElement(position, data.elem);
+                        if (data.toIndex !== -1) {
+                            data.parent.children[data.toIndex].insertAdjacentElement(position, data.elem);
+                        } else {
+                            data.parent.appendChild(data.elem);
+                        }
                         if (is('musical-score')) {
                             block.blocksDataUpdate();
                             block.calcPoly();
