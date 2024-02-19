@@ -415,6 +415,18 @@ document.addEventListener('DOMContentLoaded', () => {
             [tones, action, musicalScore].forEach(target => {
                 target.classList.add('no-op');
             });
+            const noteValueStrCalc = str => {
+                if (!str) {
+                    return scoreNoteValue;                    
+                }
+                const noteValue = Number((str.match(/[0-9]+/) || [scoreNoteValue])[0]);
+                const dots = (str.match(/\.+/) || [''])[0].length;
+                if (dots) {
+                    return 16 * 2 ** dots / (noteValue * 2 ** dots + noteValue);
+                } else {
+                    return noteValue;
+                }
+            };
             const delayAttachMotion = noteValue => {
                 const repeatFunc = timeStamp => {
                     const elapsed = timeStamp - start;
@@ -445,7 +457,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     i++;
                     attachMotion();
                 } else if (current.tone.tonePitch) {
-                    const currentNoteValue = Number((current.tone.tonePitch.match(/[0-9]+/) || [scoreNoteValue])[0]);
+                    const currentNoteValue = noteValueStrCalc(current.tone.tonePitch);
                     resetAnimation(current.elem, 'bounce');
                     i++;
                     if (!skip) {
@@ -454,14 +466,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         attachMotion();
                     }
                 } else if (current.rest) {
-                    const currentNoteValue = Number(current.rest.replace('r', '')) || scoreNoteValue;
+                    const currentNoteValue = noteValueStrCalc(current.rest);
                     resetAnimation(current.elem, 'pop');
                     i++;
                     delayAttachMotion(currentNoteValue);
                 } else if (current.polyStartEnd) {
                     skip = current.polyStartEnd === '[';
                     resetAnimation(current.elem, 'pop');
-                    const previousNoteValue = Number((data[i - 1].tone.tonePitch?.match(/[0-9]+/) || [scoreNoteValue])[0]);
+                    const previousNoteValue = noteValueStrCalc(data[i - 1].tone.tonePitch);
                     i++;
                     if (!skip) {
                         delayAttachMotion(previousNoteValue);
@@ -470,7 +482,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 } else {
                     current.tempo && (tempo = Number(current.tempo.replace('t', '')) || tempo);
-                    current.noteValue && (scoreNoteValue = Number(current.noteValue.replace('l', '')) || scoreNoteValue);
+                    current.noteValue && (scoreNoteValue = noteValueStrCalc(current.noteValue));
                     resetAnimation(current.elem, 'pop');
                     if (current.repeatStartEnd?.startsWith('/:')) {
                         repeatStart[++nest] = i;
@@ -633,7 +645,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     {
                         label: '付点の数',
                         type: 'number',
-                        name: 'point',
+                        name: 'dot',
                         min: '0'
                     }
                 ],
@@ -676,7 +688,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     {
                         label: '付点の数',
                         type: 'number',
-                        name: 'point',
+                        name: 'dot',
                         min: '0'
                     }
                 ],
@@ -701,7 +713,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     {
                         label: '付点の数',
                         type: 'number',
-                        name: 'point',
+                        name: 'dot',
                         min: '0'
                     }
                 ],
@@ -1313,12 +1325,12 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if ('noteValue' in item.dataset) {
             await dialogFormManager.prompt('noteValue', {
                 'note-value': (item.dataset.noteValue.match(/[0-9]+/) || [''])[0],
-                'point': (item.dataset.noteValue.match(/\.+/) || [''])[0].length
+                'dot': (item.dataset.noteValue.match(/\.+/) || [''])[0].length
             }, item);
         } else if ('rest' in item.dataset) {
             await dialogFormManager.prompt('rest', {
                 'rest': (item.dataset.rest.match(/[0-9]+/) || [''])[0],
-                'point': (item.dataset.rest.match(/\.+/) || [''])[0].length
+                'dot': (item.dataset.rest.match(/\.+/) || [''])[0].length
             }, item);
         } else if ('octave' in item.dataset) {
             await dialogFormManager.prompt('octave', {
@@ -1470,7 +1482,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (ctrlKey) {
                         await dialogFormManager.prompt('tonePitch', {
                             'tone-pitch': (e.target.dataset.tonePitch.match(/[0-9]+/) || [''])[0],
-                            'point': (e.target.dataset.tonePitch.match(/\.+/) || [''])[0].length
+                            'dot': (e.target.dataset.tonePitch.match(/\.+/) || [''])[0].length
                         }, e.target);
                         playMusicNote(e.target);
                     }
@@ -1651,10 +1663,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const minmax = (current, min = -Infinity, max = Infinity) => current + increaseBase < min ? 0 : current + increaseBase > max ? 0 : increaseBase;
                 if (ctrlKey && 'tonePitch' in target.dataset) {
                     const noteValue = Number((target.dataset.tonePitch.match(/[0-9]+/) || [''])[0]);
-                    const points = '.'.repeat((target.dataset.tonePitch.match(/\.+/) || [''])[0].length);
+                    const dots = '.'.repeat((target.dataset.tonePitch.match(/\.+/) || [''])[0].length);
                     const increase = minmax(noteValue, 0, 384);
                     const newNoteValue = noteValue + increase !== 0 ? noteValue + increase : '';
-                    target.dataset.tonePitch = target.dataset.tonePitch.replace(/[0-9]+/, '') + newNoteValue + points;
+                    target.dataset.tonePitch = target.dataset.tonePitch.replace(/[0-9]*\.*/g, '') + newNoteValue + dots;
                     playMusicNote(target);
                 } else if ('tempo' in target.dataset) {
                     const tempo = Number(target.dataset.tempo.replace('t', ''));
@@ -1666,10 +1678,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     target.dataset.noteValue = target.dataset.noteValue.replace(/[0-9]+/, noteValue + increase);
                 } else if ('rest' in target.dataset) {
                     const rest = Number((target.dataset.rest.match(/[0-9]+/) || [''])[0]);
-                    const points = '.'.repeat((target.dataset.rest.match(/\.+/) || [''])[0].length);
+                    const dots = '.'.repeat((target.dataset.rest.match(/\.+/) || [''])[0].length);
                     const increase = minmax(rest, 0, 384);
                     const newRest = rest + increase !== 0 ? rest + increase : '';
-                    target.dataset.rest = 'r' + newRest + points;
+                    target.dataset.rest = 'r' + newRest + dots;
                 } else if ('octave' in target.dataset) {
                     const octave = Number(target.dataset.octave.replace('o', ''));
                     const increase = minmax(octave, 0, 8);
@@ -2098,16 +2110,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 break;
             case 'set-tone-pitch':
-                submitTarget.dataset.tonePitch = submitTarget.dataset.tonePitch.match(/[a-g]\+?/)[0] + dialogForm.elements['tone-pitch'].value + '.'.repeat(dialogForm.elements['point'].value);
+                submitTarget.dataset.tonePitch = submitTarget.dataset.tonePitch.match(/[a-g]\+?/)[0] + dialogForm.elements['tone-pitch'].value + '.'.repeat(dialogForm.elements['dot'].value);
                 break;
             case 'set-tempo':
                 submitTarget.dataset.tempo = 't' + dialogForm.elements['tempo'].value;
                 break;
             case 'set-note-value':
-                submitTarget.dataset.noteValue = 'l' + dialogForm.elements['note-value'].value + '.'.repeat(dialogForm.elements['point'].value);
+                submitTarget.dataset.noteValue = 'l' + dialogForm.elements['note-value'].value + '.'.repeat(dialogForm.elements['dot'].value);
                 break;
             case 'set-rest':
-                submitTarget.dataset.rest = 'r' + dialogForm.elements['rest'].value + '.'.repeat(dialogForm.elements['point'].value);
+                submitTarget.dataset.rest = 'r' + dialogForm.elements['rest'].value + '.'.repeat(dialogForm.elements['dot'].value);
                 break;
             case 'set-octave':
                 submitTarget.dataset.octave = 'o' + dialogForm.elements['octave'].value;
