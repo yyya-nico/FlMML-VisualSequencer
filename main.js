@@ -401,6 +401,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.parseBlocks();
             this.blocksDataUpdate();
             this.calcPoly();
+            this.saveBlocksData();
         }
 
         playRendering() {
