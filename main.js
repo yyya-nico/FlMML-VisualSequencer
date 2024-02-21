@@ -2217,6 +2217,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 submitTarget.dataset.repeatStartEnd = '/:' + dialogForm.elements['repeat'].value;
                 break;
             case 'set-meta-data':
+                submitTarget.ariaLabel = dialogForm.elements['select-meta-data'].selectedOptions[0].label;
                 submitTarget.dataset.metaData = dialogForm.elements['select-meta-data'].value
                     .replace('{n}', dialogForm.elements['number'].value)
                     .replace('{desc}', dialogForm.elements['text'].value);
