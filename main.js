@@ -1712,7 +1712,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const pitches = ['c','c+','d','d+','e','f','f+','g','g+','a','a+','b'];
                 const octave = ['>', '<'];
                 const currentPitch = target.dataset.tonePitch;
-                const currentPitchIndex = pitches.findIndex(pitch => currentPitch.replace(/[><0-9]+/g, '') === pitch);
+                const currentPitchIndex = pitches.findIndex(pitch => currentPitch.match(/[a-g]\+?/)[0] === pitch);
                 const countStr = (target, str) => (target.match(new RegExp(str, 'g')) || []).length;
                 const octaveCount = [
                     countStr(currentPitch, octave[0]),
@@ -1720,25 +1720,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 ];
                 const octaveStr = octave[0].repeat(octaveCount[0]) + octave[1].repeat(octaveCount[1]);
                 const noteValue = (currentPitch.match(/[0-9]+/) || [''])[0];
+                const dots = '.'.repeat((target.dataset.tonePitch.match(/\.+/) || [''])[0].length);
                 if (isPositive) { // Up
                     if (currentPitchIndex === pitches.length - 1) {
                         if (octaveCount[0]) {
-                            target.dataset.tonePitch = octaveStr.substring(1) + pitches.at(0) + noteValue;
+                            target.dataset.tonePitch = octaveStr.substring(1) + pitches.at(0) + noteValue + dots;
                         } else {
-                            target.dataset.tonePitch = octaveStr + octave[1] + pitches.at(0) + noteValue;
+                            target.dataset.tonePitch = octaveStr + octave[1] + pitches.at(0) + noteValue + dots;
                         }
                     } else {
-                        target.dataset.tonePitch = octaveStr + pitches[currentPitchIndex + 1] + noteValue;
+                        target.dataset.tonePitch = octaveStr + pitches[currentPitchIndex + 1] + noteValue + dots;
                     }
                 } else { // Down
                     if (currentPitchIndex === 0) {
                         if (octaveCount[1]) {
-                            target.dataset.tonePitch = octaveStr.substring(1) + pitches.at(-1) + noteValue;
+                            target.dataset.tonePitch = octaveStr.substring(1) + pitches.at(-1) + noteValue + dots;
                         } else {
-                            target.dataset.tonePitch = octaveStr + octave[0] + pitches.at(-1) + noteValue;
+                            target.dataset.tonePitch = octaveStr + octave[0] + pitches.at(-1) + noteValue + dots;
                         }
                     } else {
-                        target.dataset.tonePitch = octaveStr + pitches[currentPitchIndex - 1] + noteValue;
+                        target.dataset.tonePitch = octaveStr + pitches[currentPitchIndex - 1] + noteValue + dots;
                     }
                 }
                 playMusicNote(target);
