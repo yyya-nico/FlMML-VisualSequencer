@@ -858,12 +858,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         name: 'select-meta-data'
                     },
                     {
-                        label: '数',
+                        label: ' ',
                         type: 'number',
-                        name: 'number'
+                        name: 'number',
                     },
                     {
-                        label: '文字列',
+                        label: ' ',
                         type: 'text',
                         name: 'text'
                     },
@@ -1379,7 +1379,111 @@ document.addEventListener('DOMContentLoaded', () => {
                 'using-poly': item.dataset.usingPoly.replace('#USING POLY ', '').replace(' force\n', '')
             }, item);
         } else if ('metaData' in item.dataset) {
-            await dialogFormManager.prompt('metaData', {}, item);
+            await dialogFormManager.prompt('metaData', {
+                'run': () => {
+                    const metaDataRaw = item.dataset.metaData;
+                    const metaDataSplit = metaDataRaw.split(' ');
+                    const typeDefs = [
+                        '#TITLE',
+                        '#ARTIST',
+                        '#COMMENT',
+                        '#CODING',
+                        '#PRAGMA',
+                        '#OCTAVE',
+                        '#VELOCITY',
+                        '#WAV9',
+                        '#WAV10',
+                        '#WAV13',
+                        '#OPM',
+                        '#OPN',
+                        '#FMGAIN',
+                        '#USING',
+                    ];
+                    let selectIndex = typeDefs.findIndex(def => metaDataSplit[0].startsWith(def));
+                    selectIndex === -1 && (selectIndex = 0);
+                    dialogForm.elements['select-meta-data'].selectedIndex = selectIndex;
+                    const getLabelTextNode = name => dialogForm.elements[name].previousSibling;
+                    const getOption = () => dialogForm.elements['select-meta-data'].selectedOptions[0];
+                    const setForm = (numberMode, textMode) => {
+                        getLabelTextNode('number').nodeValue = numberMode[0];
+                        dialogForm.elements['number'].value = numberMode[1];
+                        dialogForm.elements['number'].parentElement.style.display = numberMode[2] ? 'none' : '';
+                        getLabelTextNode('text').nodeValue = textMode[0];
+                        dialogForm.elements['text'].value = textMode[1];
+                        dialogForm.elements['text'].parentElement.style.display = textMode[2] ? 'none' : '';
+                    };
+                    const selectHandler = index => {
+                        const type = typeDefs[index];
+                        switch (type) {
+                            case '#TITLE':
+                            case '#ARTIST':
+                            case '#COMMENT':
+                            case '#CODING':
+                            case '#PRAGMA':
+                                const text = metaDataSplit[1] || '';
+                                setForm(
+                                    ['無効', '', true],
+                                    [getOption().label, text, false]
+                                );
+                                break;
+    
+                            case '#OCTAVE':
+                            case '#VELOCITY':
+                                setForm(
+                                    ['無効', '', true],
+                                    ['無効', '', true]
+                                );
+                                break;
+    
+                            case '#WAV9':
+                            case '#WAV10':
+                            case '#WAV13':
+                                const isWav9 = type === '#WAV9';
+                                const waveParams = metaDataSplit[1]?.split(',') || [];
+                                setForm(
+                                    ['波形番号', waveParams[0] || 0, false],
+                                    isWav9 ? ['初期変位,ループフラグ,データ', `${waveParams[1] || 0},${waveParams[2] || 0},${waveParams[3] || ''}`, false]
+                                           : ['データ', waveParams[1] || '', false]
+                                );
+                                dialogForm.elements['number'].min = 0;
+                                dialogForm.elements['number'].max = isWav9 ? 15 : 31;
+                                break;
+    
+                            case '#OPM':
+                            case '#OPN':
+                                setForm(
+                                    ['音色番号', metaDataSplit[0]?.split('@')[1] || 0, false],
+                                    ['データ', metaDataSplit[1]?.slice(1, -1) || '', false]
+                                );
+                                dialogForm.elements['number'].min = 0;
+                                dialogForm.elements['number'].max = 127;
+                                
+                                break;
+                            case '#FMGAIN':
+                                setForm(
+                                    ['音量利得', metaDataSplit[1] || 91, false],
+                                    ['無効', '', true]
+                                );
+                                dialogForm.elements['number'].min = -127;
+                                dialogForm.elements['number'].max = 127;
+                                
+                                break;
+                            case '#USING':
+                                setForm(
+                                    ['和音重ね数', metaDataSplit[2] || 2, false],
+                                    ['無効', '', true]
+                                );
+                                dialogForm.elements['number'].min = 1;
+                                dialogForm.elements['number'].max = '';
+                                break;
+                        }
+                    };
+                    selectHandler(selectIndex);
+                    dialogForm.elements['select-meta-data'].addEventListener('change', e => {
+                        selectHandler(e.target.selectedIndex);
+                    });
+                }
+            }, item);
         } else if ('otherAction' in item.dataset) {
             await dialogFormManager.prompt('otherAction', {
                 'other-action': item.dataset.otherAction
@@ -1432,7 +1536,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } else if (is('action')) {
             if (isButton) {
-                if ('otherAction' in e.target.dataset) {
+                if ('metaData' in e.target.dataset || 'otherAction' in e.target.dataset) {
                     await actionPromptSwitcher(e.target);
                 }
                 const ul = musicalScore.querySelector('ul');
@@ -2139,6 +2243,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
             case 'set-using-poly':
                 submitTarget.dataset.usingPoly = '#USING POLY ' + dialogForm.elements['using-poly'].value + ' force\n';
+                break;
+            case 'set-meta-data':
+                submitTarget.dataset.metaData = '\n';
                 break;
             case 'set-other-action':
                 submitTarget.dataset.otherAction = dialogForm.elements['other-action'].value;
