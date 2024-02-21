@@ -177,7 +177,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 detune: elem.dataset.detune,
                 repeatStartEnd: elem.dataset.repeatStartEnd,
                 repeatBreak: elem.dataset.repeatBreak,
-                usingPoly: elem.dataset.usingPoly,
                 metaData: elem.dataset.metaData,
                 polyStartEnd: elem.dataset.polyStartEnd,
                 otherAction: elem.dataset.otherAction,
@@ -256,7 +255,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
                 block.repeatBreak && (button.dataset.repeatBreak = block.repeatBreak);
-                block.usingPoly && (button.dataset.usingPoly = block.usingPoly);
                 block.metaData && (button.dataset.metaData = block.metaData);
                 block.polyStartEnd && (button.dataset.polyStartEnd = block.polyStartEnd);
                 if (block.otherAction) {
@@ -311,8 +309,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         });
                     } else {
                         mml.appendToStr(lineIndex, tonePitch || block.tempo || block.rest || block.octave
-                            || block.velocity || block.noteShift || block.detune || block.usingPoly
-                            || block.metaData || block.otherAction || '');
+                            || block.velocity || block.noteShift || block.detune || block.metaData
+                            || block.otherAction || '');
                         if (mml.getMmlLine(lineIndex).includes('\n')) {
                             const mmlText = mml.getMmlLine(lineIndex).replace('\n', '');
                             mml.rewrite(lineIndex, mmlText);
@@ -328,8 +326,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         importMml(mml) {
             const mmlArr = mml.getMmlArr();
-            const regex = /@.* |[><]*?[a-g]\+?[0-9]*\.*|t[0-9]+|l[0-9]+\.*|r[0-9]*\.*|o[0-8]|@v[0-9]+|@ns[0-9]+|@d[0-9]+|\/:[0-9]*|:\/|\/|#USING POLY [0-9]+ force|\[|\]|.*/g;
-            /* tone.tone|tone.tonePitch|tempo|noteValue|rest|octave|velocity|noteShift|detune|repeatStart|repeatEnd|repeatBreak|usingPoly|polyStartEnd|otherAction */
+            const regex = /@.* |[><]*?[a-g]\+?[0-9]*\.*|t[0-9]+|l[0-9]+\.*|r[0-9]*\.*|o[0-8]|@v[0-9]+|@ns[0-9]+|@d[0-9]+|\/:[0-9]*|:\/|\/|^#.*|\[|\]|.*/g;
+            /* tone.tone|tone.tonePitch|tempo|noteValue|rest|octave|velocity|noteShift|detune|repeatStart|repeatEnd|repeatBreak|metaData|polyStartEnd|otherAction */
             const data = [];
             let noteCount = 0;
             mmlArr.forEach(mmlTextLine => {
@@ -381,12 +379,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else if (str.startsWith('/')) {
                         obj.className = 'repeat-break';
                         obj.repeatBreak = str;
-                    } else if (str.startsWith('#USING POLY ')) {
-                        obj.className = 'using-poly';
-                        obj.usingPoly = str + '\n';
                     } else if (str.startsWith('[') || str.startsWith(']')) {
                         obj.className = 'poly-start-end';
                         obj.polyStartEnd = str;
+                    } else if (str.startsWith('#')) {
+                        obj.className = 'meta-data';
+                        obj.metaData = str + '\n';
                     } else if (str.startsWith(';')) {
                         return;
                     } else {
@@ -814,24 +812,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     {
                         class: 'primaly',
                         value: 'set-repeat',
-                        textContent: '確定'
-                    }
-                ]
-            },
-            usingPoly: {
-                title: '和音設定',
-                inputs: [
-                    {
-                        label: '和音重ね数',
-                        type: 'number',
-                        name: 'using-poly',
-                        min: '1'
-                    }
-                ],
-                buttons: [
-                    {
-                        class: 'primaly',
-                        value: 'set-using-poly',
                         textContent: '確定'
                     }
                 ]
@@ -1376,10 +1356,6 @@ document.addEventListener('DOMContentLoaded', () => {
             await dialogFormManager.prompt('repeat', {
                 'repeat': item.dataset.repeatStartEnd.replace('/:', '')
             }, item);
-        } else if ('usingPoly' in item.dataset) {
-            await dialogFormManager.prompt('usingPoly', {
-                'using-poly': item.dataset.usingPoly.replace('#USING POLY ', '').replace(' force\n', '')
-            }, item);
         } else if ('metaData' in item.dataset) {
             await dialogFormManager.prompt('metaData', {
                 'run': () => {
@@ -1833,10 +1809,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     const increase = minmax(repeat, -1);
                     const newRepeat = repeat + increase !== -1 ? repeat + increase : '';
                     target.dataset.repeatStartEnd = '/:' + newRepeat;
-                }  else if ('usingPoly' in target.dataset) {
-                    const usingPoly = Number(target.dataset.usingPoly.replace('#USING POLY ', '').replace(' force\n', ''));
-                    const increase = minmax(usingPoly, 1);
-                    target.dataset.usingPoly = '#USING POLY ' + (usingPoly + increase) + ' force\n';
                 }
             }
             const afterChange = JSON.parse(JSON.stringify(target.dataset));
@@ -2243,9 +2215,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
             case 'set-repeat':
                 submitTarget.dataset.repeatStartEnd = '/:' + dialogForm.elements['repeat'].value;
-                break;
-            case 'set-using-poly':
-                submitTarget.dataset.usingPoly = '#USING POLY ' + dialogForm.elements['using-poly'].value + ' force\n';
                 break;
             case 'set-meta-data':
                 submitTarget.dataset.metaData = dialogForm.elements['select-meta-data'].value
