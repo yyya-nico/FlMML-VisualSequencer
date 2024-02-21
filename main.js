@@ -2286,12 +2286,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     saveBtn.addEventListener('click', () => {
         const mmlText = mml.getMml();
+        const mmlArr = mml.getMmlArr();
+        const fileName = mmlArr.find(mmlTextLine => mmlTextLine.startsWith('#TITLE'))?.split(' ')[1] ?? '無題';
         const blob = new Blob([mmlText], {type: 'text/plain'});
         const link = document.createElement('a');
-        link.download = 'Sequence' + '.mml';
+        link.download = fileName + '.mml';
         link.href = URL.createObjectURL(blob);
         link.click();
         URL.revokeObjectURL(link.href);
+        if (fileName === '無題') {
+            alert('ファイル名を付けるには、先頭にメタデータブロックを追加->タイトルを選択して入力->確定してタイトルを付けてください。');
+        }
     });
 
     openBtn.addEventListener('click', () => {
