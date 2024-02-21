@@ -1399,7 +1399,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             case '#COMMENT':
                             case '#CODING':
                             case '#PRAGMA':
-                                const text = isMetaDataType ? metaDataSplit[1] ?? '' : '';
+                                const text = isMetaDataType ? metaDataSplit.slice(1).join(' ') ?? '' : '';
                                 setForm(
                                     ['無効', '', true],
                                     [getOption().label, text, false]
@@ -1418,7 +1418,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             case '#WAV10':
                             case '#WAV13':
                                 const isWav9 = type === '#WAV9';
-                                const waveParams = isMetaDataType ? metaDataSplit[1]?.split(',') ?? [] : [];
+                                const waveParams = isMetaDataType ? metaDataSplit.slice(1).join(' ')?.split(',') ?? [] : [];
                                 setForm(
                                     ['波形番号', waveParams[0] ?? 0, false],
                                     isWav9 ? ['初期変位,ループフラグ,データ', `${waveParams[1] ?? 0},${waveParams[2] ?? 0},${waveParams[3] ?? ''}`, false]
@@ -1432,7 +1432,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             case '#OPN':
                                 setForm(
                                     ['音色番号', isMetaDataType ? metaDataSplit[0]?.split('@')[1] ?? 0 : 0, false],
-                                    ['データ', isMetaDataType ? metaDataSplit[1]?.slice(1, -1) ?? '' : '', false]
+                                    ['データ', isMetaDataType ? metaDataSplit.slice(1).join(' ')?.slice(1, -1) ?? '' : '', false]
                                 );
                                 dialogForm.elements['number'].min = 0;
                                 dialogForm.elements['number'].max = 127;
@@ -2287,7 +2287,7 @@ document.addEventListener('DOMContentLoaded', () => {
     saveBtn.addEventListener('click', () => {
         const mmlText = mml.getMml();
         const mmlArr = mml.getMmlArr();
-        const fileName = mmlArr.find(mmlTextLine => mmlTextLine.startsWith('#TITLE'))?.split(' ')[1] ?? '無題';
+        const fileName = mmlArr.find(mmlTextLine => mmlTextLine.startsWith('#TITLE'))?.split(' ').slice(1).join(' ') ?? '無題';
         const blob = new Blob([mmlText], {type: 'text/plain'});
         const link = document.createElement('a');
         link.download = fileName + '.mml';
