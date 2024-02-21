@@ -2022,7 +2022,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const noteClassName = [...item.classList].find(name => name.includes('note-'));
                         newItem.classList.replace(noteClassName, getNonExistNoteClassName());
                     } else if (from === action) {
-                        if ('metaData' in e.target.dataset || 'otherAction' in newItem.dataset) {
+                        if ('metaData' in newItem.dataset || 'otherAction' in newItem.dataset) {
                             await actionPromptSwitcher(newItem);
                         }
                     }
