@@ -178,6 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 repeatStartEnd: elem.dataset.repeatStartEnd,
                 repeatBreak: elem.dataset.repeatBreak,
                 usingPoly: elem.dataset.usingPoly,
+                metaData: elem.dataset.metaData,
                 polyStartEnd: elem.dataset.polyStartEnd,
                 otherAction: elem.dataset.otherAction,
                 elem: elem
@@ -256,6 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 block.repeatBreak && (button.dataset.repeatBreak = block.repeatBreak);
                 block.usingPoly && (button.dataset.usingPoly = block.usingPoly);
+                block.metaData && (button.dataset.metaData = block.metaData);
                 block.polyStartEnd && (button.dataset.polyStartEnd = block.polyStartEnd);
                 if (block.otherAction) {
                     button.dataset.otherAction = block.otherAction;
@@ -310,7 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else {
                         mml.appendToStr(lineIndex, tonePitch || block.tempo || block.rest || block.octave
                             || block.velocity || block.noteShift || block.detune || block.usingPoly
-                            || block.otherAction || '');
+                            || block.metaData || block.otherAction || '');
                         if (mml.getMmlLine(lineIndex).includes('\n')) {
                             const mmlText = mml.getMmlLine(lineIndex).replace('\n', '');
                             mml.rewrite(lineIndex, mmlText);
@@ -1413,6 +1415,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         dialogForm.elements['text'].parentElement.style.display = textMode[2] ? 'none' : '';
                     };
                     const selectHandler = index => {
+                        const isMetaDataType = index === selectIndex;
                         const type = typeDefs[index];
                         switch (type) {
                             case '#TITLE':
@@ -1420,7 +1423,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             case '#COMMENT':
                             case '#CODING':
                             case '#PRAGMA':
-                                const text = metaDataSplit[1] || '';
+                                const text = isMetaDataType ? metaDataSplit[1] ?? '' : '';
                                 setForm(
                                     ['無効', '', true],
                                     [getOption().label, text, false]
@@ -1439,11 +1442,11 @@ document.addEventListener('DOMContentLoaded', () => {
                             case '#WAV10':
                             case '#WAV13':
                                 const isWav9 = type === '#WAV9';
-                                const waveParams = metaDataSplit[1]?.split(',') || [];
+                                const waveParams = isMetaDataType ? metaDataSplit[1]?.split(',') ?? [] : [];
                                 setForm(
-                                    ['波形番号', waveParams[0] || 0, false],
-                                    isWav9 ? ['初期変位,ループフラグ,データ', `${waveParams[1] || 0},${waveParams[2] || 0},${waveParams[3] || ''}`, false]
-                                           : ['データ', waveParams[1] || '', false]
+                                    ['波形番号', waveParams[0] ?? 0, false],
+                                    isWav9 ? ['初期変位,ループフラグ,データ', `${waveParams[1] ?? 0},${waveParams[2] ?? 0},${waveParams[3] ?? ''}`, false]
+                                           : ['データ', waveParams[1] ?? '', false]
                                 );
                                 dialogForm.elements['number'].min = 0;
                                 dialogForm.elements['number'].max = isWav9 ? 15 : 31;
@@ -1452,8 +1455,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             case '#OPM':
                             case '#OPN':
                                 setForm(
-                                    ['音色番号', metaDataSplit[0]?.split('@')[1] || 0, false],
-                                    ['データ', metaDataSplit[1]?.slice(1, -1) || '', false]
+                                    ['音色番号', isMetaDataType ? metaDataSplit[0]?.split('@')[1] ?? 0 : 0, false],
+                                    ['データ', isMetaDataType ? metaDataSplit[1]?.slice(1, -1) ?? '' : '', false]
                                 );
                                 dialogForm.elements['number'].min = 0;
                                 dialogForm.elements['number'].max = 127;
@@ -1461,7 +1464,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 break;
                             case '#FMGAIN':
                                 setForm(
-                                    ['音量利得', metaDataSplit[1] || 91, false],
+                                    ['音量利得', isMetaDataType ? metaDataSplit[1] ?? 91 : 91, false],
                                     ['無効', '', true]
                                 );
                                 dialogForm.elements['number'].min = -127;
@@ -1470,7 +1473,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 break;
                             case '#USING':
                                 setForm(
-                                    ['和音重ね数', metaDataSplit[2] || 2, false],
+                                    ['和音重ね数', isMetaDataType ? metaDataSplit[2] ?? 2 : 2, false],
                                     ['無効', '', true]
                                 );
                                 dialogForm.elements['number'].min = 1;
@@ -2245,7 +2248,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 submitTarget.dataset.usingPoly = '#USING POLY ' + dialogForm.elements['using-poly'].value + ' force\n';
                 break;
             case 'set-meta-data':
-                submitTarget.dataset.metaData = '\n';
+                submitTarget.dataset.metaData = dialogForm.elements['select-meta-data'].value
+                    .replace('{n}', dialogForm.elements['number'].value)
+                    .replace('{desc}', dialogForm.elements['text'].value);
                 break;
             case 'set-other-action':
                 submitTarget.dataset.otherAction = dialogForm.elements['other-action'].value;
