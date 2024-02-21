@@ -2191,7 +2191,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 break;
             case 'set-tone-pitch':
-                submitTarget.dataset.tonePitch = submitTarget.dataset.tonePitch.match(/[a-g]\+?/)[0] + dialogForm.elements['tone-pitch'].value + '.'.repeat(dialogForm.elements['dot'].value);
+                submitTarget.dataset.tonePitch = submitTarget.dataset.tonePitch.match(/[><]*?[a-g]\+?/)[0] + dialogForm.elements['tone-pitch'].value + '.'.repeat(dialogForm.elements['dot'].value);
                 break;
             case 'set-tempo':
                 submitTarget.dataset.tempo = 't' + dialogForm.elements['tempo'].value;
