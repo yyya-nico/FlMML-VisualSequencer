@@ -423,7 +423,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const noteValue = Number((str.match(/[0-9]+/) || [scoreNoteValue])[0]);
                 const dots = (str.match(/\.+/) || [''])[0].length;
                 if (dots) {
-                    return noteValue * (1 - 1 / 2 ** dots) * 2;
+                    return (noteValue * 2 ** dots) / (2 ** (dots + 1) - 1);
                 } else {
                     return noteValue;
                 }
