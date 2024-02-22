@@ -1515,17 +1515,23 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } else if (is('action')) {
             if (isButton) {
-                if ('metaData' in e.target.dataset || 'otherAction' in e.target.dataset) {
+                if ('otherAction' in e.target.dataset) {
                     await actionPromptSwitcher(e.target);
                 }
                 const ul = musicalScore.querySelector('ul');
                 const li = document.createElement('li');
                 const newItem = e.target.cloneNode(true);
+                if ('metaData' in newItem.dataset) {
+                    await actionPromptSwitcher(newItem);
+                }
                 if ('repeatStartEnd' in newItem.dataset) {
                     newItem.classList.remove('material-icons');
                     newItem.ariaLabel = 'リピート開始';
                     newItem.textContent = '◆';
                     newItem.dataset.repeatStartEnd = '/:';
+                } else if ('polyStartEnd' in newItem.dataset) {
+                    newItem.dataset.polyStartEnd = '[';
+                    newItem.textContent = '[';
                 }
                 li.appendChild(newItem);
                 ul.appendChild(li);
@@ -1540,11 +1546,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     newElem: li,
                     parent: ul
                 });
-                if ('repeatStartEnd' in lastTouchedButton.dataset) {
+                if ('repeatStartEnd' in lastTouchedButton.dataset || 'polyStartEnd' in lastTouchedButton.dataset) {
                     const li = document.createElement('li')
                     const newItem = e.target.cloneNode(true);
-                    newItem.ariaLabel = 'リピート終了';
-                    newItem.dataset.repeatStartEnd = ':/';
+                    if ('repeatStartEnd' in lastTouchedButton.dataset) {
+                        newItem.ariaLabel = 'リピート終了';
+                        newItem.dataset.repeatStartEnd = ':/';
+                    } else if ('polyStartEnd' in lastTouchedButton.dataset) {
+                        newItem.dataset.polyStartEnd = ']';
+                        newItem.textContent = ']';
+                    }
                     li.appendChild(newItem);
                     lastTouchedButton.parentElement.insertAdjacentElement('afterend', li);
                     block.blocksDataUpdate();
@@ -2032,7 +2043,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         newItem.ariaLabel = 'リピート開始';
                         newItem.textContent = '◆';
                         newItem.dataset.repeatStartEnd = '/:' + (newItem.dataset.repeatStartEnd.match(/[0-9]+/) || [''])[0];
-                    } 
+                    } else if ('polyStartEnd' in newItem.dataset) {
+                        newItem.dataset.polyStartEnd = '[';
+                        newItem.textContent = '[';
+                    }
                     li.appendChild(newItem);
                     newNode = li;
                     break;
@@ -2049,7 +2063,7 @@ document.addEventListener('DOMContentLoaded', () => {
             lastTouchedButton = newNode.firstElementChild;
             if (target === musicalScore) {
                 block.blocksDataUpdate();
-                block.calcPoly();
+                e.dataTransfer.dropEffect === 'move' && block.calcPoly();
                 block.saveBlocksData();
                 block.exportMml(mml);
                 if ('tonePitch' in lastTouchedButton.dataset) {
@@ -2077,13 +2091,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                     break;
             }
-            if (e.dataTransfer.dropEffect === 'copy' && 'repeatStartEnd' in lastTouchedButton.dataset) {
+            if (e.dataTransfer.dropEffect === 'copy' && ('repeatStartEnd' in lastTouchedButton.dataset || 'polyStartEnd' in lastTouchedButton.dataset)) {
                 const li = document.createElement('li')
                 const newItem = item.cloneNode(true);
-                newItem.classList.add('material-icons');
-                newItem.ariaLabel = 'リピート終了';
-                newItem.textContent = 'repeat';
-                newItem.dataset.repeatStartEnd = ':/';
+                if ('repeatStartEnd' in lastTouchedButton.dataset) {
+                    newItem.classList.add('material-icons');
+                    newItem.ariaLabel = 'リピート終了';
+                    newItem.textContent = 'repeat';
+                    newItem.dataset.repeatStartEnd = ':/';
+                } else if ('polyStartEnd' in lastTouchedButton.dataset) {
+                    newItem.dataset.polyStartEnd = ']';
+                    newItem.textContent = ']';
+                }
                 li.appendChild(newItem);
                 newNode.insertAdjacentElement('afterend', li);
                 block.blocksDataUpdate();
