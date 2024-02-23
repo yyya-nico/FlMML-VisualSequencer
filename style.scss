@@ -565,11 +565,13 @@ header {
 
                     label {
                         display: flex;
-                        flex-wrap: wrap;
                         justify-content: space-between;
                         align-items: center;
                         gap: 10px;
-                        max-width: 400px;
+
+                        &:has(emoji-picker) {
+                            flex-wrap: wrap;
+                        }
 
                         emoji-picker {
                             overflow: auto;
@@ -589,6 +591,7 @@ header {
                         }
 
                         input {
+                            flex-shrink: 0;
                             width: 50%;
                         }
                     }
