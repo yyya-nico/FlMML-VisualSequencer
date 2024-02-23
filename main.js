@@ -1664,12 +1664,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 removedIndex: removeTargetIndex,
                 parent: parent(target).querySelector('ul')
             });
-            removeTarget.remove();
             if (is('tones')) {
                 musicalScore.querySelectorAll(`[class="${buttonClassName}"]`).forEach(elem => {
                     elem.parentElement.remove();
                 });
             }
+            removeTarget.remove();
             block.blocksDataUpdate();
             block.calcPoly();
             block.saveBlocksData();
