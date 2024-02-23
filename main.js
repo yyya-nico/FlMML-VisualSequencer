@@ -218,7 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let noteCount = 1;
             data.forEach(block => {
                 const li = document.createElement('li');
-                const toneButtonHTML = `<button class="material-icons note note-${noteCount}" aria-label="無調整" draggable="true" data-tone="" data-tone-pitch="c">music_note</button>`;
+                const toneButtonHTML = `<button class="material-icons note note-${noteCount}" aria-label="無調整" draggable="true" data-tone="" data-tone-pitch="c" data-tone-macro="">music_note</button>`;
                 const toneButton = (() => {
                     const wrap = document.createElement('div');
                     wrap.innerHTML = toneButtonHTML;
@@ -1295,7 +1295,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const buttonClassName = data.removedElem.className;
                         data.removedElem.remove();
                         if (is('tones')) {
-                            musicalScore.querySelectorAll(`[class="${buttonClassName}"]`).forEach(elem => {
+                            musicalScore.querySelectorAll(`[class=*"${buttonClassName}"]`).forEach(elem => {
                                 elem.parentElement.remove();
                             });
                         }
@@ -1734,7 +1734,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 parent: parent(target).querySelector('ul')
             });
             if (is('tones')) {
-                musicalScore.querySelectorAll(`[class="${buttonClassName}"]`).forEach(elem => {
+                musicalScore.querySelectorAll(`[class=*"${buttonClassName}"]`).forEach(elem => {
                     elem.parentElement.remove();
                 });
             }
@@ -2276,7 +2276,7 @@ document.addEventListener('DOMContentLoaded', () => {
         switch (e.submitter.value) {
             case 'set-tone':
                 const buttonClassName = submitTarget.className;
-                document.querySelectorAll(`[class="${buttonClassName}"]`).forEach(elem => {
+                document.querySelectorAll(`[class=*"${buttonClassName}"]`).forEach(elem => {
                     elem.ariaLabel = dialogForm.elements['tone-name'].value;
                     if (!elem.classList.contains('material-icons') || dialogForm.elements['tone-name'].value !== '無調整') {
                         elem.classList.remove('material-icons');
