@@ -269,7 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 block.polyStartEnd && (button.dataset.polyStartEnd = block.polyStartEnd);
                 if (block.otherAction) {
                     button.dataset.otherAction = block.otherAction;
-                    button.textContent = block.otherAction;
+                    button.textContent = block.otherAction.length > 4 ? '…' : block.otherAction;
                 }
                 li.appendChild(button);
                 ul.appendChild(li);
@@ -2334,7 +2334,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
             case 'set-other-action':
                 submitTarget.dataset.otherAction = dialogForm.elements['other-action'].value;
-                submitTarget.textContent = submitTarget.dataset.otherAction;
+                submitTarget.textContent = submitTarget.dataset.otherAction.length > 4 ? '…' : submitTarget.dataset.otherAction;
                 break;
         }
         const afterChange = JSON.parse(JSON.stringify(submitTarget.dataset));
