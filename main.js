@@ -1562,7 +1562,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const ul = tones.querySelector('ul');
                 const li = document.createElement('li');
                 const nonExistClassName = getNonExistNoteClassName();
-                const toneButton = `<button class="material-icons note ${nonExistClassName}" aria-label="無調整" draggable="true" data-tone="" data-tone-pitch="c">music_note</button>`;
+                const toneButton = `<button class="material-icons note ${nonExistClassName}" aria-label="無調整" draggable="true" data-tone="" data-tone-pitch="c" data-tone-macro="">music_note</button>`;
                 li.innerHTML = toneButton;
                 const newItem = li.firstElementChild;
                 ul.appendChild(li);
