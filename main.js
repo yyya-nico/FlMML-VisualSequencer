@@ -166,7 +166,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 className: elem.className,
                 tone: {
                     tone: elem.dataset.tone,
-                    tonePitch: elem.dataset.tonePitch
+                    tonePitch: elem.dataset.tonePitch,
+                    toneMacro: elem.dataset.toneMacro,
                 },
                 tempo: elem.dataset.tempo,
                 noteValue: elem.dataset.noteValue,
@@ -282,12 +283,13 @@ document.addEventListener('DOMContentLoaded', () => {
             let toneSet = new Set(toneArr);
             let toneAppended = false;
             this.#blocksData.forEach(block => {
-                const {tone, tonePitch} = block.tone;
+                const {tone, tonePitch, toneMacro} = block.tone;
                 if (tone !== undefined) {
                     const toneIndex = [...toneSet].indexOf(tone);
                     if (!toneAppended) {
                         [...toneSet].forEach((tone, i) => {
                             tone !== '' && mml.beforeInsertToStr(lineIndex + i, tone + ' ');
+                            toneMacro !== '' && mml.beforeInsertToStr(lineIndex + i, toneMacro);
                         });
                         toneAppended = true;
                     }
@@ -1541,6 +1543,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 await dialogFormManager.prompt('tone', {
                     'tone-name': e.target.ariaLabel,
                     'tone-def': e.target.dataset.tone,
+                    'tone-macro-name': e.target.dataset.toneMacro.slice(1, -1),
                     'run': () => {
                         const toneName = dialogForm.elements['tone-name'];
                         toneName.insertAdjacentElement('afterend', picker);
@@ -2279,8 +2282,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         elem.classList.remove('material-icons');
                         elem.textContent = dialogForm.elements['tone-name'].value;
                     }
-                    const macroDef = dialogForm.elements['tone-macro-name'].value !== '' ? `$${dialogForm.elements['tone-macro-name'].value}=` : '';
-                    elem.dataset.tone = macroDef + dialogForm.elements['tone-def'].value;
+                    elem.dataset.toneMacro = dialogForm.elements['tone-macro-name'].value !== '' ? `$${dialogForm.elements['tone-macro-name'].value}=` : '';
+                    elem.dataset.tone = dialogForm.elements['tone-def'].value;
                     document.querySelector('emoji-picker').classList.remove('expaned');
                 });
                 break;
