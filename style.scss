@@ -432,6 +432,22 @@ header {
                     content: attr(data-repeat-start-end);
                 }
 
+                &.macro-def::after, &.macro-arg-use::after, &.macro-use::after {
+                    text-transform: none;
+                }
+
+                &.macro-def::after {
+                    content: attr(data-macro-def);
+                }
+
+                &.macro-arg-use::after {
+                    content: attr(data-macro-arg-use);
+                }
+
+                &.macro-use::after {
+                    content: attr(data-macro-use);
+                }
+
                 &:hover {
                     &::before {
                         visibility: visible;
@@ -465,6 +481,14 @@ header {
                     opacity: .6;
                     transition: .5s;
                 }
+            }
+
+            hr {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                border: 0;
+                background-color: transparent;
             }
         }
 
@@ -611,6 +635,11 @@ header {
             gap: 5px;
             padding-left: 0;
             list-style: none;
+
+            li:has(.break) {
+                width: 100%;
+                height: 20px;
+            }
         }
 
         small {

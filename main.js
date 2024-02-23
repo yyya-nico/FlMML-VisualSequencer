@@ -177,6 +177,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 detune: elem.dataset.detune,
                 repeatStartEnd: elem.dataset.repeatStartEnd,
                 repeatBreak: elem.dataset.repeatBreak,
+                macroDef: elem.dataset.macroDef,
+                macroArgUse: elem.dataset.macroArgUse,
+                macroUse: elem.dataset.macroUse,
                 metaData: elem.dataset.metaData,
                 polyStartEnd: elem.dataset.polyStartEnd,
                 otherAction: elem.dataset.otherAction,
@@ -255,6 +258,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
                 block.repeatBreak && (button.dataset.repeatBreak = block.repeatBreak);
+                if (block.macroDef) {
+                    button.dataset.macroDef = block.macroDef;
+                    button.textContent = block.macroDef === ';\n' ? ';' : '$=' ;
+                }
+                block.macroArgUse && (button.dataset.macroArgUse = block.macroArgUse);
+                block.macroUse && (button.dataset.macroUse = block.macroUse);
                 block.metaData && (button.dataset.metaData = block.metaData);
                 block.polyStartEnd && (button.dataset.polyStartEnd = block.polyStartEnd);
                 if (block.otherAction) {
@@ -309,8 +318,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         });
                     } else {
                         mml.appendToStr(lineIndex, tonePitch || block.tempo || block.rest || block.octave
-                            || block.velocity || block.noteShift || block.detune || block.metaData
-                            || block.otherAction || '');
+                            || block.velocity || block.noteShift || block.detune || block.macroDef
+                            || block.macroArgUse || block.macroUse || block.metaData || block.otherAction
+                            || '');
                         if (mml.getMmlLine(lineIndex).includes('\n')) {
                             const mmlText = mml.getMmlLine(lineIndex).replace('\n', '');
                             mml.rewrite(lineIndex, mmlText);
@@ -326,7 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         importMml(mml) {
             const mmlArr = mml.getMmlArr();
-            const regex = /@.* |[><]*?[a-g]\+?[0-9]*\.*|t[0-9]+|l[0-9]+\.*|r[0-9]*\.*|o[0-8]|@v[0-9]+|@ns[0-9]+|@d[0-9]+|\/:[0-9]*|:\/|\/|^#.*|\[|\]|.*/g;
+            const regex = /(\$.*?=)?@.* |[><]*?[a-g]\+?[0-9]*\.*|t[0-9]+|l[0-9]+\.*|r[0-9]*\.*|o[0-8]|@v[0-9]+|@ns[0-9]+|@d[0-9]+|\/:[0-9]*|:\/|\/|^#.*|\[|\]|.*/g;
             /* tone.tone|tone.tonePitch|tempo|noteValue|rest|octave|velocity|noteShift|detune|repeatStart|repeatEnd|repeatBreak|metaData|polyStartEnd|otherAction */
             const data = [];
             let noteCount = 0;
@@ -339,7 +349,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     const obj = {};
                     obj.tone = {};
-                    if (str.startsWith('@')) {
+                    if (/(\$.*?=)?@.* /.test(str)) {
                         toneCache = str.trim();
                         noteCount++;
                         return;
@@ -408,7 +418,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = this.#blocksData;
             let tempo = 120;
             let scoreNoteValue = 4;
-            let skip = false, jump = -1, nest = -1;
+            let skip = false, jump = -1, nest = -1, inMacro = false;
             const repeatStart = [], repeatEnd = [], remainingRepeat = [];
             const start = performance.now();
             let totalDelay = 0;
@@ -445,6 +455,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const current = data[i];
                 if (!current || i >= current.length) {
                     return;
+                } else if (inMacro) {
+                    if (current.macroDef === ';\n') {
+                        inMacro = false;
+                    }
+                    i++;
+                    attachMotion();
                 } else if (jump !== -1) {
                     if (current.repeatStartEnd?.startsWith('/:')) {
                         nest++;
@@ -481,6 +497,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else {
                         attachMotion();
                     }
+                } else if (current.macroDef && current.macroDef !== ';\n') {
+                    inMacro = true;
+                    i++;
+                    attachMotion();
                 } else {
                     current.tempo && (tempo = Number(current.tempo.replace('t', '')) || tempo);
                     current.noteValue && (scoreNoteValue = noteValueStrCalc(current.noteValue));
@@ -623,6 +643,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         type: 'text',
                         name: 'tone-def',
                         autofocus: ''
+                    },
+                    {
+                        label: 'マクロ名(マクロにする場合)',
+                        type: 'text',
+                        name: 'tone-macro-name',
                     },
                 ],
                 buttons: [
@@ -816,6 +841,67 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 ]
             },
+            macroDef: {
+                title: 'マクロ定義設定',
+                inputs: [
+                    {
+                        label: '名前',
+                        type: 'text',
+                        name: 'macro-def-name'
+                    },
+                    {
+                        label: '引数 カンマ区切り',
+                        type: 'text',
+                        name: 'macro-def-arg'
+                    }
+                ],
+                buttons: [
+                    {
+                        class: 'primaly',
+                        value: 'set-macro-def',
+                        textContent: '確定'
+                    }
+                ]
+            },
+            macroArgUse: {
+                title: 'マクロ引数使用設定',
+                inputs: [
+                    {
+                        label: '引数名',
+                        type: 'text',
+                        name: 'macro-arg-use'
+                    }
+                ],
+                buttons: [
+                    {
+                        class: 'primaly',
+                        value: 'set-macro-arg-use',
+                        textContent: '確定'
+                    }
+                ]
+            },
+            macroUse: {
+                title: 'マクロ使用設定',
+                inputs: [
+                    {
+                        label: '名前',
+                        type: 'text',
+                        name: 'macro-use-name'
+                    },
+                    {
+                        label: '引数 カンマ区切り',
+                        type: 'text',
+                        name: 'macro-use-arg'
+                    },
+                ],
+                buttons: [
+                    {
+                        class: 'primaly',
+                        value: 'set-macro-use',
+                        textContent: '確定'
+                    }
+                ]
+            },
             metaData: {
                 title: 'メタデータ設定',
                 inputs: [
@@ -854,50 +940,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     {
                         class: 'primaly',
                         value: 'set-meta-data',
-                        textContent: '確定'
-                    }
-                ]
-            },
-            macroDef: {
-                title: 'マクロ定義設定',
-                inputs: [
-                    {
-                        label: '名前(+引数)',
-                        type: 'text',
-                        name: 'macro-def-name'
-                    },
-                    {
-                        label: '内容',
-                        type: 'text',
-                        name: 'macro-def-desc'
-                    },
-                ],
-                buttons: [
-                    {
-                        class: 'primaly',
-                        value: 'set-macro-def',
-                        textContent: '確定'
-                    }
-                ]
-            },
-            macroUse: {
-                title: 'マクロ使用設定',
-                inputs: [
-                    {
-                        label: '名前',
-                        type: 'text',
-                        name: 'macro-use-name'
-                    },
-                    {
-                        label: '引数(あれば)',
-                        type: 'text',
-                        name: 'macro-use-arg'
-                    },
-                ],
-                buttons: [
-                    {
-                        class: 'primaly',
-                        value: 'set-macro-use',
                         textContent: '確定'
                     }
                 ]
@@ -1356,6 +1398,23 @@ document.addEventListener('DOMContentLoaded', () => {
             await dialogFormManager.prompt('repeat', {
                 'repeat': item.dataset.repeatStartEnd.replace('/:', '')
             }, item);
+        } else if ('macroDef' in item.dataset) {
+            if (item.dataset.macroDef === ';\n') {
+                return;
+            }
+            await dialogFormManager.prompt('macroDef', {
+                'macro-def-name': (item.dataset.macroDef.match(/\$([^\{\=]*)[\{\=]/) || [,''])[1],
+                'macro-def-arg': (item.dataset.macroDef.match(/\{([^\}]*)\}/) || [,''])[1],
+            }, item);
+        } else if ('macroArgUse' in item.dataset) {
+            await dialogFormManager.prompt('macroArgUse', {
+                'macro-arg-use': item.dataset.macroArgUse.replace('%', '')
+            }, item);
+        } else if ('macroUse' in item.dataset) {
+            await dialogFormManager.prompt('macroUse', {
+                'macro-use-name': (item.dataset.macroUse.match(/\$([^\{]*)\{?/) || [,''])[1],
+                'macro-use-arg': (item.dataset.macroUse.match(/\{([^\}]*)\}/) || [,''])[1],
+            }, item);
         } else if ('metaData' in item.dataset) {
             await dialogFormManager.prompt('metaData', {
                 'run': () => {
@@ -1521,7 +1580,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const ul = musicalScore.querySelector('ul');
                 const li = document.createElement('li');
                 const newItem = e.target.cloneNode(true);
-                if ('metaData' in newItem.dataset) {
+                if ('metaData' in newItem.dataset || 'macroDef' in newItem.dataset
+                    || 'macroArgUse' in newItem.dataset || 'macroUse' in newItem.dataset) {
                     await actionPromptSwitcher(newItem);
                 }
                 if ('repeatStartEnd' in newItem.dataset) {
@@ -1532,6 +1592,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else if ('polyStartEnd' in newItem.dataset) {
                     newItem.dataset.polyStartEnd = '[';
                     newItem.textContent = '[';
+                } else if ('macroDef' in newItem.dataset) {
+                    newItem.textContent = '$=';
                 }
                 li.appendChild(newItem);
                 ul.appendChild(li);
@@ -1546,7 +1608,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     newElem: li,
                     parent: ul
                 });
-                if ('repeatStartEnd' in lastTouchedButton.dataset || 'polyStartEnd' in lastTouchedButton.dataset) {
+                if ('repeatStartEnd' in lastTouchedButton.dataset || 'polyStartEnd' in lastTouchedButton.dataset
+                    || 'macroDef' in lastTouchedButton.dataset) {
                     const li = document.createElement('li')
                     const newItem = e.target.cloneNode(true);
                     if ('repeatStartEnd' in lastTouchedButton.dataset) {
@@ -1555,6 +1618,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else if ('polyStartEnd' in lastTouchedButton.dataset) {
                         newItem.dataset.polyStartEnd = ']';
                         newItem.textContent = ']';
+                    } else if ('macroDef' in lastTouchedButton.dataset) {
+                        newItem.dataset.macroDef = ';\n';
+                        newItem.textContent = ';';
                     }
                     li.appendChild(newItem);
                     lastTouchedButton.parentElement.insertAdjacentElement('afterend', li);
@@ -2034,7 +2100,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         const noteClassName = [...item.classList].find(name => name.includes('note-'));
                         newItem.classList.replace(noteClassName, getNonExistNoteClassName());
                     } else if (from === action) {
-                        if ('metaData' in newItem.dataset || 'otherAction' in newItem.dataset) {
+                        if ('metaData' in newItem.dataset || 'macroDef' in newItem.dataset
+                            || 'macroArgUse' in newItem.dataset || 'macroUse' in newItem.dataset
+                            || 'otherAction' in item.dataset) {
                             await actionPromptSwitcher(newItem);
                         }
                     }
@@ -2046,6 +2114,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else if ('polyStartEnd' in newItem.dataset) {
                         newItem.dataset.polyStartEnd = '[';
                         newItem.textContent = '[';
+                    } else if ('macroDef' in newItem.dataset) {
+                        newItem.textContent = '$=';
                     }
                     li.appendChild(newItem);
                     newNode = li;
@@ -2091,7 +2161,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                     break;
             }
-            if (e.dataTransfer.dropEffect === 'copy' && ('repeatStartEnd' in lastTouchedButton.dataset || 'polyStartEnd' in lastTouchedButton.dataset)) {
+            if (e.dataTransfer.dropEffect === 'copy' && ('repeatStartEnd' in lastTouchedButton.dataset
+                || 'polyStartEnd' in lastTouchedButton.dataset || 'macroDef' in lastTouchedButton.dataset)) {
                 const li = document.createElement('li')
                 const newItem = item.cloneNode(true);
                 if ('repeatStartEnd' in lastTouchedButton.dataset) {
@@ -2102,6 +2173,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else if ('polyStartEnd' in lastTouchedButton.dataset) {
                     newItem.dataset.polyStartEnd = ']';
                     newItem.textContent = ']';
+                } else if ('macroDef' in lastTouchedButton.dataset) {
+                    newItem.dataset.macroDef = ';\n';
+                    newItem.textContent = ';';
                 }
                 li.appendChild(newItem);
                 newNode.insertAdjacentElement('afterend', li);
@@ -2205,7 +2279,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         elem.classList.remove('material-icons');
                         elem.textContent = dialogForm.elements['tone-name'].value;
                     }
-                    elem.dataset.tone = dialogForm.elements['tone-def'].value;
+                    const macroDef = dialogForm.elements['tone-macro-name'].value !== '' ? `$${dialogForm.elements['tone-macro-name'].value}=` : '';
+                    elem.dataset.tone = macroDef + dialogForm.elements['tone-def'].value;
                     document.querySelector('emoji-picker').classList.remove('expaned');
                 });
                 break;
@@ -2235,6 +2310,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
             case 'set-repeat':
                 submitTarget.dataset.repeatStartEnd = '/:' + dialogForm.elements['repeat'].value;
+                break;
+            case 'set-macro-def':
+                submitTarget.dataset.macroDef = '$' + dialogForm.elements['macro-def-name'].value
+                    + (dialogForm.elements['macro-def-arg'].value !== '' ? `{${dialogForm.elements['macro-def-arg'].value}}` : '')
+                    + '=';
+                break;
+            case 'set-macro-arg-use':
+                submitTarget.dataset.macroArgUse = '%' + dialogForm.elements['macro-arg-use'].value;
+                break;
+            case 'set-macro-use':
+                submitTarget.dataset.macroUse = '$' + dialogForm.elements['macro-use-name'].value
+                    + (dialogForm.elements['macro-use-arg'].value !== '' ? `{${dialogForm.elements['macro-use-arg'].value}}` : '');
                 break;
             case 'set-meta-data':
                 submitTarget.ariaLabel = dialogForm.elements['select-meta-data'].selectedOptions[0].label;
