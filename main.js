@@ -238,7 +238,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else {
                         tonesUl.appendChild(button.cloneNode(true));
                     }
-                    button.dataset.tonePitch = block.tone.tonePitch
+                    button.dataset.tonePitch = block.tone.tonePitch;
+                    button.dataset.toneMacro = block.tone.toneMacro;
                     noteCount++;
                 }
                 block.tempo && (button.dataset.tempo = block.tempo);
