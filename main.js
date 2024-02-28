@@ -2427,7 +2427,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if ('ontouchstart' in window || navigator.maxTouchPoints) {
-        document.querySelector('.for-mobile').classList.add('show');
+        document.body.classList.add('mobile');
     }
 
     undoBtn.addEventListener('click', () => history.undo());
