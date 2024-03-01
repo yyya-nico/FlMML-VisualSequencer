@@ -1132,6 +1132,7 @@ document.addEventListener('DOMContentLoaded', () => {
         playBtn.innerHTML = playHtml;
         block.stopRendering();
         flmml.removeEventListener('compilecomplete', playAnimationStart);
+        clearBtn.disabled = false;
     };
     flmml.addEventListener('complete', completeHandler);
 
@@ -2371,10 +2372,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isPlaying) {
             flmml.play(mml.getMml());
             flmml.addEventListener('compilecomplete', playAnimationStart);
+            clearBtn.disabled = true;
         } else {
             flmml.stop();
             block.stopRendering();
             flmml.removeEventListener('compilecomplete', playAnimationStart);
+            clearBtn.disabled = false;
         }
         playBtn.innerHTML = !isPlaying ? stopHtml : playHtml;
     });
