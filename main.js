@@ -451,7 +451,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const criHeiPercentage = ratio => {
                     return wrap.clientHeight * ratio;
                 };
-                if (current.elem.offsetTop >  headerHeight + wrap.scrollTop + criHeiPercentage(0.8) || current.elem.offsetTop < headerHeight + wrap.scrollTop + criHeiPercentage(0.2)) {
+                if (i === 0 || current.elem.offsetTop >  headerHeight + wrap.scrollTop + criHeiPercentage(0.8) || current.elem.offsetTop < headerHeight + wrap.scrollTop + criHeiPercentage(0.2)) {
                     scrTo(current.elem.offsetTop - criHeiPercentage(0.2));
                 }
             };
