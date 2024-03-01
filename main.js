@@ -441,6 +441,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     return noteValue;
                 }
             };
+            const scrollTask = current => {
+                const headerHeight = Number(getComputedStyle(document.querySelector(':root')).getPropertyValue('--header-height').replace('px',''));
+                const wrap = document.querySelector('.wrap');
+                const scrTo = (top) => {
+                    top -= headerHeight;
+                    wrap.scrollTo({top, behavior: 'smooth'});
+                };
+                const criHeiPercentage = ratio => {
+                    return wrap.clientHeight * ratio;
+                };
+                if (current.elem.offsetTop >  headerHeight + wrap.scrollTop + criHeiPercentage(0.8) || current.elem.offsetTop < headerHeight + wrap.scrollTop + criHeiPercentage(0.2)) {
+                    scrTo(current.elem.offsetTop - criHeiPercentage(0.2));
+                }
+            };
             const delayAttachMotion = noteValue => {
                 const repeatFunc = timeStamp => {
                     const elapsed = timeStamp - start;
@@ -458,7 +472,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const current = data[i];
                 if (!current || i >= current.length) {
                     return;
-                } else if (inMacro) {
+                }
+                scrollTask(current);
+                if (inMacro) {
                     if (current.macroDef === ';\n') {
                         inMacro = false;
                     }
