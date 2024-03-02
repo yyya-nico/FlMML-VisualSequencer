@@ -283,7 +283,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let toneArr = this.#blocksData.filter(block => block.tone.tone !== undefined).map(block => block.tone.tone);
             let toneSet = new Set(toneArr);
             let toneAppended = false;
-            this.#blocksData.forEach(block => {
+            this.#blocksData.forEach((block, i) => {
                 const {tone, tonePitch, toneMacro} = block.tone;
                 if (tone !== undefined) {
                     const toneIndex = [...toneSet].indexOf(tone);
@@ -319,16 +319,16 @@ document.addEventListener('DOMContentLoaded', () => {
                                 }
                             }
                         });
+                    } else if (block.metaData) {
+                        if (i !== 0) {
+                            lineIndex++;
+                        }
+                        mml.appendToStr(lineIndex, block.metaData.replace('\n', '') || '');
+                        lineIndex++;
                     } else {
                         mml.appendToStr(lineIndex, tonePitch || block.tempo || block.rest || block.octave
                             || block.velocity || block.noteShift || block.detune || block.macroDef
-                            || block.macroArgUse || block.macroUse || block.metaData || block.otherAction
-                            || '');
-                        if (mml.getMmlLine(lineIndex).includes('\n')) {
-                            const mmlText = mml.getMmlLine(lineIndex).replace('\n', '');
-                            mml.rewrite(lineIndex, mmlText);
-                            lineIndex++;
-                        }
+                            || block.macroArgUse || block.macroUse || block.otherAction || '');
                     }
                 }
             });
