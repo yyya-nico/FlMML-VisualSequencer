@@ -323,7 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             }
                         });
                     } else if (block.metaData) {
-                        if (i !== 0) {
+                        if (mml.getMmlLine(lineIndex)) {
                             lineIndex++;
                         }
                         mml.appendToStr(lineIndex, block.metaData.replace('\n', '') || '');
