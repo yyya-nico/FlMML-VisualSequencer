@@ -2311,9 +2311,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // /Form Controls
     //----------------
 
-    dialog.addEventListener('click', e => {
+    dialog.addEventListener('pointerdown', e => {
         if (e.target === dialog) {
-            dialog.close();
+            dialog.addEventListener('pointerup', e => {
+                if (e.target === dialog) {
+                    dialog.close();
+                }
+            }, {once: true});
         }
     });
 
