@@ -1173,7 +1173,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const playMusicNote = block => {
         const findOctaveElem = () => {
             let findTemp = block.parentElement;
-            while (findTemp && !('octave' in findTemp.firstElementChild.dataset)) {
+            while (findTemp && !(findTemp.firstElementChild.dataset.octave?.startsWith('o'))) {
                 findTemp = findTemp.previousElementSibling;
             };
             return findTemp?.firstElementChild || null;
@@ -1182,9 +1182,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentIndex = [...musicalScore.querySelector('ul').children].indexOf(block.parentElement);
         const concatAllOctave = [...musicalScore.querySelector('ul').children]
                                     .slice(0, currentIndex)
-                                    .filter(li => 'tonePitch' in li.firstElementChild.dataset)
+                                    .filter(li => 'tonePitch' in li.firstElementChild.dataset || 'octave' in li.firstElementChild.dataset && !li.firstElementChild.dataset.octave.startsWith('o'))
                                     .map(li => {
-                                        const pitch = li.firstElementChild.dataset.tonePitch;
+                                        const pitch = li.firstElementChild.dataset.tonePitch || li.firstElementChild.dataset.octave;
                                         return (pitch.match(/[><]+/) || [''])[0];
                                     }).join('');
         const octave = ['>', '<'];
