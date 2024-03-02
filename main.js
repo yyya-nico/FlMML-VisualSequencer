@@ -280,17 +280,20 @@ document.addEventListener('DOMContentLoaded', () => {
         exportMml(mml) {
             mml.setMmlArr([]);
             let lineIndex = 0;
-            let toneArr = this.#blocksData.filter(block => block.tone.tone !== undefined).map(block => block.tone.tone);
-            let toneSet = new Set(toneArr);
+            let toneArr = this.#blocksData.filter(block => block.tone.tone !== undefined).map(block => [block.tone.tone, block.tone.toneMacro]);
+            let toneSet = new Set(toneArr.map(tone => tone[0]));
+            let toneMacroSet = new Set(toneArr.map(tone => tone[1]));
             let toneAppended = false;
             this.#blocksData.forEach((block, i) => {
-                const {tone, tonePitch, toneMacro} = block.tone;
+                const {tone, tonePitch} = block.tone;
                 if (tone !== undefined) {
                     const toneIndex = [...toneSet].indexOf(tone);
                     if (!toneAppended) {
                         [...toneSet].forEach((tone, i) => {
-                            tone !== '' && mml.beforeInsertToStr(lineIndex + i, tone + ' ');
-                            toneMacro !== '' && mml.beforeInsertToStr(lineIndex + i, toneMacro);
+                            tone && mml.beforeInsertToStr(lineIndex + i, tone + ' ');
+                        });
+                        [...toneMacroSet].forEach((toneMacro, i) => {
+                            toneMacro && mml.beforeInsertToStr(lineIndex + i, toneMacro);
                         });
                         toneAppended = true;
                     }
