@@ -342,7 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         importMml(mml) {
             const mmlArr = mml.getMmlArr();
-            const regex = /(\$.*?=)?@.* |[><]*?[a-g]\+?[0-9]*\.*|t[0-9]+|l[0-9]+\.*|r[0-9]*\.*|o[0-8]|@v[0-9]+|@ns[0-9]+|@d[0-9]+|\/:[0-9]*|:\/|\/|^#.*|\[|\]|.*/g;
+            const regex = /(\$.*?=)?@.* |[><]*?[a-g]\+?[0-9]*\.*|t[0-9]+|l[0-9]+\.*|r[0-9]*\.*|o[0-8]|[><]+|@v[0-9]+|[\)\(][0-9]+|@?ns[0-9]+|@d[0-9]+|\/:[0-9]*|:\/|\/|^#.*|\[|\]|.*/g;
             /* tone.tone|tone.tonePitch|tempo|noteValue|rest|octave|velocity|noteShift|detune|repeatStart|repeatEnd|repeatBreak|metaData|polyStartEnd|otherAction */
             const data = [];
             let noteCount = 0;
@@ -374,13 +374,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else if (str.startsWith('r')) {
                         obj.className = 'material-icons rest';
                         obj.rest = str;
-                    } else if (str.startsWith('o')) {
+                    } else if (/o[0-8]|[><]+/.test(str)) {
                         obj.className = 'material-icons octave';
                         obj.octave = str;
-                    } else if (str.startsWith('@v')) {
+                    } else if (/@v[0-9]+|[\)\(][0-9]+/.test(str)) {
                         obj.className = 'material-icons velocity';
                         obj.velocity = str;
-                    } else if (str.startsWith('@ns')) {
+                    } else if (str.startsWith('@ns') || str.startsWith('ns')) {
                         obj.className = 'material-icons note-shift';
                         obj.noteShift = str;
                     } else if (str.startsWith('@d')) {
@@ -780,7 +780,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         label: 'オクターブ位置',
                         type: 'number',
                         name: 'octave',
-                        min: '0',
+                        min: '-8',
                         max: '8'
                     }
                 ],
@@ -788,7 +788,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     {
                         class: 'primaly',
                         value: 'set-octave',
-                        textContent: '確定'
+                        textContent: '絶対指定'
+                    },
+                    {
+                        value: 'set-octave-relative',
+                        textContent: '相対指定'
                     }
                 ]
             },
@@ -799,7 +803,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         label: '音量',
                         type: 'number',
                         name: 'velocity',
-                        min: '0',
+                        min: '-127',
                         max: '127'
                     }
                 ],
@@ -807,7 +811,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     {
                         class: 'primaly',
                         value: 'set-velocity',
-                        textContent: '確定'
+                        textContent: '絶対指定'
+                    },
+                    {
+                        value: 'set-velocity-relative',
+                        textContent: '相対指定'
                     }
                 ]
             },
@@ -824,7 +832,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     {
                         class: 'primaly',
                         value: 'set-note-shift',
-                        textContent: '確定'
+                        textContent: '絶対指定'
+                    },
+                    {
+                        value: 'set-note-shift-relative',
+                        textContent: '相対指定'
                     }
                 ]
             },
@@ -1382,15 +1394,15 @@ document.addEventListener('DOMContentLoaded', () => {
             }, item);
         } else if ('octave' in item.dataset) {
             await dialogFormManager.prompt('octave', {
-                'octave': item.dataset.octave.replace('o', '')
+                'octave': item.dataset.octave.startsWith('o') ? item.dataset.octave.replace('o', '') : (item.dataset.octave.match(/[><]+/) || [''])[0].length
             }, item);
         } else if ('velocity' in item.dataset) {
             await dialogFormManager.prompt('velocity', {
-                'velocity': item.dataset.velocity.replace('@v', '')
+                'velocity': item.dataset.velocity.startsWith('@v') ? item.dataset.velocity.replace('@v', '') : Number((item.dataset.velocity.match(/[0-9]+/) || [''])[0]) * (item.dataset.velocity.startsWith('(') ? 1 : -1)
             }, item);
         } else if ('noteShift' in item.dataset) {
             await dialogFormManager.prompt('noteShift', {
-                'note-shift': item.dataset.noteShift.replace('@ns', '')
+                'note-shift': (item.dataset.noteShift.match(/[0-9]+/) || [''])[0]
             }, item);
         } else if ('detune' in item.dataset) {
             await dialogFormManager.prompt('detune', {
@@ -1869,17 +1881,31 @@ document.addEventListener('DOMContentLoaded', () => {
                     const newRest = rest + increase !== 0 ? rest + increase : '';
                     target.dataset.rest = 'r' + newRest + dots;
                 } else if ('octave' in target.dataset) {
-                    const octave = Number(target.dataset.octave.replace('o', ''));
-                    const increase = minmax(octave, 0, 8);
-                    target.dataset.octave = 'o' + (octave + increase);
+                    const isAbsolute = target.dataset.octave.startsWith('o');
+                    if (isAbsolute) {
+                        const octave = Number(target.dataset.octave.replace('o', ''));
+                        const increase = minmax(octave, 0, 8);
+                        target.dataset.octave = 'o' + (octave + increase);
+                    } else {
+                        const octave = (target.dataset.octave.match(/<+/) || [''])[0].length - (target.dataset.octave.match(/>+/) || [''])[0].length;
+                        const increase = minmax(octave, -8, 8);
+                        target.dataset.octave = octave + increase > 0 ? '<'.repeat(octave + increase) : '>'.repeat(-(octave + increase));
+                    }
                 } else if ('velocity' in target.dataset) {
-                    const velocity = Number(target.dataset.velocity.replace('@v', ''));
-                    const increase = minmax(velocity, 0, 127);
-                    target.dataset.velocity = '@v' + (velocity + increase);
+                    const isAbsolute = target.dataset.velocity.startsWith('@v');
+                    if (isAbsolute) {
+                        const velocity = Number(target.dataset.velocity.replace('@v', ''));
+                        const increase = minmax(velocity, 0, 127);
+                        target.dataset.velocity = '@v' + (velocity + increase);
+                    } else {
+                        const velocity = Number((target.dataset.velocity.match(/[0-9]+/) || [''])[0]) * (target.dataset.velocity.startsWith('(') ? 1 : -1);
+                        const increase = minmax(velocity, -127, 127);
+                        target.dataset.velocity = (velocity + increase >= 0 ? '(' : ')') + Math.abs(velocity + increase);
+                    }
                 } else if ('noteShift' in target.dataset) {
-                    const noteShift = Number(target.dataset.noteShift.replace('@ns', ''));
+                    const noteShift = Number((target.dataset.noteShift.match(/[0-9]+/) || [''])[0]);
                     const increase = increaseBase;
-                    target.dataset.noteShift = '@ns' + (noteShift + increase);
+                    target.dataset.noteShift = target.dataset.noteShift.match(/ns|@ns/)[0] + (noteShift + increase);
                 } else if ('detune' in target.dataset) {
                     const detune = Number(target.dataset.detune.replace('@d', ''));
                     const increase = increaseBase;
@@ -2323,10 +2349,19 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'set-octave':
                 submitTarget.dataset.octave = 'o' + dialogForm.elements['octave'].value;
                 break;
+            case 'set-octave-relative':
+                submitTarget.dataset.octave = dialogForm.elements['octave'].value > 0 ? '<'.repeat(dialogForm.elements['octave'].value) : '>'.repeat(-dialogForm.elements['octave'].value);
+                break;
             case 'set-velocity':
                 submitTarget.dataset.velocity = '@v' + dialogForm.elements['velocity'].value;
                 break;
+            case 'set-velocity-relative':
+                submitTarget.dataset.velocity = (dialogForm.elements['velocity'].value >= 0 ? '(' : ')') + Math.abs(dialogForm.elements['velocity'].value);
+                break;
             case 'set-note-shift':
+                submitTarget.dataset.noteShift = 'ns' + dialogForm.elements['note-shift'].value;
+                break;
+            case 'set-note-shift-relative':
                 submitTarget.dataset.noteShift = '@ns' + dialogForm.elements['note-shift'].value;
                 break;
             case 'set-detune':
