@@ -6,7 +6,7 @@ import {FlMML} from 'flmml-on-html5';
 import localForage from 'localforage';
 import {Picker} from 'emoji-picker-element';
 import {polyfill} from 'mobile-drag-drop';
-import {htmlspecialchars, resetAnimation, useVisualViewportToCss} from './utils';
+import {htmlspecialchars, resetAnimation, useVisualViewportToCss, waitScroll} from './utils';
 
 const version = import.meta.env.VITE_APP_VER;
 
@@ -427,6 +427,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let tempo = 120;
             let scoreNoteValue = 4;
             let skip = false, jump = -1, nest = -1, inMacro = false;
+            let scrWaiting = false;
             const repeatStart = [], repeatEnd = [], remainingRepeat = [];
             const start = performance.now();
             let totalDelay = 0;
@@ -451,7 +452,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const wrap = document.querySelector('.wrap');
                 const scrTo = (top) => {
                     top -= headerHeight;
-                    wrap.scrollTo({top, behavior: 'smooth'});
+                    !scrWaiting && wrap.scrollTo({top, behavior: 'smooth'});
+                    scrWaiting = true;
+                    waitScroll(wrap).then(() => {
+                        scrWaiting = false;
+                    });
                 };
                 const criHeiPercentage = ratio => {
                     return wrap.clientHeight * ratio;

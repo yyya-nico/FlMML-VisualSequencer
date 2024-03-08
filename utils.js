@@ -33,4 +33,23 @@ const useVisualViewportToCss = () => {
     setVvh();
 };
 
-export {htmlspecialchars, resetAnimation, useVisualViewportToCss}
+let scrollResolveTimeout;
+
+const waitScroll = (target = window) => {
+  return new Promise(resolve => {
+    const scrollTimeout = setTimeout(() => {
+      resolve();
+    }, 100);
+    const scrollHandler = () => {
+        clearTimeout(scrollTimeout);
+        clearTimeout(scrollResolveTimeout);
+        scrollResolveTimeout = setTimeout(() => {
+          target.removeEventListener('scroll', scrollHandler);
+          resolve();
+        }, 100);
+      }
+    target.addEventListener('scroll', scrollHandler);
+  });
+}
+
+export {htmlspecialchars, resetAnimation, useVisualViewportToCss, waitScroll}
