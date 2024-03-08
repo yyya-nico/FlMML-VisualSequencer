@@ -2165,6 +2165,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         newItem.dataset.polyStartEnd = '[';
                         newItem.textContent = '[';
                     } else if ('macroDef' in newItem.dataset) {
+                        newItem.dataset.macroDef === ';\n' && (newItem.dataset.macroDef = '$=');
                         newItem.textContent = '$=';
                     }
                     li.appendChild(newItem);
