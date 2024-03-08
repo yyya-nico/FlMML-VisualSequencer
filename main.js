@@ -178,11 +178,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 detune: elem.dataset.detune,
                 repeatStartEnd: elem.dataset.repeatStartEnd,
                 repeatBreak: elem.dataset.repeatBreak,
+                polyStartEnd: elem.dataset.polyStartEnd,
                 macroDef: elem.dataset.macroDef,
                 macroArgUse: elem.dataset.macroArgUse,
                 macroUse: elem.dataset.macroUse,
                 metaData: elem.dataset.metaData,
-                polyStartEnd: elem.dataset.polyStartEnd,
+                newTrack: elem.dataset.newTrack,
                 otherAction: elem.dataset.otherAction,
                 elem: elem
             }));
@@ -260,6 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
                 block.repeatBreak && (button.dataset.repeatBreak = block.repeatBreak);
+                block.polyStartEnd && (button.dataset.polyStartEnd = block.polyStartEnd);
                 if (block.macroDef) {
                     button.dataset.macroDef = block.macroDef;
                     button.textContent = block.macroDef === ';\n' ? ';' : '$=' ;
@@ -267,7 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 block.macroArgUse && (button.dataset.macroArgUse = block.macroArgUse);
                 block.macroUse && (button.dataset.macroUse = block.macroUse);
                 block.metaData && (button.dataset.metaData = block.metaData);
-                block.polyStartEnd && (button.dataset.polyStartEnd = block.polyStartEnd);
+                block.newTrack && (button.dataset.newTrack = block.newTrack);
                 if (block.otherAction) {
                     button.dataset.otherAction = block.otherAction;
                     button.textContent = block.otherAction.length > 4 ? '…' : block.otherAction;
@@ -322,11 +324,11 @@ document.addEventListener('DOMContentLoaded', () => {
                                 }
                             }
                         });
-                    } else if (block.metaData) {
-                        if (mml.getMmlLine(lineIndex)) {
+                    } else if (block.metaData || block.newTrack) {
+                        if (block.metaData && mml.getMmlLine(lineIndex)) {
                             lineIndex++;
                         }
-                        mml.appendToStr(lineIndex, block.metaData.replace('\n', '') || '');
+                        mml.appendToStr(lineIndex, (block.metaData || block.newTrack).replace('\n', '') || '');
                         lineIndex++;
                     } else {
                         mml.appendToStr(lineIndex, tonePitch || block.tempo || block.rest || block.octave
@@ -335,15 +337,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             });
-            [...toneSet].forEach((_, i) => {
-                mml.appendToStr(lineIndex + i, ';');
+            mml.getMmlArr().forEach((mmlTextLine, i) => {
+                !mmlTextLine.startsWith('#') && !mmlTextLine.endsWith(';') && mml.appendToStr(i, ';');
             });
         }
 
         importMml(mml) {
             const mmlArr = mml.getMmlArr();
-            const regex = /(\$.*?=)?@.* |[><]*?[a-g]\+?[0-9]*\.*|t[0-9]+|l[0-9]+\.*|r[0-9]*\.*|o[0-8]|[><]+|@v[0-9]+|[\)\(][0-9]+|@?ns[0-9]+|@d[0-9]+|\/:[0-9]*|:\/|\/|^#.*|\[|\]|.*/g;
-            /* tone.tone|tone.tonePitch|tempo|noteValue|rest|octave|velocity|noteShift|detune|repeatStart|repeatEnd|repeatBreak|metaData|polyStartEnd|otherAction */
+            const regex = /(\$.*?=)?@.* |[><]*?[a-g]\+?[0-9]*\.*|t[0-9]+|l[0-9]+\.*|r[0-9]*\.*|o[0-8]|[><]+|@v[0-9]+|[\)\(][0-9]+|@?ns[0-9]+|@d[0-9]+|\/:[0-9]*|:\/|\/|^#.*|;|\[|\]|.*/g;
+            /* tone.tone|tone.tonePitch|tempo|noteValue|rest|octave|velocity|noteShift|detune|repeatStart|repeatEnd|repeatBreak|metaData|newTrack|polyStartEnd|otherAction */
             const data = [];
             let noteCount = 0;
             mmlArr.forEach(mmlTextLine => {
