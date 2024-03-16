@@ -389,7 +389,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else if (str.startsWith('#')) {
                         obj.className = 'meta-data';
                         obj.metaData = str + '\n';
-                    } else if (str.startsWith(';') || str.startsWith(' ')) {
+                    } else if (str.startsWith(';')) {
+                        obj.className = 'new-track';
+                        obj.newTrack = str + '\n';
+                    } else if (str.startsWith(' ')) {
                         return;
                     } else {
                         obj.className = 'other-action';
