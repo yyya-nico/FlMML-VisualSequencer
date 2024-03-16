@@ -1533,7 +1533,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 break;
                             case '#FMGAIN':
                                 setForm(
-                                    ['音量利得', isMetaDataType ? metaDataSplit[1] ?? 91 : 91, false],
+                                    ['音量利得', isMetaDataType ? metaDataSplit[1].replace('\n', '') ?? 91 : 91, false],
                                     ['無効', '', true]
                                 );
                                 dialogForm.elements['number'].min = -127;
