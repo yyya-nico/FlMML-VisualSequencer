@@ -11,23 +11,6 @@ import {htmlspecialchars, resetAnimation, useVisualViewportToCss, waitScroll} fr
 const version = import.meta.env.VITE_APP_VER;
 
 document.addEventListener('DOMContentLoaded', () => {
-    const mmlForm = document.forms['mml-line'];
-    mmlForm.add = {
-        field: mmlForm.elements['add-mml'],
-        mmlText: mmlForm.elements['add-mml-text'],
-        btn: mmlForm.elements['add-button']
-    };
-    mmlForm.del = {
-        field: mmlForm.elements['delete-mml'],
-        index: mmlForm.elements['delete-mml-index'],
-        btn: mmlForm.elements['delete-button']
-    }
-    mmlForm.rw = {
-        field: mmlForm.elements['rewrite-mml'],
-        index: mmlForm.elements['rewrite-mml-index'],
-        mmlText: mmlForm.elements['rewrite-mml-text'],
-        btn: mmlForm.elements['rewrite-button']
-    }
     const editor = document.querySelector('.editor');
     const tones = document.getElementById('tones');
     const action = document.getElementById('action');
@@ -1163,16 +1146,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     mml.onChange = (arr, mmlText) => {
         mmlOut.innerHTML = mmlText ? `<pre><code>${htmlspecialchars(mmlText).replaceAll('\n','<br>')}</code></pre>` : '(なし)';
-        const mmlIsExist = Boolean(arr.length);
-        [mmlForm.del.field, mmlForm.rw.field, copyBtn, saveBtn].forEach(elem => {
-            elem.disabled = !mmlIsExist;
-        });
-        if (mmlIsExist) {
-            mmlForm.del.index.max = arr.length - 1;
-            mmlForm.rw.index.max = arr.length - 1;
-            mmlForm.del.index.value > mmlForm.del.index.max && (mmlForm.del.index.value = mmlForm.del.index.max);
-            mmlForm.rw.index.value > mmlForm.rw.index.max && (mmlForm.rw.index.value = mmlForm.rw.index.max);
-        }
     };
     mml.onError = (error, reason) => {
         alert(error + '\n' + reason);
@@ -2263,64 +2236,6 @@ document.addEventListener('DOMContentLoaded', () => {
         e.target.classList.remove('bounce');
         e.target.classList.remove('pop');
     });
-
-    //---------------
-    // Form Controls
-    //---------------
-
-    mmlForm.addEventListener('submit', async e => {
-        e.preventDefault();
-        const mmlArr = mml.getMmlArr();
-        switch (e.submitter) {
-            case mmlForm.add.btn:
-                mmlForm.add.field.disabled = true;
-                mmlForm.add.btn.textContent = '追加中...';
-                const addMmlText = mmlForm.add.mmlText.value;
-                mml.append(addMmlText);
-                history.pushState({
-                    operation: 'append',
-                    index: mmlArr.length - 1,
-                    mmlText: addMmlText
-                });
-                mmlArr.length && (mmlForm.add.field.disabled = false);
-                mmlForm.add.btn.textContent = '追加';
-                break;
-            case mmlForm.del.btn:
-                mmlForm.del.field.disabled = true;
-                mmlForm.del.btn.textContent = '削除中...';
-                const delIndex = Number(mmlForm.del.index.value);
-                const delMmlText = mmlArr[delIndex];
-                mml.delete(delIndex);
-                history.pushState({
-                    operation: 'delete',
-                    index: delIndex,
-                    mmlText: delMmlText
-                });
-                mmlArr.length && (mmlForm.del.field.disabled = false);
-                mmlForm.del.btn.textContent = '削除';
-                break;
-            case mmlForm.rw.btn:
-                mmlForm.rw.field.disabled = true;
-                mmlForm.rw.btn.textContent = '書換中...';
-                const rwIndex = Number(mmlForm.rw.index.value);
-                const rwMmlText = mmlForm.rw.mmlText.value;
-                const beforeRwMmlText = mmlArr[rwIndex];
-                mml.rewrite(rwIndex, rwMmlText);
-                history.pushState({
-                    operation: 'rewrite',
-                    index: rwIndex,
-                    beforeMmlText: beforeRwMmlText,
-                    afterMmlText: rwMmlText
-                });
-                mmlArr.length && (mmlForm.rw.field.disabled = false);
-                mmlForm.rw.btn.textContent = '書換';
-                break;
-        }
-    });
-
-    //----------------
-    // /Form Controls
-    //----------------
 
     dialog.addEventListener('pointerdown', e => {
         if (e.target === dialog) {

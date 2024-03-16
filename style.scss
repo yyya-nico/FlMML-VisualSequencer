@@ -520,51 +520,6 @@ header {
             }
         }
 
-        .mml-form {
-            fieldset {
-                div {
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    width: 340px;
-                    height: 38px;
-                    margin: 0 auto;
-                    max-width: 100%;
-        
-                    +* {
-                        margin: 10px auto 0;
-                    }
-        
-                    >* {
-                        height: 100%;
-                    }
-    
-                    input {
-                        flex-shrink: 0;
-        
-                        +input {
-                            margin-left: -1px;
-                        }
-                    }
-            
-                    input:not(:first-child, :last-child) {
-                        border-radius: 0;
-                    }
-            
-                    input:first-child {
-                        border-top-right-radius: 0;
-                        border-bottom-right-radius: 0;
-                    }
-            
-                    button:last-child {
-                        flex-shrink: 0;
-                        border-top-left-radius: 0;
-                        border-bottom-left-radius: 0;
-                    }
-                }
-            }
-        }
-
         #dialog {
             all: revert;
             bottom: calc(100dvh - var(--vvh, 100dvh));
