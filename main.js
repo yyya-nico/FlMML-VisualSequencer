@@ -327,8 +327,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         importMml(mml) {
             const mmlArr = mml.getMmlArr();
-            const regex = /(\$.*?=)?@.* |[><]*?[a-g]\+?[0-9]*\.*|t[0-9]+|l[0-9]+\.*|r[0-9]*\.*|o[0-8]|[><]+|@v[0-9]+|[\)\(][0-9]+|@?ns[0-9]+|@d[0-9]+|\/\*.*?\*\/|\/:[0-9]*|:\/|\/|^#.*|;|\[|\]|.*/g;
-            /* tone.tone|tone.tonePitch|tempo|noteValue|rest|octave|velocity|noteShift|detune|comment|repeatStart|repeatEnd|repeatBreak|metaData|newTrack|polyStartEnd|otherAction */
+            const regex = /(\$.*?=)?@.* |[><]*?[a-g]\+?[0-9]*\.*|t[0-9]+|l[0-9]+\.*|r[0-9]*\.*|o[0-8]|[><]+|@v[0-9]+|[\)\(][0-9]+|@?ns[0-9]+|@d[0-9]+|\/\*.*?\*\/|\/:[0-9]*|:\/|\/|^#.*|;|\[|\]| +|.*/g;
+            /* tone.tone|tone.tonePitch|tempo|noteValue|rest|octave|velocity|noteShift|detune|comment|repeatStart|repeatEnd|repeatBreak|metaData|newTrack|polyStartEnd|space|otherAction */
             const data = [];
             let noteCount = 0;
             mmlArr.forEach(mmlTextLine => {
@@ -389,7 +389,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else if (str.startsWith('#')) {
                         obj.className = 'meta-data';
                         obj.metaData = str + '\n';
-                    } else if (str.startsWith(';')) {
+                    } else if (str.startsWith(';') || str.startsWith(' ')) {
                         return;
                     } else {
                         obj.className = 'other-action';
