@@ -987,6 +987,19 @@ document.addEventListener('DOMContentLoaded', () => {
                         textContent: '確定'
                     }
                 ]
+            },
+            remove: {
+                title: '一部の消去メニュー',
+                buttons: [
+                    {
+                        value: 'remove-left',
+                        textContent: 'このブロックから左をすべて消去'
+                    },
+                    {
+                        value: 'remove-right',
+                        textContent: 'このブロックから右をすべて消去'
+                    },
+                ]
             }
         }
         #createElems = (type) => {
@@ -1544,6 +1557,8 @@ document.addEventListener('DOMContentLoaded', () => {
             await dialogFormManager.prompt('otherAction', {
                 'other-action': item.dataset.otherAction
             }, item);
+        } else if ('remove' in item.dataset) {
+            await dialogFormManager.prompt('remove', {}, item);
         }
     };
     let lastTouchedButton = tones.querySelector('button');
@@ -2249,8 +2264,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     dialogForm.addEventListener('submit', e => {
         const submitTarget = dialogFormManager.submitTarget;
+        const submitterVal = e.submitter.value;
         const beforeChange = JSON.parse(JSON.stringify(submitTarget.dataset));
-        switch (e.submitter.value) {
+        switch (submitterVal) {
             case 'set-tone':
                 const buttonClassName = submitTarget.className;
                 document.querySelectorAll(`[class*="${buttonClassName}"]`).forEach(elem => {
@@ -2321,6 +2337,30 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'set-other-action':
                 submitTarget.dataset.otherAction = dialogForm.elements['other-action'].value;
                 submitTarget.textContent = submitTarget.dataset.otherAction.length > 4 ? '…' : submitTarget.dataset.otherAction;
+                break;
+            case 'remove-left':
+            case 'remove-right':
+                const removeFrom = submitTarget.parentElement;
+                const musicalScoreUl = musicalScore.querySelector('ul');
+                const ulChildren = musicalScoreUl.children;
+                const removeFromIndex = [...ulChildren].indexOf(removeFrom);
+                lastTouchedButton = null;
+                while ([...ulChildren].includes(removeFrom)) {
+                    const isLeft = submitterVal === 'remove-left';
+                    const removeTarget = isLeft ? musicalScoreUl.firstElementChild
+                                                : musicalScoreUl.lastElementChild;
+                    history.pushState({
+                        operation: 'remove',
+                        removedElem: removeTarget,
+                        removedIndex: isLeft ? 0 : ulChildren.length - 1,
+                        parent: musicalScoreUl
+                    });
+                    removeTarget.remove();
+                }
+                block.blocksDataUpdate();
+                block.calcPoly();
+                block.saveBlocksData();
+                block.exportMml(mml);
                 break;
         }
         const afterChange = JSON.parse(JSON.stringify(submitTarget.dataset));
