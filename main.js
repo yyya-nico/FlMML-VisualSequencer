@@ -1162,6 +1162,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     mml.onChange = (arr, mmlText) => {
         mmlOut.innerHTML = mmlText ? `<pre><code>${htmlspecialchars(mmlText).replaceAll('\n','<br>')}</code></pre>` : '(なし)';
+        const mmlIsExist = Boolean(arr.length);
+        [copyBtn, saveBtn].forEach(elem => {
+            elem.disabled = !mmlIsExist;
+        });
     };
     mml.onError = (error, reason) => {
         alert(error + '\n' + reason);
