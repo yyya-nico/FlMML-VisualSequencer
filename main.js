@@ -337,7 +337,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         [...toneSet].forEach((_, i) => {
                             mml.appendToStr(lineIndex + i, block.noteValue || block.repeatStartEnd || block.repeatBreak || block.polyStartEnd || '');
                             if (block.polyStartEnd === ']') {
-                                console.log(mml.getMmlLine(lineIndex + i));
                                 const targetStr = mml.getMmlLine(lineIndex + i).match(/\[(.+?)\]/);
                                 if (targetStr) {
                                     const matched = targetStr[1].matchAll(/([a-g*r]\+?)([0-9]*)(\.*)/g);
@@ -413,7 +412,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         importMml(mml) {
             const mmlArr = mml.getMmlArr();
-            const regex = /[@QVXMWNFEoirs'][LQVXPU0-9HAIEO]?'?[0-9, ]*?|[><]*?[a-g]\+?[0-9]*\.*|t[0-9]+|l[0-9]+\.*|r[0-9]*\.*|o[0-8]|[><]+|@v[0-9]+|[\)\(][0-9]+|@?ns[0-9]+|@d[0-9]+|\/\*.*?\*\/|\/\*|\*\/|\/:[0-9]*|:\/|\/|\[|\]|\$.*?=|%[A-Za-z0-9_]+|\$[A-Za-z0-9_{}]+|^#.*|;| +|.+/ig;
+            const regex = /@.* |[><]*?[a-g]\+?[0-9]*\.*|t[0-9]+|l[0-9]+\.*|r[0-9]*\.*|o[0-8]|[><]+|@v[0-9]+|[\)\(][0-9]+|@?ns[0-9]+|@d[0-9]+|\/\*.*?\*\/|\/\*|\*\/|\/:[0-9]*|:\/|\/|\[|\]|\$.*?=|%[A-Za-z0-9_]+|\$[A-Za-z0-9_{}]+|^#.*|;| +|.+/ig;
             /* tone.tone|tone.tonePitch|tempo|noteValue|rest|octave|velocity|noteShift|detune|comment|repeatStartEnd|repeatBreak|polyStartEnd|macroDef|macroArgUse|macroUse|metaData|newTrack|space|otherAction */
             const data = [];
             let trackNo = 0;
@@ -424,7 +423,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const obj = {};
                     obj.tone = {};
                     obj.trackNo = trackNo;
-                    if (/^[@QVXMWNFEoirs'][LQVXPU0-9HAIEO]?'?[0-9, ]*?$/i.test(str)) {
+                    if (/@.* /.test(str)) {
                         toneCache = str.trim();
                         toneSet.add(toneCache);
                         return;
@@ -544,6 +543,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 };
                 const scrollTask = current => {
+                    if (current.trackNo) {
+                        return;                        
+                    }
                     const headerHeight = Number(getComputedStyle(document.querySelector(':root')).getPropertyValue('--header-height').replace('px',''));
                     const wrap = document.querySelector('.wrap');
                     const scrTo = (top) => {
