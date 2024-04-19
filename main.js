@@ -286,6 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let toneSet = getToneSet();
             let toneIndex = 0;
             let toneAppended = false;
+            let scoreNoteValue = [4, 0], inPoly = false;
             this.#blocksData.forEach((block) => {
                 const {tone, tonePitch} = block.tone;
                 if (block.trackNo !== trackNo) {
@@ -308,38 +309,79 @@ document.addEventListener('DOMContentLoaded', () => {
                     [...toneSet].forEach((_, i) => {
                         let mmlText = tonePitch || '';
                         if (i !== toneIndex) {
-                            mmlText = mmlText.replace(/[a-g]/, 'r');
+                            mmlText = mmlText.replace(/[a-g]/, inPoly ? '*' : 'r');
                         }
                         mml.appendToStr(lineIndex + i, mmlText);
                     });
+                } else if (block.rest) {
+                    [...toneSet].forEach((_, i) => {
+                        mml.appendToStr(lineIndex + i, block.rest);
+                    });
                 } else {
-                    if (block.noteValue || block.rest || block.repeatStartEnd || block.repeatBreak || block.polyStartEnd) {
+                    if (block.noteValue || block.repeatStartEnd || block.repeatBreak || block.polyStartEnd) {
+                        const noteValueStrCalc = str => {
+                            if (!str) {
+                                return scoreNoteValue;                    
+                            }
+                            const noteValue = Number((str.match(/[0-9]+/) || [scoreNoteValue[0]])[0]);
+                            const dots = (str.match(/\.+/) || [''])[0].length;
+                            return [noteValue, dots];
+                        };
+                        if (block.noteValue) {
+                            scoreNoteValue = noteValueStrCalc(block.noteValue);
+                        } else if (block.polyStartEnd === '[') {
+                            inPoly = true;
+                        } else if (block.polyStartEnd === ']') {
+                            inPoly = false;
+                        }
                         [...toneSet].forEach((_, i) => {
                             mml.appendToStr(lineIndex + i, block.noteValue || block.repeatStartEnd || block.repeatBreak || block.polyStartEnd || '');
-                            if (block.polyStartEnd === ']' && i !== toneIndex) {
+                            if (block.polyStartEnd === ']') {
+                                console.log(mml.getMmlLine(lineIndex + i));
                                 const targetStr = mml.getMmlLine(lineIndex + i).match(/\[(.+?)\]/);
                                 if (targetStr) {
-                                    const matched = targetStr[1].matchAll(/([a-gr])([0-9]*)/g);
+                                    const matched = targetStr[1].matchAll(/([a-g*r]\+?)([0-9]*)(\.*)/g);
                                     if (matched) {
                                         const noteInfo = [...matched].map(arr => ({
-                                            type: arr[1] === 'r' ? 'rest' : 'note',
-                                            num: arr[2]
+                                            type: arr[1] === 'r' ? 'rest' : 
+                                                  arr[1] === '*' ? 'otherNote'
+                                                                 : 'note',
+                                            num: noteValueStrCalc(arr[0])
                                         }));
-                                        const maxNoteNoteValue = (() => {
-                                            const noteOnlyInfo = noteInfo.filter(note => note.type === 'note');
-                                            const nums = noteOnlyInfo.map(note => note.num);
-                                            return Math.max(0, ...nums);
-                                        })();
-                                        const restInfo = (() => {
-                                            const restOnlyInfo = noteInfo.filter(note => note.type === 'rest');
-                                            const nums = restOnlyInfo.map(note => note.num);
-                                            return {
-                                                maxRestNoteValue: Math.max(0, ...nums),
-                                                concatRests: `r${nums.join('r')}`
-                                            };
-                                        })();
-                                        const maxNoteValue = Math.max(maxNoteNoteValue, restInfo.maxRestNoteValue);
-                                        const mmlText = mml.getMmlLine(lineIndex + i).replace(/\[.+?\]/, `r${maxNoteValue ? maxNoteValue : ''}${restInfo.concatRests}`);
+                                        const numsOf = {
+                                            note: (() => {
+                                                const noteOnlyInfo = noteInfo.filter(note => note.type === 'note');
+                                                return noteOnlyInfo.map(note => note.num);
+                                            })(),
+                                            otherNote: (() => {
+                                                const otherNoteOnlyInfo = noteInfo.filter(note => note.type === 'otherNote');
+                                                return otherNoteOnlyInfo.map(note => note.num);
+                                            })(),
+                                            rest: (() => {
+                                                const restOnlyInfo = noteInfo.filter(note => note.type === 'rest');
+                                                return restOnlyInfo.map(note => note.num);
+                                            })()
+                                        };
+                                        const getMaxNoteValue = arr => arr.reduce((accum, num) => {
+                                            if (accum[0] >= num[0]) {
+                                                if (accum[1] <= num[1]) {
+                                                    return num;
+                                                } else {
+                                                    return accum;
+                                                }
+                                            } else {
+                                                return accum;
+                                            }
+                                        }, [386, 0]);
+                                        const maxNoteNoteValue = getMaxNoteValue(numsOf.note);
+                                        const maxOtherNoteNoteValue = getMaxNoteValue(numsOf.otherNote);
+                                        // const restNoteTime = numsOf.rest.reduce((sum, num) => sum + 4 / num, 0);
+                                        const getMaxNoteTime = maxNoteValue => (maxNoteValue[0] * 2 ** maxNoteValue[1]) / (2 ** (maxNoteValue[1] + 1) - 1);
+                                        let replaceMmlText = targetStr[0].replace(/\*\+?[0-9]*\.*/g, '');
+                                        if (getMaxNoteTime(maxNoteNoteValue) < getMaxNoteTime(maxOtherNoteNoteValue)) {
+                                            replaceMmlText = `${replaceMmlText.slice(0, -1)}r${maxOtherNoteNoteValue[0]}${'.'.repeat(maxOtherNoteNoteValue[1])}]`;
+                                        }
+                                        const mmlText = mml.getMmlLine(lineIndex + i).replace(/\[.+?\]/, replaceMmlText);
                                         mml.rewrite(lineIndex + i, mmlText);
                                     }
                                 }
@@ -642,7 +684,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const numOfTracks = Math.max(...data.map(block => block.trackNo)) + 1;
             for (let trackNo = 0; trackNo < numOfTracks; trackNo++) {
-                rendPerTrack(data.filter(elem => elem.trackNo === trackNo));
+                rendPerTrack(data.filter(block => block.trackNo === trackNo));
             }
         }
 
@@ -661,16 +703,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         calcPoly() {
-            const polyBlocksData = this.#blocksData.filter(block => block.polyStartEnd);
-            polyBlocksData.forEach((block, i) => {
-                if (i % 2 === 0) {
-                    block.elem.dataset.polyStartEnd = '[';
-                    block.elem.textContent = '[';
-                } else {
-                    block.elem.dataset.polyStartEnd = ']';
-                    block.elem.textContent = ']';
-                }
-            });
+            const numOfTracks = Math.max(...this.#blocksData.map(block => block.trackNo)) + 1;
+            for (let trackNo = 0; trackNo < numOfTracks; trackNo++) {
+                const polyBlocksData = this.#blocksData.filter(block => block.polyStartEnd && block.trackNo === trackNo);
+                polyBlocksData.forEach((block, i) => {
+                    if (i % 2 === 0) {
+                        block.elem.dataset.polyStartEnd = '[';
+                        block.elem.textContent = '[';
+                    } else {
+                        block.elem.dataset.polyStartEnd = ']';
+                        block.elem.textContent = ']';
+                    }
+                });
+            }
             this.blocksDataUpdate();
         }
     }
