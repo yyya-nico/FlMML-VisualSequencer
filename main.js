@@ -302,7 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     toneIndex = [...toneSet].indexOf(tone);
                     if (!toneAppended) {
                         [...toneSet].forEach((tone, i) => {
-                            tone && mml.beforeInsertToStr(lineIndex + i, tone);
+                            tone && mml.beforeInsertToStr(lineIndex + i, tone + ' ');
                         });
                         toneAppended = true;
                     }
