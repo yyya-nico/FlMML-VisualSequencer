@@ -18,7 +18,7 @@
                     <small>空いているところをクリックで追加</small>
                 </div>
                 <ul>
-                    <li><button class="material-icons note note-1" aria-label="無調整" draggable="true" data-tone="" data-tone-pitch="c" data-tone-macro="">music_note</button></li>
+                    <li><button class="material-icons note note-1" aria-label="無調整" draggable="true" data-tone="" data-tone-pitch="c">music_note</button></li>
                 </ul>
             </div>
             <div id="action">
@@ -40,7 +40,6 @@
                     <li><button class="macro-arg-use" aria-label="マクロ引数使用" draggable="true" data-macro-arg-use="%">%</button></li>
                     <li><button class="macro-use" aria-label="マクロ使用" draggable="true" data-macro-use="$">$</button></li>
                     <li><button class="meta-data" aria-label="メタデータ" draggable="true" data-meta-data="">#</button></li>
-                    <li><button class="new-track" aria-label="新規トラック" draggable="true" data-new-track=";&NewLine;">;</li>
                     <li hidden><hr class="break" aria-label="区切り"></li>
                     <li><button class="other-action" aria-label="その他の作用" draggable="true" data-other-action=""></button></li>
                     <li><button class="material-icons remove danger" aria-label="一部の消去" draggable="true" data-remove="">delete</button></li>
@@ -52,7 +51,9 @@
                 </p>
             </div>
             <div id="musical-score">
-                <ul></ul>
+                <ul class="track active"></ul>
+                <button id="add-track"><span class="material-icons">add</span>トラックを追加</button>
+                <button id="remove-track"><span class="material-icons">remove</span>トラックを削除</button>
             </div>
             <dialog id="dialog">
                 <form id="dialog-form" method="dialog">

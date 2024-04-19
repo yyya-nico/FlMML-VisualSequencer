@@ -407,6 +407,18 @@ header {
                     text-transform: uppercase;
                 }
 
+                &#add-track,
+                &#remove-track {
+                    width: calc(50% - 5px / 2);
+                    padding: 5px 13px;
+                    aspect-ratio: auto;
+                    font-weight: inherit;
+
+                    &::before {
+                        display: none;
+                    }
+                }
+
                 &.tempo::after {
                     content: attr(data-tempo);
                 }
@@ -501,10 +513,11 @@ header {
 
         #tones, #musical-score {
             min-height: 120px;
-            padding-bottom: 50px;
         }
 
         #tones {
+            padding-bottom: 50px;
+
             button {
                 &.note::after {
                     content: attr(data-tone);
@@ -513,6 +526,34 @@ header {
         }
 
         #musical-score {
+            .track {
+                min-height: 55px;
+                padding-bottom: 10px;
+
+                &:first-child {
+                    &:empty {
+                        +#add-track,
+                        ~#remove-track {
+                            display: none;
+                        }
+                    }
+
+                    +#add-track {
+                        width: 100%;
+
+                        +#remove-track {
+                            display: none;
+                        }
+                    }
+                }
+
+                +.track {
+                    min-height: 66px;
+                    border-top: 1px solid gray;
+                    padding-top: 10px;
+                }
+            }
+
             button {
                 &.note::after {
                     content: attr(data-tone-pitch);
