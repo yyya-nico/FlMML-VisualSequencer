@@ -519,6 +519,19 @@ document.addEventListener('DOMContentLoaded', () => {
             [tones, action, musicalScore].forEach(target => {
                 target.classList.add('no-op');
             });
+            const wrap = document.querySelector('.wrap');
+            const headerHeight = Number(getComputedStyle(document.querySelector(':root')).getPropertyValue('--header-height').replace('px',''));
+            const scrTo = (top) => {
+                top -= headerHeight;
+                wrap.scrollTo({top, behavior: 'smooth'});
+            };
+            scrTo(musicalScore.offsetTop - 10);
+            const tracks = document.getElementsByClassName('track');
+            const wrapHeight = wrap.clientHeight;
+            const trackHeight = (wrapHeight - 22) / tracks.length;
+            [...tracks].forEach(track => {
+                track.style.setProperty('--max-height', `${trackHeight}px`);
+            });
             addTrackBtn.disabled = true;
             removeTrackBtn.disabled = true;
             const start = performance.now();
@@ -528,6 +541,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 let scrWaiting = false;
                 const repeatStart = [], repeatEnd = [], remainingRepeat = [];
                 const trackNo = data[0].trackNo;
+                const track = tracks[trackNo];
                 let totalDelay = 0;
                 let i = 0;
                 const noteValueStrCalc = str => {
@@ -543,23 +557,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 };
                 const scrollTask = current => {
-                    if (current.trackNo) {
-                        return;                        
-                    }
-                    const headerHeight = Number(getComputedStyle(document.querySelector(':root')).getPropertyValue('--header-height').replace('px',''));
-                    const wrap = document.querySelector('.wrap');
                     const scrTo = (top) => {
-                        top -= headerHeight;
-                        !scrWaiting && wrap.scrollTo({top, behavior: 'smooth'});
+                        !scrWaiting && track.scrollTo({top, behavior: 'smooth'});
                         scrWaiting = true;
-                        waitScroll(wrap).then(() => {
+                        waitScroll(track).then(() => {
                             scrWaiting = false;
                         });
                     };
                     const criHeiPercentage = ratio => {
-                        return wrap.clientHeight * ratio;
+                        return track.clientHeight * ratio;
                     };
-                    if (i === 0 || current.elem.offsetTop >  headerHeight + wrap.scrollTop + criHeiPercentage(0.8) || current.elem.offsetTop < headerHeight + wrap.scrollTop + criHeiPercentage(0.2)) {
+                    if (i === 0 || current.elem.offsetTop >  track.scrollTop + criHeiPercentage(0.8) || current.elem.offsetTop < track.scrollTop + criHeiPercentage(0.2)) {
                         scrTo(current.elem.offsetTop - criHeiPercentage(0.2));
                     }
                 };

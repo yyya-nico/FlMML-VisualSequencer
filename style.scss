@@ -526,6 +526,14 @@ header {
         }
 
         #musical-score {
+            &.no-op {
+                .track {
+                    position: relative;
+                    overflow-y: auto;
+                    max-height: var(--max-height, 300px);
+                }
+            }
+
             .track {
                 min-height: 55px;
                 padding-bottom: 10px;
