@@ -528,7 +528,7 @@ document.addEventListener('DOMContentLoaded', () => {
             scrTo(musicalScore.offsetTop - 10);
             const tracks = document.getElementsByClassName('track');
             const wrapHeight = wrap.clientHeight;
-            const trackHeight = (wrapHeight - 22) / tracks.length;
+            const trackHeight = (wrapHeight - (10 + 1 + 10 + 1 + 10)) / tracks.length;
             [...tracks].forEach(track => {
                 track.style.setProperty('--max-height', `${trackHeight}px`);
             });
