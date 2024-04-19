@@ -280,43 +280,92 @@ document.addEventListener('DOMContentLoaded', () => {
         exportMml(mml) {
             mml.setMmlArr([]);
             let lineIndex = 0, trackNo = 0;
-            let toneCache = null;
+            const toneArr = this.#blocksData.filter(block => block.tone.tone !== undefined);
+            const getTrackToneArr = () => toneArr.filter(block => block.trackNo === trackNo);
+            const getToneSet = () => new Set(getTrackToneArr().map(block => block.tone.tone));
+            let toneSet = getToneSet();
+            let toneIndex = 0;
+            let toneAppended = false;
             this.#blocksData.forEach((block) => {
                 const {tone, tonePitch} = block.tone;
                 if (block.trackNo !== trackNo) {
-                    mml.appendToStr(lineIndex, ';');
-                    lineIndex++;
+                    [...toneSet].forEach((_, i) => {
+                        mml.appendToStr(lineIndex + i, ';');
+                    });
+                    lineIndex += toneSet.size;
                     trackNo = block.trackNo;
-                    toneCache = null;
+                    toneSet = getToneSet();
+                    toneAppended = false;
                 }
                 if (tone !== undefined) {
-                    let mmlText;
-                    if (tone !== toneCache) {
-                        toneCache = tone;
-                        mmlText = tone + tonePitch || '';
-                    } else {
-                        mmlText = tonePitch || '';
+                    toneIndex = [...toneSet].indexOf(tone);
+                    if (!toneAppended) {
+                        [...toneSet].forEach((tone, i) => {
+                            tone && mml.beforeInsertToStr(lineIndex + i, tone);
+                        });
+                        toneAppended = true;
                     }
-                    mml.appendToStr(lineIndex, mmlText);
+                    [...toneSet].forEach((_, i) => {
+                        let mmlText = tonePitch || '';
+                        if (i !== toneIndex) {
+                            mmlText = mmlText.replace(/[a-g]/, 'r');
+                        }
+                        mml.appendToStr(lineIndex + i, mmlText);
+                    });
                 } else {
-                    if (block.metaData) {
+                    if (block.noteValue || block.rest || block.repeatStartEnd || block.repeatBreak || block.polyStartEnd) {
+                        [...toneSet].forEach((_, i) => {
+                            mml.appendToStr(lineIndex + i, block.noteValue || block.repeatStartEnd || block.repeatBreak || block.polyStartEnd || '');
+                            if (block.polyStartEnd === ']' && i !== toneIndex) {
+                                const targetStr = mml.getMmlLine(lineIndex + i).match(/\[(.+?)\]/);
+                                if (targetStr) {
+                                    const matched = targetStr[1].matchAll(/([a-gr])([0-9]*)/g);
+                                    if (matched) {
+                                        const noteInfo = [...matched].map(arr => ({
+                                            type: arr[1] === 'r' ? 'rest' : 'note',
+                                            num: arr[2]
+                                        }));
+                                        const maxNoteNoteValue = (() => {
+                                            const noteOnlyInfo = noteInfo.filter(note => note.type === 'note');
+                                            const nums = noteOnlyInfo.map(note => note.num);
+                                            return Math.max(0, ...nums);
+                                        })();
+                                        const restInfo = (() => {
+                                            const restOnlyInfo = noteInfo.filter(note => note.type === 'rest');
+                                            const nums = restOnlyInfo.map(note => note.num);
+                                            return {
+                                                maxRestNoteValue: Math.max(0, ...nums),
+                                                concatRests: `r${nums.join('r')}`
+                                            };
+                                        })();
+                                        const maxNoteValue = Math.max(maxNoteNoteValue, restInfo.maxRestNoteValue);
+                                        const mmlText = mml.getMmlLine(lineIndex + i).replace(/\[.+?\]/, `r${maxNoteValue ? maxNoteValue : ''}${restInfo.concatRests}`);
+                                        mml.rewrite(lineIndex + i, mmlText);
+                                    }
+                                }
+                            }
+                        });
+                    } else if (block.metaData) {
                         if (block.metaData && mml.getMmlLine(lineIndex)) {
                             lineIndex++;
                         }
                         mml.appendToStr(lineIndex, block.metaData.replace('\n', '') || '');
                         lineIndex++;
                     } else {
-                        const mmlText = tonePitch || block.tempo || block.noteValue 
-                            || block.rest || block.octave || block.velocity || block.noteShift
-                            || block.detune || block.repeatStartEnd || block.repeatBreak
-                            || block.polyStartEnd || block.macroDef || block.macroArgUse
+                        const mmlText = tonePitch || block.tempo || block.octave || block.velocity
+                            || block.noteShift || block.detune || block.macroDef || block.macroArgUse
                             || block.macroUse || block.otherAction || '';
                         mml.appendToStr(lineIndex, mmlText);
                         if (/;/.test(mmlText)) {
-                            toneCache = null;
+                            lineIndex += toneSet.size;
+                            toneSet = getToneSet();
+                            toneAppended = false;
                         }
                     }
                 }
+            });
+            [...toneSet].forEach((_, i) => {
+                mml.appendToStr(lineIndex + i, ';');
             });
         }
 
