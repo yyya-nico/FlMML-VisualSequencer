@@ -200,12 +200,12 @@ button {
             background-color: #e0aa58;
             color: #555555;
         }
-    
+
         &:active {
             background-color: #91611a;
             color: #111111;
         }
-    
+
         &:disabled {
             background-color: #816d4e;
             color: #111111;
@@ -218,11 +218,11 @@ button {
         &:hover {
             color: #ff7676;
         }
-    
+
         &:active {
             color: #942727;
         }
-    
+
         &:disabled {
             color: #522121;
         }
@@ -732,7 +732,7 @@ header {
                     margin: 0;
                     opacity: 0;
                     cursor: pointer;
-                
+
                     &:active + label {
                         background-color: #91611a;
                         color: #111111;
@@ -748,7 +748,7 @@ header {
                                 content: "複製\A音価変更";
                             }
                         }
-                    
+
                         &:active + label {
                             background-color: #186997;
                         }
