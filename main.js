@@ -321,7 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (block.noteValue || block.repeatStartEnd || block.repeatBreak || block.polyStartEnd) {
                         const noteValueStrCalc = str => {
                             if (!str) {
-                                return scoreNoteValue;                    
+                                return scoreNoteValue;
                             }
                             const noteValue = Number((str.match(/[0-9]+/) || [scoreNoteValue[0]])[0]);
                             const dots = (str.match(/\.+/) || [''])[0].length;
@@ -342,7 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     const matched = targetStr[1].matchAll(/([a-g*r]\+?)([0-9]*)(\.*)/g);
                                     if (matched) {
                                         const noteInfo = [...matched].map(arr => ({
-                                            type: arr[1] === 'r' ? 'rest' : 
+                                            type: arr[1] === 'r' ? 'rest' :
                                                   arr[1] === '*' ? 'otherNote'
                                                                  : 'note',
                                             num: noteValueStrCalc(arr[0])
@@ -503,7 +503,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     track.textContent = '';
                     this.activeTrack = track;
-                } 
+                }
             });
             lastTouchedButton = null;
             this.#blocksData = data;
@@ -546,7 +546,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 let i = 0;
                 const noteValueStrCalc = str => {
                     if (!str) {
-                        return scoreNoteValue;                    
+                        return scoreNoteValue;
                     }
                     const noteValue = Number((str.match(/[0-9]+/) || [scoreNoteValue])[0]);
                     const dots = (str.match(/\.+/) || [''])[0].length;
@@ -657,7 +657,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                         if (i > repeatStart[nest]) {
                                             console.log(tempNest);
                                             if (block.repeatStartEnd.startsWith('/:')) {
-                                                tempNest++;                                            
+                                                tempNest++;
                                             } else if (block.repeatStartEnd === ':/') {
                                                 if (tempNest === nest) {
                                                     return true;
@@ -1472,7 +1472,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             } else {
                                 track.textContent = '';
                                 blockManager.activeTrack = track;
-                            } 
+                            }
                         });
                         lastTouchedButton = null;
                         blockManager.blocksDataUpdate();
@@ -1633,7 +1633,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     [getOption().label, text, false]
                                 );
                                 break;
-    
+
                             case '#OCTAVE':
                             case '#VELOCITY':
                                 setForm(
@@ -1641,7 +1641,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     ['無効', '', true]
                                 );
                                 break;
-    
+
                             case '#WAV9':
                             case '#WAV10':
                             case '#WAV13':
@@ -1655,7 +1655,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 dialogForm.elements['number'].min = 0;
                                 dialogForm.elements['number'].max = isWav9 ? 15 : 31;
                                 break;
-    
+
                             case '#OPM':
                             case '#OPN':
                                 setForm(
@@ -1664,7 +1664,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 );
                                 dialogForm.elements['number'].min = 0;
                                 dialogForm.elements['number'].max = 127;
-                                
+
                                 break;
                             case '#FMGAIN':
                                 setForm(
@@ -1673,7 +1673,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 );
                                 dialogForm.elements['number'].min = -127;
                                 dialogForm.elements['number'].max = 127;
-                                
+
                                 break;
                             case '#USING':
                                 setForm(
@@ -2582,7 +2582,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     track.textContent = '';
                     blockManager.activeTrack = track;
-                } 
+                }
             });
             blockManager.blocksDataUpdate();
             blockManager.saveBlocksData();
