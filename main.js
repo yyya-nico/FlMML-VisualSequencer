@@ -2625,7 +2625,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const inputFile = document.createElement('input');
         const fr = new FileReader();
         inputFile.type = 'file';
-        inputFile.accept = '.mml,.flmml,.txt,text/plain'
+        inputFile.accept = '.mml,.flmml,.txt'
         inputFile.click();
         inputFile.onchange = () => {
             fr.onload = () => {
