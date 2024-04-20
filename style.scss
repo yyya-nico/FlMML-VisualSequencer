@@ -526,6 +526,10 @@ header {
         }
 
         #musical-score {
+            display: flex;
+            flex-wrap: wrap;
+            column-gap: 5px;
+
             &.no-op {
                 .track {
                     position: relative;
@@ -535,13 +539,14 @@ header {
             }
 
             .track {
+                width: 100%;
                 min-height: 55px;
                 padding-bottom: 10px;
 
                 &:first-child {
                     &:empty {
                         +#add-track,
-                        ~#remove-track {
+                        +#add-track+#remove-track {
                             display: none;
                         }
                     }
