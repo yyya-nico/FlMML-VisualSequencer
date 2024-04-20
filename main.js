@@ -215,7 +215,10 @@ document.addEventListener('DOMContentLoaded', () => {
             let noteCount = 1, trackNo = 0;
             data.forEach(block => {
                 if (block.trackNo !== trackNo) {
-                    addTrackBtn.click();
+                    const newTrack = document.createElement('ul');
+                    newTrack.classList.add('track');
+                    blockManager.activeTrack = newTrack;
+                    this.areaElem.insertBefore(newTrack, addTrackBtn);
                     trackNo = block.trackNo;
                 }
                 const li = document.createElement('li');
