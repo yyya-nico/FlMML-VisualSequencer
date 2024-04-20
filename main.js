@@ -372,14 +372,17 @@ document.addEventListener('DOMContentLoaded', () => {
                                                 return accum;
                                             }
                                         }, [386, 0]);
-                                        const maxNoteNoteValue = getMaxNoteValue(numsOf.note);
-                                        const maxOtherNoteNoteValue = getMaxNoteValue(numsOf.otherNote);
+                                        // TODO
+
+                                        // const maxNoteNoteValue = getMaxNoteValue(numsOf.note);
+                                        // const maxOtherNoteNoteValue = getMaxNoteValue(numsOf.otherNote);
                                         // const restNoteTime = numsOf.rest.reduce((sum, num) => sum + 4 / num, 0);
-                                        const getMaxNoteTime = maxNoteValue => (maxNoteValue[0] * 2 ** maxNoteValue[1]) / (2 ** (maxNoteValue[1] + 1) - 1);
+                                        // const getMaxNoteTime = maxNoteValue => (maxNoteValue[0] * 2 ** maxNoteValue[1]) / (2 ** (maxNoteValue[1] + 1) - 1);
                                         let replaceMmlText = targetStr[0].replace(/\*\+?[0-9]*\.*/g, '');
-                                        if (getMaxNoteTime(maxNoteNoteValue) < getMaxNoteTime(maxOtherNoteNoteValue)) {
-                                            replaceMmlText = `${replaceMmlText.slice(0, -1)}r${maxOtherNoteNoteValue[0]}${'.'.repeat(maxOtherNoteNoteValue[1])}]`;
-                                        }
+                                        // console.log(getMaxNoteTime(maxNoteNoteValue), getMaxNoteTime(maxOtherNoteNoteValue));
+                                        // if (getMaxNoteTime(maxNoteNoteValue) < getMaxNoteTime(maxOtherNoteNoteValue)) {
+                                        //     replaceMmlText = `${replaceMmlText.slice(0, -1)}r${maxOtherNoteNoteValue[0]}${'.'.repeat(maxOtherNoteNoteValue[1])}]`;
+                                        // }
                                         const mmlText = mml.getMmlLine(lineIndex + i).replace(/\[.+?\]/, replaceMmlText);
                                         mml.rewrite(lineIndex + i, mmlText);
                                     }
