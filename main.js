@@ -2562,6 +2562,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 lastTouchedButton
             });
             tones.querySelector('ul').textContent = '';
+            const ul = tones.querySelector('ul');
+            const li = document.createElement('li');
+            const toneButton = `<button class="material-icons note note-1" aria-label="無調整" draggable="true" data-tone="" data-tone-pitch="c">music_note</button>`;
+            li.innerHTML = toneButton;
+            const newItem = li.firstElementChild;
+            ul.appendChild(li);
+            lastTouchedButton = newItem;
             musicalScore.querySelectorAll('.track').forEach((track, notFirst) => {
                 if (notFirst) {
                     track.remove();
@@ -2570,7 +2577,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     blockManager.activeTrack = track;
                 } 
             });
-            lastTouchedButton = null;
             blockManager.blocksDataUpdate();
             blockManager.saveBlocksData();
             blockManager.exportMml(mml);
