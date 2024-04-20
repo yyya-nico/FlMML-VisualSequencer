@@ -2424,6 +2424,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    dialog.addEventListener('close', () => {
+        switch (dialogFormManager.type) {
+            case 'tone':
+                document.querySelector('emoji-picker').classList.remove('expaned');
+                break;
+        }
+    });
+
     dialogForm.addEventListener('submit', e => {
         const submitTarget = dialogFormManager.submitTarget;
         const submitterVal = e.submitter.value;
@@ -2438,7 +2446,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         elem.textContent = dialogForm.elements['tone-name'].value;
                     }
                     elem.dataset.tone = dialogForm.elements['tone-def'].value;
-                    document.querySelector('emoji-picker').classList.remove('expaned');
                 });
                 break;
             case 'set-tone-pitch':
