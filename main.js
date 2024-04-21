@@ -293,10 +293,15 @@ document.addEventListener('DOMContentLoaded', () => {
             this.#blocksData.forEach((block) => {
                 const {tone, tonePitch} = block.tone;
                 if (block.trackNo !== trackNo) {
-                    [...toneSet].forEach((_, i) => {
-                        mml.appendToStr(lineIndex + i, ';');
-                    });
-                    lineIndex += toneSet.size;
+                    if (toneSet.size) {
+                        [...toneSet].forEach((_, i) => {
+                            mml.appendToStr(lineIndex + i, ';');
+                        });
+                        lineIndex += toneSet.size;
+                    } else {
+                        mml.appendToStr(lineIndex, ';');
+                        lineIndex++;
+                    }
                     trackNo = block.trackNo;
                     toneSet = getToneSet();
                     toneAppended = false;
