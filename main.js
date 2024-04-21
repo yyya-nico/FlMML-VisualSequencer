@@ -549,6 +549,7 @@ document.addEventListener('DOMContentLoaded', () => {
         playRendering() {
             const allData = this.#blocksData;
             let tempo = 120;
+            let rAFIdBase = 0;
             [tones, action, musicalScore].forEach(target => {
                 target.classList.add('no-op');
             });
@@ -575,6 +576,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const start = performance.now();
                 const trackNo = data[0]?.trackNo;
                 const track = tracks[trackNo];
+                const rAFId = rAFIdBase++;
                 let totalDelay = 0;
                 let i = 0;
                 const noteValueStrCalc = str => {
@@ -609,13 +611,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         const elapsed = timeStamp - start;
                         const delay = 60 / tempo * 4 / noteValue * 1000;
                         if (elapsed < totalDelay + delay) {
-                            this.#rAFs[trackNo] = requestAnimationFrame(repeatFunc);
+                            this.#rAFs[rAFId] = requestAnimationFrame(repeatFunc);
                         } else {
                             totalDelay += delay;
                             attachMotion();
                         }
                     }
-                    this.#rAFs[trackNo] = requestAnimationFrame(repeatFunc);
+                    this.#rAFs[rAFId] = requestAnimationFrame(repeatFunc);
                 };
                 const attachMotion = () => {
                     const current = data[i];
