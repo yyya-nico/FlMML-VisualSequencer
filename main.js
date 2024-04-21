@@ -217,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (block.trackNo !== trackNo) {
                     const newTrack = document.createElement('ul');
                     newTrack.classList.add('track');
-                    blockManager.activeTrack = newTrack;
+                    this.activeTrack = newTrack;
                     this.areaElem.insertBefore(newTrack, addTrackBtn);
                     trackNo = block.trackNo;
                 }
