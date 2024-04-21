@@ -266,7 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 block.polyStartEnd && (button.dataset.polyStartEnd = block.polyStartEnd);
                 if (block.macroDef) {
                     button.dataset.macroDef = block.macroDef;
-                    button.textContent = block.macroDef === ';\n' ? ';' : '$=' ;
+                    button.textContent = block.macroDef === ';' ? ';' : '$=' ;
                 }
                 block.macroArgUse && (button.dataset.macroArgUse = block.macroArgUse);
                 block.macroUse && (button.dataset.macroUse = block.macroUse);
@@ -614,7 +614,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     scrollTask(current);
                     if (inMacro) {
-                        if (current.macroDef === ';\n') {
+                        if (current.macroDef === ';') {
                             inMacro = false;
                         }
                         i++;
@@ -655,7 +655,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         } else {
                             attachMotion();
                         }
-                    } else if (current.macroDef && current.macroDef !== ';\n') {
+                    } else if (current.macroDef && current.macroDef !== ';') {
                         inMacro = true;
                         i++;
                         attachMotion();
@@ -1591,7 +1591,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 'repeat': item.dataset.repeatStartEnd.replace('/:', '')
             }, item);
         } else if ('macroDef' in item.dataset) {
-            if (item.dataset.macroDef === ';\n') {
+            if (item.dataset.macroDef === ';') {
                 return;
             }
             await dialogFormManager.prompt('macroDef', {
@@ -1813,7 +1813,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         newItem.dataset.polyStartEnd = ']';
                         newItem.textContent = ']';
                     } else if ('macroDef' in lastTouchedButton.dataset) {
-                        newItem.dataset.macroDef = ';\n';
+                        newItem.dataset.macroDef = ';';
                         newItem.textContent = ';';
                     }
                     li.appendChild(newItem);
@@ -2328,7 +2328,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         newItem.dataset.polyStartEnd = '[';
                         newItem.textContent = '[';
                     } else if ('macroDef' in newItem.dataset) {
-                        newItem.dataset.macroDef === ';\n' && (newItem.dataset.macroDef = '$=');
+                        newItem.dataset.macroDef === ';' && (newItem.dataset.macroDef = '$=');
                         newItem.textContent = '$=';
                     }
                     li.appendChild(newItem);
@@ -2389,7 +2389,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     newItem.dataset.polyStartEnd = ']';
                     newItem.textContent = ']';
                 } else if ('macroDef' in lastTouchedButton.dataset) {
-                    newItem.dataset.macroDef = ';\n';
+                    newItem.dataset.macroDef = ';';
                     newItem.textContent = ';';
                 }
                 li.appendChild(newItem);
