@@ -1556,12 +1556,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 break;
             case 's':
-                e.preventDefault();
-                ctrlKey && !saveBtn.disabled && saveBtn.click();
+                if (ctrlKey) {
+                    e.preventDefault();
+                    !saveBtn.disabled && saveBtn.click();
+                }
                 break;
             case 'o':
-                e.preventDefault();
-                ctrlKey && !openBtn.disabled && openBtn.click();
+                if (ctrlKey) {
+                    e.preventDefault();
+                    !openBtn.disabled && openBtn.click();
+                }
                 break;
             case 'z':
                 ctrlKey && history.undo();
