@@ -1555,6 +1555,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     playBtn.click();
                 }
                 break;
+            case 's':
+                e.preventDefault();
+                ctrlKey && !saveBtn.disabled && saveBtn.click();
+                break;
+            case 'o':
+                e.preventDefault();
+                ctrlKey && !openBtn.disabled && openBtn.click();
+                break;
             case 'z':
                 ctrlKey && history.undo();
                 break;
