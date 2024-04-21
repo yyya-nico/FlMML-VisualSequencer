@@ -425,6 +425,7 @@ document.addEventListener('DOMContentLoaded', () => {
             mmlArr.forEach(mmlTextLine => {
                 const matched = mmlTextLine.match(regex);
                 let toneCache = '', toneSet = new Set();
+                let inMacro = false, noteExist = false;
                 (matched || []).forEach(str => {
                     const obj = {};
                     obj.tone = {};
@@ -442,6 +443,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         obj.className = `material-icons note note-${noteCount}`;
                         obj.tone.tone = toneCache;
                         obj.tone.tonePitch = str;
+                        inMacro && (noteExist = true);
                     } else if (str.startsWith('t')) {
                         obj.className = 'material-icons tempo';
                         obj.tempo = str;
@@ -481,6 +483,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else if (/\$.*?=/.test(str)) {
                         obj.className = 'macro-def';
                         obj.macroDef = str;
+                        inMacro = true;
                     } else if (str.startsWith('%')) {
                         obj.className = 'macro-arg-use';
                         obj.macroArgUse = str;
@@ -509,6 +512,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         obj.metaData = str + '\n';
                     } else if (str.startsWith(';')) {
                         trackNo++;
+                        if (inMacro && !noteExist) {
+                            obj.className = 'other-action';
+                            obj.otherAction = [...toneSet].join(' ');
+                            data.push(obj);
+                            inMacro = false;
+                            noteExist = false;
+                        }
                         return;
                     } else if (str.startsWith(' ')) {
                         return;
