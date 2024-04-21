@@ -1616,7 +1616,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     dialogForm.elements['select-meta-data'].selectedIndex = selectIndex;
                     const getLabelTextNode = name => dialogForm.elements[name].previousSibling;
                     const getOption = () => dialogForm.elements['select-meta-data'].selectedOptions[0];
-                    const setForm = (numberMode, textMode) => {
+                    const setForm = (numberMode, textMode) => { // [labelText, inputValue, isDisplayNone]
                         getLabelTextNode('number').nodeValue = numberMode[0];
                         dialogForm.elements['number'].value = numberMode[1];
                         dialogForm.elements['number'].parentElement.style.display = numberMode[2] ? 'none' : '';
