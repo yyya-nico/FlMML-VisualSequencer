@@ -1518,7 +1518,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.addEventListener('keydown', e => {
         const ctrlKey = e.ctrlKey || ctrlSw.checked;
-        switch (e.key.toLowerCase()) {
+        switch (e.key?.toLowerCase()) {
             case ' ':
                 if (document.activeElement.tagName.toLowerCase() !== 'input') { // contentEditableのことは考えていない
                     e.preventDefault();
