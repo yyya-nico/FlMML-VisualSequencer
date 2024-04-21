@@ -537,7 +537,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         playRendering() {
-            const data = this.#blocksData;
+            const allData = this.#blocksData;
             let tempo = 120;
             [tones, action, musicalScore].forEach(target => {
                 target.classList.add('no-op');
@@ -557,13 +557,13 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             addTrackBtn.disabled = true;
             removeTrackBtn.disabled = true;
-            const start = performance.now();
             const rendPerTrack = data => {
                 let scoreNoteValue = 4;
                 let skip = false, jump = -1, nest = -1, inMacro = false;
                 let scrWaiting = false;
                 const repeatStart = [], repeatEnd = [], remainingRepeat = [];
-                const trackNo = data[0].trackNo;
+                const start = performance.now();
+                const trackNo = data[0]?.trackNo;
                 const track = tracks[trackNo];
                 let totalDelay = 0;
                 let i = 0;
@@ -619,6 +619,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                         i++;
                         attachMotion();
+                        return;
                     } else if (jump !== -1) {
                         if (current.repeatStartEnd?.startsWith('/:')) {
                             nest++;
@@ -659,6 +660,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         inMacro = true;
                         i++;
                         attachMotion();
+                        return;
                     } else {
                         current.tempo && (tempo = Number(current.tempo.replace('t', '')) || tempo);
                         current.noteValue && (scoreNoteValue = noteValueStrCalc(current.noteValue));
@@ -707,6 +709,22 @@ document.addEventListener('DOMContentLoaded', () => {
                             }
                             repeatEnd[nest] = null;
                             nest--;
+                        } else if (current.macroUse) {
+                            const findMacroEndIndex = start => {
+                                const trackNo = allData[start].trackNo;
+                                let end = start + 1;
+                                while (allData[end].macroDef !== ';' && allData[end].trackNo === trackNo) {
+                                    end++;
+                                };
+                                return end;
+                            };
+                            const targetMacro = {};
+                            targetMacro.start = allData.findIndex(block => block.macroDef?.startsWith(current.macroUse));
+                            if (targetMacro.start > -1) {
+                                targetMacro.end = findMacroEndIndex(targetMacro.start);
+                                targetMacro.blocks = allData.slice(targetMacro.start + 1, targetMacro.end);
+                                rendPerTrack(targetMacro.blocks);
+                            }
                         }
                         i++;
                         attachMotion();
@@ -715,9 +733,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 attachMotion();
             }
-            const numOfTracks = Math.max(...data.map(block => block.trackNo)) + 1;
+            const numOfTracks = Math.max(...allData.map(block => block.trackNo)) + 1;
             for (let trackNo = 0; trackNo < numOfTracks; trackNo++) {
-                rendPerTrack(data.filter(block => block.trackNo === trackNo));
+                rendPerTrack(allData.filter(block => block.trackNo === trackNo));
             }
         }
 
