@@ -1728,7 +1728,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 break;
                             case '#USING':
                                 setForm(
-                                    ['和音重ね数', isMetaDataType ? metaDataSplit[2] ?? 2 : 2, false],
+                                    ['和音重ね数', isMetaDataType ? metaDataSplit[2].replace('\n', '') ?? 2 : 2, false],
                                     ['無効', '', true]
                                 );
                                 dialogForm.elements['number'].min = 1;
