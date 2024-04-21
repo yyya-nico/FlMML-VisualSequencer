@@ -488,6 +488,23 @@ document.addEventListener('DOMContentLoaded', () => {
                         obj.className = 'macro-use';
                         obj.macroUse = str;
                     } else if (str.startsWith('#')) {
+                        const typeDefs = {
+                            '#TITLE': 'タイトル',
+                            '#ARTIST': 'アーティスト',
+                            '#COMMENT': 'コメント',
+                            '#CODING': '作成者',
+                            '#PRAGMA': 'PRAGMA',
+                            '#OCTAVE': '相対オクターブ反転',
+                            '#VELOCITY REVERSE': '相対ベロシティ反転',
+                            '#WAV9': '@9 波形データ',
+                            '#WAV10': '@10 波形データ',
+                            '#WAV13': '@13 波形データ',
+                            '#OPM': '@14 OPM音色データ',
+                            '#OPN': '@14 OPN音色データ',
+                            '#FMGAIN': '@14 音量利得',
+                            '#USING': '和音利用宣言',
+                        };
+                        obj.label = (Object.entries(typeDefs).find(def => str.startsWith(def[0])) || [,undefined])[1];
                         obj.className = 'meta-data';
                         obj.metaData = str + '\n';
                     } else if (str.startsWith(';')) {
