@@ -173,6 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 velocity: elem.dataset.velocity,
                 noteShift: elem.dataset.noteShift,
                 detune: elem.dataset.detune,
+                slur: elem.dataset.slur,
                 repeatStartEnd: elem.dataset.repeatStartEnd,
                 repeatBreak: elem.dataset.repeatBreak,
                 polyStartEnd: elem.dataset.polyStartEnd,
@@ -252,6 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 block.velocity && (button.dataset.velocity = block.velocity);
                 block.noteShift && (button.dataset.noteShift = block.noteShift);
                 block.detune && (button.dataset.detune = block.detune);
+                block.slur && (button.dataset.slur = block.slur);
                 if (block.repeatStartEnd) {
                     button.dataset.repeatStartEnd = block.repeatStartEnd;
                     if (block.repeatStartEnd.startsWith('/:')) {
@@ -405,8 +407,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         lineIndex++;
                     } else {
                         const mmlText = tonePitch || block.tempo || block.octave || block.velocity
-                            || block.noteShift || block.detune || block.macroDef || block.macroArgUse
-                            || block.macroUse || block.otherAction || '';
+                            || block.noteShift || block.detune || block.slur || block.macroDef
+                            || block.macroArgUse || block.macroUse || block.otherAction || '';
                         mml.appendToStr(lineIndex, mmlText);
                         if (/;/.test(mmlText)) {
                             lineIndex += toneSet.size;
@@ -423,8 +425,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         importMml(mml) {
             const mmlArr = mml.getMmlArr();
-            const regex = /((@(l|q|x|p|u|mh|w|n|f|e|'[aeiou]?'|o|i|r|s)?|q|x)[0-9\-, ]+)+|[><]*?[a-g]\+?[0-9]*\.*|t[0-9]+|l[0-9]+\.*|r[0-9]*\.*|o[0-8]|[><]+|@v[0-9]+|[\)\(][0-9]+|@?ns[0-9]+|@d[0-9]+|\/\*.*?\*\/|\/\*|\*\/|\/:[0-9]*|:\/|\/|\[|\]|\$.*?=|%[A-Za-z0-9_]+|\$[A-Za-z0-9_{}]+|^#.*|;| +|.+/ig;
-            /* tone.tone|tone.tonePitch|tempo|noteValue|rest|octave|velocity|noteShift|detune|comment|repeatStartEnd|repeatBreak|polyStartEnd|macroDef|macroArgUse|macroUse|metaData|newTrack|space|otherAction */
+            const regex = /((@(l|q|x|p|u|mh|w|n|f|e|'[aeiou]?'|o|i|r|s)?|q|x)[0-9\-, ]+)+|[><]*?[a-g]\+?[0-9]*\.*|t[0-9]+|l[0-9]+\.*|r[0-9]*\.*|o[0-8]|[><]+|@v[0-9]+|[\)\(][0-9]+|@?ns[0-9]+|@d[0-9]+|&|\/\*.*?\*\/|\/\*|\*\/|\/:[0-9]*|:\/|\/|\[|\]|\$.*?=|%[A-Za-z0-9_]+|\$[A-Za-z0-9_{}]+|^#.*|;| +|.+/ig;
+            /* tone.tone|tone.tonePitch|tempo|noteValue|rest|octave|velocity|noteShift|detune|slur|comment|repeatStartEnd|repeatBreak|polyStartEnd|macroDef|macroArgUse|macroUse|metaData|newTrack|space|otherAction */
             const data = [];
             let trackNo = 0;
             mmlArr.forEach(mmlTextLine => {
@@ -470,6 +472,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else if (str.startsWith('@d')) {
                         obj.className = 'material-icons detune';
                         obj.detune = str;
+                    } else if (str.startsWith('&')) {
+                        obj.className = 'slur';
+                        obj.slur = str;
                     } else if (str.startsWith('/*')) {
                         obj.className = 'other-action';
                         obj.otherAction = str;
