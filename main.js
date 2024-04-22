@@ -411,7 +411,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             || block.macroArgUse || block.macroUse || block.otherAction || '';
                         mml.appendToStr(lineIndex, mmlText);
                         if (/;/.test(mmlText)) {
-                            lineIndex += toneSet.size;
+                            lineIndex += toneSet.size || 1;
                             toneSet = getToneSet();
                             toneAppended = false;
                         }
