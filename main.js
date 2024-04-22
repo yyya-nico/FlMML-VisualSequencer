@@ -425,7 +425,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         importMml(mml) {
             const mmlArr = mml.getMmlArr();
-            const regex = /((@(l|q|x|p|u|mh|w|n|f|e|'[aeiou]?'|o|i|r|s)?|q|x)[0-9\-, ]+)+|[><]*?[a-g]\+?[0-9]*\.*|t[0-9]+|l[0-9]+\.*|r[0-9]*\.*|o[0-8]|[><]+|@v[0-9]+|[\)\(][0-9]+|@?ns[0-9]+|@d[0-9]+|&|\/\*.*?\*\/|\/\*|\*\/|\/:[0-9]*|:\/|\/|\[|\]|\$.*?=|%[A-Za-z0-9_]+|\$[A-Za-z0-9_{}]+|^#.*|;| +|.+/ig;
+            const regex = /((@(l|q|x|p|u|mh|w|n|f|e|'[aeiou]?'|o|i|r|s)?|q|x)[0-9\-, ]+)+|[><]*?[a-g]\+?[0-9]*\.*|t[0-9]+|l[0-9]+\.*|r[0-9]*\.*|o[0-8]|[><]+|@v[0-9]+|[\)\(][0-9]+|@?ns[0-9]+|@d[0-9]+|&|\/\*.*?\*\/|\/\*|\*\/|\/:[0-9]*|:\/|\/|\[|\]|\$.*?=|%[A-Za-z0-9_]+|\$[A-Za-z0-9_{}]+|^#.*|;| +|@pl[0-9]+|.+/ig;
             /* tone.tone|tone.tonePitch|tempo|noteValue|rest|octave|velocity|noteShift|detune|slur|comment|repeatStartEnd|repeatBreak|polyStartEnd|macroDef|macroArgUse|macroUse|metaData|newTrack|space|otherAction */
             const data = [];
             let trackNo = 0;
