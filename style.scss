@@ -653,6 +653,7 @@ header {
         ul {
             display: flex;
             flex-wrap: wrap;
+            align-content: start;
             gap: 5px;
             padding-left: 0;
             list-style: none;
