@@ -540,7 +540,8 @@ header {
 
             .track {
                 width: 100%;
-                min-height: 55px;
+                $mh-ref: 166px;
+                min-height: $mh-ref - 11px;
                 padding-bottom: 10px;
 
                 &:first-child {
@@ -558,10 +559,10 @@ header {
                             display: none;
                         }
                     }
-                }
+                } 
 
                 +.track {
-                    min-height: 66px;
+                    min-height: $mh-ref;
                     border-top: 1px solid gray;
                     padding-top: 10px;
                 }
