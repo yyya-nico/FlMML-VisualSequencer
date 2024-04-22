@@ -173,7 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 velocity: elem.dataset.velocity,
                 noteShift: elem.dataset.noteShift,
                 detune: elem.dataset.detune,
-                slur: elem.dataset.slur,
+                tieSlur: elem.dataset.tieSlur,
                 repeatStartEnd: elem.dataset.repeatStartEnd,
                 repeatBreak: elem.dataset.repeatBreak,
                 polyStartEnd: elem.dataset.polyStartEnd,
@@ -253,7 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 block.velocity && (button.dataset.velocity = block.velocity);
                 block.noteShift && (button.dataset.noteShift = block.noteShift);
                 block.detune && (button.dataset.detune = block.detune);
-                block.slur && (button.dataset.slur = block.slur);
+                block.tieSlur && (button.dataset.tieSlur = block.tieSlur);
                 if (block.repeatStartEnd) {
                     button.dataset.repeatStartEnd = block.repeatStartEnd;
                     if (block.repeatStartEnd.startsWith('/:')) {
@@ -323,13 +323,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                         mml.appendToStr(lineIndex + i, mmlText);
                     });
-                } else if (block.rest) {
+                } else if (block.rest || block.tieSlur) {
                     if (toneSet.size) {
                         [...toneSet].forEach((_, i) => {
-                            mml.appendToStr(lineIndex + i, block.rest);
+                            mml.appendToStr(lineIndex + i, block.rest || block.tieSlur);
                         });
                     } else {
-                        mml.appendToStr(lineIndex, block.rest);
+                        mml.appendToStr(lineIndex, block.rest || block.tieSlur);
                     }
                 } else {
                     if (block.noteValue || block.repeatStartEnd || block.repeatBreak || block.polyStartEnd) {
@@ -415,7 +415,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         lineIndex++;
                     } else {
                         const mmlText = tonePitch || block.tempo || block.octave || block.velocity
-                            || block.noteShift || block.detune || block.slur || block.macroDef
+                            || block.noteShift || block.detune || block.tieSlur || block.macroDef
                             || block.macroArgUse || block.macroUse || block.otherAction || '';
                         mml.appendToStr(lineIndex, mmlText);
                         if (/;/.test(mmlText)) {
@@ -433,7 +433,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         importMml(mml) {
             const mmlArr = mml.getMmlArr();
-            const regex = /((@(l|q|x|p|u|mh|w|n|f|e|'[aeiou]?'|o|i|r|s)?|q|x)[0-9\-, ]+)+|[><]*?[a-g]\+?[0-9]*\.*|t[0-9]+|l[0-9]+\.*|r[0-9]*\.*|o[0-8]|[><]+|@v[0-9]+|[\)\(][0-9]+|@?ns[0-9]+|@d[0-9]+|&|\/\*.*?\*\/|\/\*|\*\/|\/:[0-9]*|:\/|\/|\[|\]|\$.*?=|%[A-Za-z0-9_]+|\$[A-Za-z0-9_{}]+|^#.*|;| +|@pl[0-9]+|.+/ig;
+            const regex = /((@(l|q|x|p|u|mh|w|n|f|e|'[aeiou]?'|o|i|r|s)?|q|x)[0-9\-, ]+)+|[><]*?[a-g]\+?[0-9]*\.*|t[0-9]+|l[0-9]+\.*|r[0-9]*\.*|o[0-8]|[><]+|@v[0-9]+|[\)\(][0-9]+|@?ns[0-9]+|@d[0-9]+|(&[0-9]*\.*)+|\/\*.*?\*\/|\/\*|\*\/|\/:[0-9]*|:\/|\/|\[|\]|\$.*?=|%[A-Za-z0-9_]+|\$[A-Za-z0-9_{}]+|^#.*|;| +|@pl[0-9]+|.+/ig;
             /* tone.tone|tone.tonePitch|tempo|noteValue|rest|octave|velocity|noteShift|detune|slur|comment|repeatStartEnd|repeatBreak|polyStartEnd|macroDef|macroArgUse|macroUse|metaData|newTrack|space|otherAction */
             const data = [];
             let trackNo = 0;
@@ -481,8 +481,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         obj.className = 'material-icons detune';
                         obj.detune = str;
                     } else if (str.startsWith('&')) {
-                        obj.className = 'slur';
-                        obj.slur = str;
+                        obj.className = 'tie-slur';
+                        obj.tieSlur = str;
                     } else if (str.startsWith('/*')) {
                         obj.className = 'other-action';
                         obj.otherAction = str;
@@ -601,13 +601,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!str) {
                         return scoreNoteValue;
                     }
-                    const noteValue = Number((str.match(/[0-9]+/) || [scoreNoteValue])[0]);
-                    const dots = (str.match(/\.+/) || [''])[0].length;
-                    if (dots) {
-                        return (noteValue * 2 ** dots) / (2 ** (dots + 1) - 1);
-                    } else {
-                        return noteValue;
-                    }
+                    const matched = str.match(/.[0-9]*\.*/g);
+                    return (matched || [scoreNoteValue]).reduce((sum, str) => {
+                        const noteValue = Number((str.match(/[0-9]+/) || [scoreNoteValue])[0]);
+                        const dots = (str.match(/\.+/) || [''])[0].length;
+                        return sum + (noteValue * 2 ** dots) / (2 ** (dots + 1) - 1);
+                    }, 0);
                 };
                 const scrollTask = current => {
                     const scrTo = (top) => {
@@ -671,11 +670,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         } else {
                             attachMotion();
                         }
-                    } else if (current.rest) {
-                        const currentNoteValue = noteValueStrCalc(current.rest);
+                    } else if (current.rest || current.tieSlur) {
                         resetAnimation(current.elem, 'pop');
                         i++;
-                        delayAttachMotion(currentNoteValue);
+                        if (current.tieSlur === '&') {
+                            attachMotion();
+                        } else {
+                            const currentNoteValue = noteValueStrCalc(current.rest || current.tieSlur);
+                            delayAttachMotion(currentNoteValue);
+                        }
                     } else if (current.polyStartEnd) {
                         skip = current.polyStartEnd === '[';
                         resetAnimation(current.elem, 'pop');

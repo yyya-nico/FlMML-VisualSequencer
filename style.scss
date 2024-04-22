@@ -447,6 +447,10 @@ header {
                     content: attr(data-detune);
                 }
 
+                &.tie-slur::after {
+                    content: attr(data-tie-slur);
+                }
+
                 &.repeat-start-end::after {
                     content: attr(data-repeat-start-end);
                 }
