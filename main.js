@@ -426,7 +426,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             });
-            [...toneSet].forEach((_, i) => {
+            [...toneSet].slice(0, -1).forEach((_, i) => {
                 mml.appendToStr(lineIndex + i, ';');
             });
         }
