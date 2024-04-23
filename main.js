@@ -1369,9 +1369,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         submitTarget.dataset.repeatStartEnd = '/:' + dialogForm.elements['repeat'].value;
                         break;
                     case 'set-macro-def':
+                        const beforeMacroDef = submitTarget.dataset.macroDef;
                         submitTarget.dataset.macroDef = '$' + dialogForm.elements['macro-def-name'].value
                             + (dialogForm.elements['macro-def-arg'].value !== '' ? `{${dialogForm.elements['macro-def-arg'].value}}` : '')
                             + '=';
+                        musicalScore.querySelectorAll(`[data-macro-use="${beforeMacroDef.replace('=', '')}"]`).forEach(elem => {
+                            elem.dataset.macroUse = submitTarget.dataset.macroDef.replace('=', '');
+                        });
                         break;
                     case 'set-macro-arg-use':
                         submitTarget.dataset.macroArgUse = '%' + dialogForm.elements['macro-arg-use'].value;
@@ -2157,6 +2161,10 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             if (is('tones')) {
                 musicalScore.querySelectorAll(`[class*="${buttonClassName}"]`).forEach(elem => {
+                    elem.parentElement.remove();
+                });
+            } else if ('macroDef' in target.dataset) {
+                musicalScore.querySelectorAll(`[data-macro-use="${target.dataset.macroDef.replace('=', '')}"]`).forEach(elem => {
                     elem.parentElement.remove();
                 });
             }
