@@ -253,7 +253,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 block.velocity && (button.dataset.velocity = block.velocity);
                 block.noteShift && (button.dataset.noteShift = block.noteShift);
                 block.detune && (button.dataset.detune = block.detune);
-                block.tieSlur && (button.dataset.tieSlur = block.tieSlur);
+                if (block.tieSlur) {
+                    button.dataset.tieSlur = block.tieSlur
+                    if (block.tieSlur === '&') {
+                        button.ariaLabel = 'スラー';
+                    } else {
+                        button.ariaLabel = 'タイ';
+                    }
+                }
                 if (block.repeatStartEnd) {
                     button.dataset.repeatStartEnd = block.repeatStartEnd;
                     if (block.repeatStartEnd.startsWith('/:')) {
@@ -433,8 +440,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         importMml(mml) {
             const mmlArr = mml.getMmlArr();
-            const regex = /((@(l|q|x|p|u|mh|w|n|f|e|'[aeiou]?'|o|i|r|s)?|q|x)[0-9\-, ]+)+|[><]*?[a-g]\+?[0-9]*\.*|t[0-9]+|l[0-9]+\.*|r[0-9]*\.*|o[0-8]|[><]+|@v[0-9]+|[\)\(][0-9]+|@?ns[0-9]+|@d[0-9]+|(&[0-9]*\.*)+|\/\*.*?\*\/|\/\*|\*\/|\/:[0-9]*|:\/|\/|\[|\]|\$.*?=|%[A-Za-z0-9_]+|\$[A-Za-z0-9_{}]+|^#.*|;| +|@pl[0-9]+|.+/ig;
-            /* tone.tone|tone.tonePitch|tempo|noteValue|rest|octave|velocity|noteShift|detune|slur|comment|repeatStartEnd|repeatBreak|polyStartEnd|macroDef|macroArgUse|macroUse|metaData|newTrack|space|otherAction */
+            const regex = /((@(l|q|x|p|u|mh|w|n|f|e|'[aeiou]?'|o|i|r|s)?|q|x)[0-9\-, ]+)+|[><]*?[a-g]\+?[0-9]*\.*|t[0-9]+|l[0-9]+\.*|r[0-9]*\.*|o[0-8]|[><]+|@v[0-9]+|[\)\(][0-9]+|@?ns[0-9]+|@d[0-9]+|&[0-9]*\.*|\/\*.*?\*\/|\/\*|\*\/|\/:[0-9]*|:\/|\/|\[|\]|\$.*?=|%[A-Za-z0-9_]+|\$[A-Za-z0-9_{}]+|^#.*|;| +|@pl[0-9]+|.+/ig;
+            /* tone.tone|tone.tonePitch|tempo|noteValue|rest|octave|velocity|noteShift|detune|tieSlur|comment|repeatStartEnd|repeatBreak|polyStartEnd|macroDef|macroArgUse|macroUse|metaData|newTrack|space|otherAction */
             const data = [];
             let trackNo = 0;
             mmlArr.forEach(mmlTextLine => {
@@ -1051,6 +1058,31 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 ]
             },
+            tieSlur: {
+                title: 'タイ設定',
+                inputs: [
+                    {
+                        label: '音価(音の長さ)',
+                        type: 'number',
+                        name: 'tie-slur',
+                        min: '1',
+                        max: '384'
+                    },
+                    {
+                        label: '付点の数',
+                        type: 'number',
+                        name: 'dot',
+                        min: '0'
+                    }
+                ],
+                buttons: [
+                    {
+                        class: 'primaly',
+                        value: 'set-tie-slur',
+                        textContent: '確定'
+                    }
+                ]
+            },
             repeat: {
                 title: 'ループ設定',
                 inputs: [
@@ -1322,6 +1354,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         break;
                     case 'set-detune':
                         submitTarget.dataset.detune = '@d' + dialogForm.elements['detune'].value;
+                        break;
+                    case 'set-tie-slur':
+                        submitTarget.dataset.tieSlur = '&' + dialogForm.elements['tie-slur'].value + '.'.repeat(dialogForm.elements['dot'].value);
+                        if (submitTarget.dataset.tieSlur === '&') {
+                            submitTarget.ariaLabel = 'スラー';
+                        } else {
+                            submitTarget.ariaLabel = 'タイ';
+                        }
                         break;
                     case 'set-repeat':
                         submitTarget.dataset.repeatStartEnd = '/:' + dialogForm.elements['repeat'].value;
@@ -1738,6 +1778,11 @@ document.addEventListener('DOMContentLoaded', () => {
             await dialogFormManager.prompt('detune', {
                 'detune': item.dataset.detune.replace('@d', '')
             }, item);
+        } else if ('tieSlur' in item.dataset) {
+            await dialogFormManager.prompt('tieSlur', {
+                'tie-slur': (item.dataset.tieSlur.match(/[0-9]+/) || [''])[0],
+                'dot': (item.dataset.tieSlur.match(/\.+/) || [''])[0].length
+            }, item);
         } else if ('repeatStartEnd' in item.dataset) {
             if (item.dataset.repeatStartEnd === ':/') {
                 const findRepeatStartElem = () => {
@@ -1951,7 +1996,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     || 'macroArgUse' in newItem.dataset || 'macroUse' in newItem.dataset) {
                     await actionPromptSwitcher(newItem);
                 }
-                if ('repeatStartEnd' in newItem.dataset) {
+                if ('tieSlur' in newItem.dataset) {
+                    newItem.ariaLabel = 'スラー';
+                } else if ('repeatStartEnd' in newItem.dataset) {
                     newItem.classList.remove('material-icons');
                     newItem.ariaLabel = 'リピート開始';
                     newItem.textContent = '◆';
@@ -2246,6 +2293,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     const detune = Number(target.dataset.detune.replace('@d', ''));
                     const increase = increaseBase;
                     target.dataset.detune = '@d' + (detune + increase);
+                } else if ('tieSlur' in target.dataset) {
+                    const tieSlur = Number((target.dataset.tieSlur.match(/[0-9]+/) || [''])[0]);
+                    const dots = '.'.repeat((target.dataset.tieSlur.match(/\.+/) || [''])[0].length);
+                    const increase = minmax(tieSlur, 0, 384);
+                    const newTieSlur = tieSlur + increase !== 0 ? tieSlur + increase : '';
+                    target.dataset.tieSlur = '&' + newTieSlur + dots;
                 } else if ('repeatStartEnd' in target.dataset) {
                     if (target.dataset.repeatStartEnd === ':/') {
                         const findRepeatStartElem = () => {
