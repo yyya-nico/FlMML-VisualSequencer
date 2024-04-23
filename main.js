@@ -449,11 +449,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 let toneCache = '', toneSet = new Set();
                 let inMacro = false, noteExist = false;
                 (matched || []).forEach(str => {
+                    str = str.trim();
+                    if (!str) {
+                        return;
+                    }
                     const obj = {};
                     obj.tone = {};
                     obj.trackNo = trackNo;
                     if (/((@(l|q|x|p|u|mh|w|n|f|e|'[aeiou]?'|o|i|r|s)?|q|x)[0-9\-, ]+)+/i.test(str)) {
-                        toneCache = str.trim();
+                        toneCache = str;
                         toneSet.add(toneCache);
                         return;
                     } else if (/^[><]*?[a-g]\+?[0-9]*\.*$/i.test(str)) {
@@ -507,7 +511,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         obj.polyStartEnd = str;
                     } else if (/\$.*?=/.test(str)) {
                         obj.className = 'macro-def';
-                        obj.macroDef = str;
+                        obj.macroDef = str.replaceAll(' ', '');
                         inMacro = true;
                     } else if (str.startsWith('%')) {
                         obj.className = 'macro-arg-use';
@@ -544,8 +548,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             inMacro = false;
                             noteExist = false;
                         }
-                        return;
-                    } else if (str.startsWith(' ')) {
                         return;
                     } else {
                         obj.className = 'other-action';
