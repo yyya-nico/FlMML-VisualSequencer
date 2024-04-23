@@ -1083,7 +1083,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 ]
             },
-            repeat: {
+            repeatStartEnd: {
                 title: 'ループ設定',
                 inputs: [
                     {
@@ -1748,87 +1748,52 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const actionPromptSwitcher = async item => {
-        if ('tempo' in item.dataset) {
-            await dialogFormManager.prompt('tempo', {
-                'tempo': item.dataset.tempo.replace('t', '')
-            }, item);
-        } else if ('noteValue' in item.dataset) {
-            await dialogFormManager.prompt('noteValue', {
-                'note-value': (item.dataset.noteValue.match(/[0-9]+/) || [''])[0],
-                'dot': (item.dataset.noteValue.match(/\.+/) || [''])[0].length
-            }, item);
-        } else if ('rest' in item.dataset) {
-            await dialogFormManager.prompt('rest', {
-                'rest': (item.dataset.rest.match(/[0-9]+/) || [''])[0],
-                'dot': (item.dataset.rest.match(/\.+/) || [''])[0].length
-            }, item);
-        } else if ('octave' in item.dataset) {
-            await dialogFormManager.prompt('octave', {
-                'octave': item.dataset.octave.startsWith('o') ? item.dataset.octave.replace('o', '') : (item.dataset.octave.match(/[><]+/) || [''])[0].length
-            }, item);
-        } else if ('velocity' in item.dataset) {
-            await dialogFormManager.prompt('velocity', {
-                'velocity': item.dataset.velocity.startsWith('@v') ? item.dataset.velocity.replace('@v', '') : Number((item.dataset.velocity.match(/[0-9]+/) || [''])[0]) * (item.dataset.velocity.startsWith('(') ? 1 : -1)
-            }, item);
-        } else if ('noteShift' in item.dataset) {
-            await dialogFormManager.prompt('noteShift', {
-                'note-shift': (item.dataset.noteShift.match(/[0-9]+/) || [''])[0]
-            }, item);
-        } else if ('detune' in item.dataset) {
-            await dialogFormManager.prompt('detune', {
-                'detune': item.dataset.detune.replace('@d', '')
-            }, item);
-        } else if ('tieSlur' in item.dataset) {
-            await dialogFormManager.prompt('tieSlur', {
-                'tie-slur': (item.dataset.tieSlur.match(/[0-9]+/) || [''])[0],
-                'dot': (item.dataset.tieSlur.match(/\.+/) || [''])[0].length
-            }, item);
-        } else if ('repeatStartEnd' in item.dataset) {
-            if (item.dataset.repeatStartEnd === ':/') {
-                const findRepeatStartElem = () => {
-                    let findTemp = item.parentElement;
-                    while (findTemp && !(findTemp.firstElementChild.dataset.repeatStartEnd?.startsWith('/:'))) {
-                        findTemp = findTemp.previousElementSibling;
-                    };
-                    return findTemp?.firstElementChild || null;
-                };
-                const repeatStart = findRepeatStartElem();
-                if (!repeatStart) {
-                    const ul = blockManager.activeTrack;
-                    const li = document.createElement('li');
-                    const baseItem = action.querySelector('.repeat-start-end');
-                    const newItem = baseItem.cloneNode(true);
-                    li.appendChild(newItem);
-                    ul.insertBefore(li, item.parentElement);
-                    item = newItem;
-                } else {
-                    item = repeatStart;
-                }
-            }
-            await dialogFormManager.prompt('repeat', {
-                'repeat': item.dataset.repeatStartEnd.replace('/:', '')
-            }, item);
-        } else if ('macroDef' in item.dataset) {
-            if (item.dataset.macroDef === ';') {
-                return;
-            }
-            await dialogFormManager.prompt('macroDef', {
-                'macro-def-name': (item.dataset.macroDef.match(/\$([^\{\=]*)[\{\=]/) || [,''])[1],
-                'macro-def-arg': (item.dataset.macroDef.match(/\{([^\}]*)\}/) || [,''])[1],
-            }, item);
-        } else if ('macroArgUse' in item.dataset) {
-            await dialogFormManager.prompt('macroArgUse', {
-                'macro-arg-use': item.dataset.macroArgUse.replace('%', '')
-            }, item);
-        } else if ('macroUse' in item.dataset) {
-            await dialogFormManager.prompt('macroUse', {
-                'macro-use-name': (item.dataset.macroUse.match(/\$([^\{]*)\{?/) || [,''])[1],
-                'macro-use-arg': (item.dataset.macroUse.match(/\{([^\}]*)\}/) || [,''])[1],
-            }, item);
-        } else if ('metaData' in item.dataset) {
-            await dialogFormManager.prompt('metaData', {
+        const dataset = item.dataset;
+        const promptDefinitions = {
+            tempo: mmlText => ({
+                'tempo': mmlText.replace('t', '')
+            }),
+            noteValue: mmlText => ({
+                'note-value': (mmlText.match(/[0-9]+/) || [''])[0],
+                'dot': (mmlText.match(/\.+/) || [''])[0].length
+            }),
+            rest: mmlText => ({
+                'rest': (mmlText.match(/[0-9]+/) || [''])[0],
+                'dot': (mmlText.match(/\.+/) || [''])[0].length
+            }),
+            octave: mmlText => ({
+                'octave': mmlText.startsWith('o') ? mmlText.replace('o', '') : (mmlText.match(/[><]+/) || [''])[0].length
+            }),
+            velocity: mmlText => ({
+                'velocity': mmlText.startsWith('@v') ? mmlText.replace('@v', '') : Number((mmlText.match(/[0-9]+/) || [''])[0]) * (mmlText.startsWith('(') ? 1 : -1)
+            }),
+            noteShift: mmlText => ({
+                'note-shift': (mmlText.match(/[0-9]+/) || [''])[0]
+            }),
+            detune: mmlText => ({
+                'detune': mmlText.replace('@d', '')
+            }),
+            tieSlur: mmlText => ({
+                'tie-slur': (mmlText.match(/[0-9]+/) || [''])[0],
+                'dot': (mmlText.match(/\.+/) || [''])[0].length
+            }),
+            repeatStartEnd: mmlText => ({
+                'repeat': mmlText.replace('/:', '')
+            }),
+            macroDef: mmlText => ({
+                'macro-def-name': (mmlText.match(/\$([^\{\=]*)[\{\=]/) || [,''])[1],
+                'macro-def-arg': (mmlText.match(/\{([^\}]*)\}/) || [,''])[1],
+            }),
+            macroArgUse: mmlText => ({
+                'macro-arg-use': mmlText.replace('%', '')
+            }),
+            macroUse: mmlText => ({
+                'macro-use-name': (mmlText.match(/\$([^\{]*)\{?/) || [,''])[1],
+                'macro-use-arg': (mmlText.match(/\{([^\}]*)\}/) || [,''])[1],
+            }),
+            metaData: mmlText => ({
                 'run': () => {
-                    const metaDataRaw = item.dataset.metaData;
+                    const metaDataRaw = mmlText;
                     const metaDataSplit = metaDataRaw.split(' ');
                     const typeDefs = [
                         '#TITLE',
@@ -1931,13 +1896,52 @@ document.addEventListener('DOMContentLoaded', () => {
                         selectHandler(e.target.selectedIndex);
                     });
                 }
-            }, item);
-        } else if ('otherAction' in item.dataset) {
-            await dialogFormManager.prompt('otherAction', {
-                'other-action': item.dataset.otherAction
-            }, item);
-        } else if ('remove' in item.dataset) {
-            await dialogFormManager.prompt('remove', {}, item);
+            }),
+            otherAction: mmlText => ({
+                'other-action': mmlText
+            }),
+            remove: () => ({})
+        };
+        const keys = Object.keys(dataset);
+        for (const key of keys) {
+            if (key in promptDefinitions) {
+                let mmlText = dataset[key];
+                switch (key) {
+                    case 'repeatStartEnd':
+                        if (mmlText === ':/') {
+                            const findRepeatStartElem = () => {
+                                let findTemp = item.parentElement;
+                                while (findTemp && !(findTemp.firstElementChild.dataset.repeatStartEnd?.startsWith('/:'))) {
+                                    findTemp = findTemp.previousElementSibling;
+                                };
+                                return findTemp?.firstElementChild || null;
+                            };
+                            const repeatStart = findRepeatStartElem();
+                            if (!repeatStart) {
+                                const ul = blockManager.activeTrack;
+                                const li = document.createElement('li');
+                                const baseItem = action.querySelector('.repeat-start-end');
+                                const newItem = baseItem.cloneNode(true);
+                                li.appendChild(newItem);
+                                ul.insertBefore(li, item.parentElement);
+                                item = newItem;
+                            } else {
+                                item = repeatStart;
+                            }
+                            mmlText = item.dataset.repeatStartEnd;
+                        }
+                        break;
+                    case 'macroDef':
+                        if (mmlText === ';') {
+                            return;
+                        }
+                        break;
+                }
+                const type = key;
+                const initVals = promptDefinitions[key](mmlText);
+                await dialogFormManager.prompt(type, initVals, item);
+                break;
+            }
         }
     };
     let lastTouchedButton = tones.querySelector('button');
