@@ -581,12 +581,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 target.classList.add('no-op');
             });
             const wrap = document.querySelector('.wrap');
-            const headerHeight = Number(getComputedStyle(document.querySelector(':root')).getPropertyValue('--header-height').replace('px',''));
-            const scrTo = (top) => {
-                top -= headerHeight;
-                wrap.scrollTo({top, behavior: 'smooth'});
-            };
-            scrTo(musicalScore.offsetTop - 10);
+            // const headerHeight = Number(getComputedStyle(document.querySelector(':root')).getPropertyValue('--header-height').replace('px',''));
+            // const scrTo = (top) => {
+            //     top -= headerHeight;
+            //     wrap.scrollTo({top, behavior: 'smooth'});
+            // };
+            // scrTo(musicalScore.offsetTop - 10);
             const tracks = document.getElementsByClassName('track');
             const wrapHeight = wrap.clientHeight;
             const trackHeight = (wrapHeight - (10 + 1 + 10 + 1 + 10)) / tracks.length;
