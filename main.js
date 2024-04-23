@@ -449,7 +449,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         toneCache = str.trim();
                         toneSet.add(toneCache);
                         return;
-                    } else if (/^[><]*?[a-g]\+?[0-9]*\.*$/.test(str)) {
+                    } else if (/^[><]*?[a-g]\+?[0-9]*\.*$/i.test(str)) {
                         if (!toneSet.has(toneCache)) {
                             toneSet.add(toneCache);
                         }
