@@ -479,8 +479,6 @@ header {
                 }
 
                 &:active {
-                    transition: none;
-
                     &::before {
                         display: none;
                     }
