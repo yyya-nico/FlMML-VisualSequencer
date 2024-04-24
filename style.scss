@@ -1,6 +1,6 @@
 @charset "UTF-8";
-@use 'sass:math';
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap');
+@use "sass:math";
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap");
 
 * {
     margin: 0;
@@ -18,36 +18,36 @@
 html,
 html * {
     scrollbar-color: var(--scrollbarHandle) transparent;
-    scrollbar-width: thin
+    scrollbar-width: thin;
 }
 
 html::-webkit-scrollbar,
 html *::-webkit-scrollbar {
     width: 6px;
-    height: 6px
+    height: 6px;
 }
 
 html::-webkit-scrollbar-track,
 html *::-webkit-scrollbar-track {
-    background: #ffffff1a
+    background: #ffffff1a;
 }
 
 html::-webkit-scrollbar-thumb,
 html *::-webkit-scrollbar-thumb {
-    background: var(--scrollbarHandle)
+    background: var(--scrollbarHandle);
 }
 
 html::-webkit-scrollbar-thumb:hover,
 html *::-webkit-scrollbar-thumb:hover {
-    background: var(--scrollbarHandleHover)
+    background: var(--scrollbarHandleHover);
 }
 
 html::-webkit-scrollbar-thumb:active,
 html *::-webkit-scrollbar-thumb:active {
-    background: var(--accent)
+    background: var(--accent);
 }
 
-$noto-sans-jp: 'Noto Sans JP', sans-serif;
+$noto-sans-jp: "Noto Sans JP", sans-serif;
 
 body {
     margin: 0;
@@ -93,7 +93,7 @@ ul {
 dd {
     margin-left: 40px;
 
-    +dt {
+    + dt {
         margin-top: 10px;
     }
 }
@@ -241,15 +241,15 @@ details {
     background-color: #232323;
     box-shadow: 0 0 8px 0 #000000;
 
-    >summary {
+    > summary {
         padding: 10px;
         background-color: #323232;
         cursor: pointer;
         user-select: none;
     }
 
-    >p,
-    >div {
+    > p,
+    > div {
         margin: 0;
         padding: 10px;
     }
@@ -286,11 +286,17 @@ header {
 }
 
 @function randomColor() {
-    @return rgb(64 + math.random(159), 32 + math.random(159), 32 + math.random(159));
+    @return rgb(
+        64 + math.random(159),
+        32 + math.random(159),
+        32 + math.random(159)
+    );
 }
 
 @function randomColorHsl() {
-    @return hsl(math.random(360) 50 + math.random(25) + 0% 30 + math.random(50) + 0%);
+    @return hsl(
+        math.random(360) 50 + math.random(25) + 0% 30 + math.random(50) + 0%
+    );
 }
 
 @keyframes bounce {
@@ -329,22 +335,24 @@ header {
         padding: 20px 40px;
     }
 
-    >* {
+    > * {
         width: 100%;
         max-width: 800px;
         margin: 0 auto;
 
-        +* {
+        + * {
             margin: 20px auto 0;
         }
     }
 
     .editor {
-        >*+* {
+        > * + * {
             margin-top: 10px;
         }
 
-        #tones, #action, #musical-score {
+        #tones,
+        #action,
+        #musical-score {
             padding: 10px;
             background-color: #7f7f7f1f;
             border: 1px solid gray;
@@ -386,7 +394,7 @@ header {
                     font-weight: 400;
                     line-height: 15px;
                     white-space: nowrap;
-                    transition: .15s;
+                    transition: 0.15s;
                     content: attr(aria-label);
                 }
 
@@ -455,7 +463,9 @@ header {
                     content: attr(data-repeat-start-end);
                 }
 
-                &.macro-def::after, &.macro-arg-use::after, &.macro-use::after {
+                &.macro-def::after,
+                &.macro-arg-use::after,
+                &.macro-use::after {
                     text-transform: none;
                 }
 
@@ -486,21 +496,21 @@ header {
 
                 &.droppable {
                     color: white;
-                    opacity: .8;
+                    opacity: 0.8;
                     transform: translateY(2px);
                 }
 
                 &.bounce {
-                    animation: .6s bounce ease-in-out;
+                    animation: 0.6s bounce ease-in-out;
                 }
 
                 &.pop {
-                    animation: .4s pop ease-in-out;
+                    animation: 0.4s pop ease-in-out;
                 }
 
                 &.done:not(.note) {
-                    opacity: .6;
-                    transition: .5s;
+                    opacity: 0.6;
+                    transition: 0.5s;
                 }
             }
 
@@ -513,7 +523,8 @@ header {
             }
         }
 
-        #tones, #musical-score {
+        #tones,
+        #musical-score {
             min-height: 120px;
         }
 
@@ -548,22 +559,22 @@ header {
 
                 &:first-child {
                     &:empty {
-                        +#add-track,
-                        +#add-track+#remove-track {
+                        + #add-track,
+                        + #add-track + #remove-track {
                             display: none;
                         }
                     }
 
-                    +#add-track {
+                    + #add-track {
                         width: 100%;
 
-                        +#remove-track {
+                        + #remove-track {
                             display: none;
                         }
                     }
                 }
 
-                +.track {
+                + .track {
                     min-height: $mh-ref;
                     border-top: 1px solid gray;
                     padding-top: 10px;
@@ -627,7 +638,7 @@ header {
                             margin: 0 auto;
                             visibility: hidden;
                             opacity: 0;
-                            transition: .5s;
+                            transition: 0.5s;
                             --h-ref: 360px;
 
                             &.expaned {
@@ -667,7 +678,7 @@ header {
         }
 
         small {
-            margin-left: .25em;
+            margin-left: 0.25em;
         }
 
         @for $i from 1 through 16 {

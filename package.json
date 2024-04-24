@@ -10,7 +10,11 @@
   },
   "devDependencies": {
     "flmml-on-html5": "^2.0.3",
+    "prettier": "^3.2.5",
     "sass": "^1.70.0",
+    "stylelint": "^16.4.0",
+    "stylelint-config-standard": "^36.0.0",
+    "stylelint-scss": "^6.2.1",
     "vite": "^5.0.8"
   },
   "dependencies": {
