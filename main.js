@@ -1533,6 +1533,15 @@ document.addEventListener('DOMContentLoaded', () => {
             };
             return findTemp?.firstElementChild || null;
         };
+        const concatTies = () => {
+            let findTemp = block.parentElement.nextElementSibling;
+            let ties = '';
+            while (findTemp && findTemp.firstElementChild.dataset.tieSlur?.match(/&[0-9]+\.*/)) {
+                ties += findTemp.firstElementChild.dataset.tieSlur;
+                findTemp = findTemp.nextElementSibling;
+            }
+            return ties;
+        };
         const absoluteOctaveMml = findOctaveElem()?.dataset.octave || '';
         const currentIndex = [...blockManager.activeTrack.children].indexOf(block.parentElement);
         const concatAllOctave = [...blockManager.activeTrack.children]
@@ -1554,7 +1563,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 return '';
             }
         })();
-        flmml.play(block.dataset.tone + absoluteOctaveMml + currentRelativeOctave + block.dataset.tonePitch);
+        const ties = concatTies();
+        flmml.play(block.dataset.tone + absoluteOctaveMml + currentRelativeOctave + block.dataset.tonePitch + ties);
     };
 
     history.onPopstate = obj => {
