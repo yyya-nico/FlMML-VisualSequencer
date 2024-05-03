@@ -611,7 +611,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         return scoreNoteValue;
                     }
                     const matched = /[a-glr&]\+?([0-9]*)(\.*)/.exec(str);
-                    const noteValue = matched && matched[1] !== '' ? Number(matched[1]) : scoreNoteValue;
+                    const noteValue = matched && matched[1] ? Number(matched[1]) : scoreNoteValue;
                     const dots = matched ? matched[2].length : 0;
                     return (noteValue * 2 ** dots) / (2 ** (dots + 1) - 1);
                 };
