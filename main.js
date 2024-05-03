@@ -610,12 +610,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!str) {
                         return scoreNoteValue;
                     }
-                    const matched = str.match(/.[0-9]*\.*/g);
-                    return (matched || [scoreNoteValue]).reduce((sum, str) => {
-                        const noteValue = Number((str.match(/[0-9]+/) || [scoreNoteValue])[0]);
-                        const dots = (str.match(/\.+/) || [''])[0].length;
-                        return sum + (noteValue * 2 ** dots) / (2 ** (dots + 1) - 1);
-                    }, 0);
+                    const matched = /[a-glr&]\+?([0-9]*)(\.*)/.exec(str);
+                    const noteValue = matched && matched[1] !== '' ? Number(matched[1]) : scoreNoteValue;
+                    const dots = matched ? matched[2].length : 0;
+                    return (noteValue * 2 ** dots) / (2 ** (dots + 1) - 1);
                 };
                 const scrollTask = current => {
                     const scrTo = (top) => {
