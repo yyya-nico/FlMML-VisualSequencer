@@ -521,7 +521,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else if (str.startsWith('$')) {
                         obj.className = 'macro-use';
                         const findMacroDef = [...macroDefSet].sort((a, b) => b.length - a.length).find(def => str.includes(def));
-                        console.log(findMacroDef);
                         if (findMacroDef) {
                             obj.macroUse = findMacroDef;
                             data.push(obj);
@@ -623,6 +622,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const trackNo = data[0]?.trackNo;
                 const track = tracks[trackNo];
                 const rAFId = rAFIdBase++;
+                let resolve = null;
+                const promise = new Promise(res => resolve = res);
                 let totalDelay = 0;
                 let i = 0;
                 const noteValueStrCalc = str => {
@@ -662,9 +663,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     this.#rAFs[rAFId] = requestAnimationFrame(repeatFunc);
                 };
-                const attachMotion = () => {
+                const attachMotion = async () => {
                     const current = data[i];
-                    if (!current || i >= current.length) {
+                    if (!current || i >= data.length) {
+                        resolve();
                         return;
                     }
                     scrollTask(current);
@@ -782,7 +784,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             if (targetMacro.start > -1) {
                                 targetMacro.end = findMacroEndIndex(targetMacro.start);
                                 targetMacro.blocks = allData.slice(targetMacro.start + 1, targetMacro.end);
-                                rendPerTrack(targetMacro.blocks);
+                                await rendPerTrack(targetMacro.blocks);
                             }
                         }
                         i++;
@@ -791,6 +793,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     resetAnimation(current.elem, 'done');
                 }
                 attachMotion();
+                return promise;
             }
             const numOfTracks = Math.max(...allData.map(block => block.trackNo)) + 1;
             for (let trackNo = 0; trackNo < numOfTracks; trackNo++) {
