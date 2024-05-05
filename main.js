@@ -445,10 +445,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = [];
             const macroDefSet = new Set();
             let trackNo = 0;
+            let toneCache = '', toneSet = new Set();
+            let inMacro = false, noteExist = false;
             mmlArr.forEach(mmlTextLine => {
                 const matched = mmlTextLine.match(regex);
-                let toneCache = '', toneSet = new Set();
-                let inMacro = false, noteExist = false;
                 (matched || []).forEach(str => {
                     str = str.trim();
                     if (!str) {
