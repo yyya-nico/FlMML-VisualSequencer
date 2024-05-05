@@ -553,8 +553,8 @@ header {
 
             .track {
                 width: 100%;
-                $mh-ref: 166px;
-                min-height: $mh-ref - 11px;
+                --mh-ref: calc(50px * var(--visible-blocks, 3) + 16px);
+                min-height: calc(var(--mh-ref) - 11px);
                 padding-bottom: 10px;
 
                 &:first-child {
@@ -575,7 +575,7 @@ header {
                 }
 
                 + .track {
-                    min-height: $mh-ref;
+                    min-height: var(--mh-ref);
                     border-top: 1px solid gray;
                     padding-top: 10px;
                 }
