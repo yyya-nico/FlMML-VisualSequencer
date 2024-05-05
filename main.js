@@ -213,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // console.log(data);
             this.activeTrack = this.areaElem.querySelector('.track');
             const tonesUl  = this.tonesElem.querySelector('ul');
-            let noteCount = 1, trackNo = 0;
+            let trackNo = 0;
             data.forEach(block => {
                 if (block.trackNo !== trackNo) {
                     const newTrack = document.createElement('ul');
@@ -223,7 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     trackNo = block.trackNo;
                 }
                 const li = document.createElement('li');
-                const toneButtonHTML = `<button class="material-icons note note-${noteCount}" aria-label="無調整" draggable="true" data-tone="" data-tone-pitch="c">music_note</button>`;
+                const toneButtonHTML = `<button class="material-icons note note-1" aria-label="無調整" draggable="true" data-tone="" data-tone-pitch="c">music_note</button>`;
                 const toneButton = (() => {
                     const wrap = document.createElement('div');
                     wrap.innerHTML = toneButtonHTML;
@@ -233,8 +233,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const button = copySourceCandidate?.cloneNode(true) || toneButton;
                 block.label && (button.ariaLabel = block.label);
                 if (block.tone.tonePitch) {
+                    button.className = block.className;
                     if (block.label !== '無調整') {
-                        button.classList.remove('material-icons');
                         button.textContent = block.label;
                     }
                     button.dataset.tone = block.tone.tone;
@@ -244,7 +244,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         tonesUl.appendChild(button.cloneNode(true));
                     }
                     button.dataset.tonePitch = block.tone.tonePitch;
-                    noteCount++;
                 }
                 block.tempo && (button.dataset.tempo = block.tempo);
                 block.noteValue && (button.dataset.noteValue = block.noteValue);
