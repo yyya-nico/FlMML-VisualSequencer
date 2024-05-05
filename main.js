@@ -443,6 +443,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const regex = /((@(l|q|x|p|u|mh|w|n|f|e|'[aeiou]?'|o|i|r|s)?|q|x)[0-9\-, ]+)+|[><]*?[a-g]\+?[0-9]*\.*|t[0-9]+|l[0-9]+\.*|r[0-9]*\.*|o[0-8]|[><]+|@?v[0-9]+|[\)\(][0-9]+|@?ns-?[0-9]+|@d-?[0-9]+|&[0-9]*\.*|\/\*.*?\*\/|\/\*|\*\/|\/:[0-9]*|:\/|\/|\[|\]|\$.*?=|%[A-Za-z0-9_]+|\$[A-Za-z0-9_{}]+|^#.*|;| +|@pl[0-9]+|.+/ig;
             /* tone.tone|tone.tonePitch|tempo|noteValue|rest|octave|velocity|noteShift|detune|tieSlur|comment|repeatStartEnd|repeatBreak|polyStartEnd|macroDef|macroArgUse|macroUse|metaData|newTrack|space|otherAction */
             const data = [];
+            const macroDefSet = new Set();
             let trackNo = 0;
             mmlArr.forEach(mmlTextLine => {
                 const matched = mmlTextLine.match(regex);
@@ -512,13 +513,31 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else if (/\$.*?=/.test(str)) {
                         obj.className = 'macro-def';
                         obj.macroDef = str.replaceAll(' ', '');
+                        macroDefSet.add(obj.macroDef.slice(0, -1));
                         inMacro = true;
                     } else if (str.startsWith('%')) {
                         obj.className = 'macro-arg-use';
                         obj.macroArgUse = str;
                     } else if (str.startsWith('$')) {
                         obj.className = 'macro-use';
-                        obj.macroUse = str;
+                        const findMacroDef = [...macroDefSet].sort((a, b) => b.length - a.length).find(def => str.includes(def));
+                        console.log(findMacroDef);
+                        if (findMacroDef) {
+                            obj.macroUse = findMacroDef;
+                            data.push(obj);
+                            const remaining = str.replace(findMacroDef, '');
+                            if (remaining !== '') {
+                                const obj2 = {};
+                                obj2.tone = {};
+                                obj2.trackNo = trackNo;
+                                obj2.className = 'other-action';
+                                obj2.otherAction = remaining;
+                                data.push(obj2);
+                            }
+                            return
+                        } else {
+                            obj.macroUse = str;
+                        }
                     } else if (str.startsWith('#')) {
                         const typeDefs = {
                             '#TITLE': 'タイトル',
