@@ -665,7 +665,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const attachMotion = async () => {
                     const current = data[i];
                     if (!current || i >= data.length) {
-                        resolve();
+                        resolve(scoreNoteValue);
                         return;
                     }
                     scrollTask(current);
@@ -784,7 +784,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 targetMacro.end = findMacroEndIndex(targetMacro.start);
                                 targetMacro.blocks = allData.slice(targetMacro.start + 1, targetMacro.end);
                                 const start = performance.now();
-                                await rendPerTrack(targetMacro.blocks);
+                                scoreNoteValue = await rendPerTrack(targetMacro.blocks);
                                 const end = performance.now();
                                 totalDelay += end - start;
                             }
