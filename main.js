@@ -783,7 +783,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             if (targetMacro.start > -1) {
                                 targetMacro.end = findMacroEndIndex(targetMacro.start);
                                 targetMacro.blocks = allData.slice(targetMacro.start + 1, targetMacro.end);
+                                const start = performance.now();
                                 await rendPerTrack(targetMacro.blocks);
+                                const end = performance.now();
+                                totalDelay += end - start;
                             }
                         }
                         i++;
