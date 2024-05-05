@@ -650,9 +650,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 };
                 const delayAttachMotion = noteValue => {
-                    const delay = 60 / tempo * 4 / noteValue * 1000;
                     const repeatFunc = timeStamp => {
                         const elapsed = timeStamp - start;
+                        const delay = 60 / tempo * 4 / noteValue * 1000;
                         if (elapsed < totalDelay + delay) {
                             this.#rAFs[rAFId] = requestAnimationFrame(repeatFunc);
                         } else {
