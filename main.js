@@ -2594,7 +2594,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             newItem.ariaLabel = 'スラー';
                         } else if ('metaData' in newItem.dataset || 'macroDef' in newItem.dataset
                             || 'macroArgUse' in newItem.dataset || 'macroUse' in newItem.dataset
-                            || 'otherAction' in item.dataset) {
+                            || 'otherAction' in newItem.dataset) {
                             await actionPromptSwitcher(newItem);
                         }
                     }
