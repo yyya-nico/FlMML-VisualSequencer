@@ -2345,6 +2345,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     const increase = minmax(tieSlur, 0, 384);
                     const newTieSlur = tieSlur + increase !== 0 ? tieSlur + increase : '';
                     target.dataset.tieSlur = '&' + newTieSlur + dots;
+                    if (target.dataset.tieSlur === '&') {
+                        target.ariaLabel = 'スラー';
+                    } else {
+                        target.ariaLabel = 'タイ';
+                    }
                 } else if ('repeatStartEnd' in target.dataset) {
                     if (target.dataset.repeatStartEnd === ':/') {
                         const findRepeatStartElem = () => {
@@ -2585,7 +2590,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         const noteClassName = [...item.classList].find(name => name.includes('note-'));
                         newItem.classList.replace(noteClassName, getNonExistNoteClassName());
                     } else if (from === action) {
-                        if ('metaData' in newItem.dataset || 'macroDef' in newItem.dataset
+                        if ('tieSlur' in newItem.dataset) {
+                            newItem.ariaLabel = 'スラー';
+                        } else if ('metaData' in newItem.dataset || 'macroDef' in newItem.dataset
                             || 'macroArgUse' in newItem.dataset || 'macroUse' in newItem.dataset
                             || 'otherAction' in item.dataset) {
                             await actionPromptSwitcher(newItem);
