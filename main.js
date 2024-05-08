@@ -709,9 +709,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else if (current.polyStartEnd) {
                         skip = current.polyStartEnd === '[';
                         resetAnimation(current.elem, 'pop');
-                        const previousNoteValue = noteValueStrCalc(data[i - 1].tone.tonePitch);
                         i++;
                         if (!skip) {
+                            const previousNoteValue = noteValueStrCalc(data[i - 1].tone.tonePitch);
                             delayAttachMotion(previousNoteValue);
                         } else {
                             attachMotion();
