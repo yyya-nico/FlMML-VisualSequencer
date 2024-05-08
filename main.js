@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const warnOut = document.getElementById('warn-out');
     const mmlOut = document.getElementById('mml');
     const copyBtn = document.getElementById('copy');
+    const pasteBtn = document.getElementById('paste');
     const saveBtn = document.getElementById('save');
     const openBtn = document.getElementById('open');
     const ctrlSw = document.getElementById('ctrl');
@@ -2795,6 +2796,27 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 1500);
         })
         .catch(e => alert('コピーできませんでした\n' + e));
+    });
+
+    pasteBtn.addEventListener('click', () => {
+        const textCache = pasteBtn.innerHTML;
+        pasteBtn.disabled = true;
+        navigator.clipboard.readText()
+        .then(text => {
+            pasteBtn.disabled = true;
+            if (text) {
+                mml.setMml(text);
+                blockManager.importMml(mml);
+                pasteBtn.innerHTML = createMIsHtml('content_paste') + '貼り付けました';
+            } else {
+                pasteBtn.innerHTML = createMIsHtml('content_paste') + '内容がありません';
+            }
+            setTimeout(() => {
+                pasteBtn.innerHTML = textCache;
+                pasteBtn.disabled = false;
+            }, 1500);
+        })
+        .catch(e => alert('貼り付けできませんでした\n' + e));
     });
 
     saveBtn.addEventListener('click', () => {
