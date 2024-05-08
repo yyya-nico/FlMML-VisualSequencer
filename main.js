@@ -2805,7 +2805,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(text => {
             pasteBtn.disabled = true;
             if (text) {
-                mml.setMml(text);
+                mml.setMml(text.replace(/\r/g, ''));
                 blockManager.importMml(mml);
                 pasteBtn.innerHTML = createMIsHtml('content_paste') + '貼り付けました';
             } else {
