@@ -560,12 +560,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else if (str.startsWith(';')) {
                         trackNo++;
                         if (inMacro && !noteExist) {
-                            obj.className = 'other-action';
-                            obj.otherAction = [...toneSet].join(' ');
-                            data.push(obj);
-                            inMacro = false;
-                            noteExist = false;
+                            const tone = [...toneSet].join(' ');
+                            if (tone) {
+                                obj.className = 'other-action';
+                                obj.otherAction = tone;
+                                data.push(obj);
+                            }
                         }
+                        inMacro = false;
+                        noteExist = false;
                         return;
                     } else {
                         obj.className = 'other-action';
