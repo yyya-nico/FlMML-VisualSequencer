@@ -444,8 +444,9 @@ document.addEventListener('DOMContentLoaded', () => {
             /* tone.tone|tone.tonePitch|tempo|noteValue|rest|octave|velocity|noteShift|detune|tieSlur|comment|repeatStartEnd|repeatBreak|polyStartEnd|macroDef|macroArgUse|macroUse|metaData|newTrack|space|otherAction */
             const data = [];
             const macroDefSet = new Set();
+            const toneSet = new Set();
             let trackNo = 0;
-            let toneCache = '', toneSet = new Set();
+            let toneCache = ''
             let inMacro = false, noteExist = false;
             mmlArr.forEach(mmlTextLine => {
                 const matched = mmlTextLine.match(regex);
@@ -565,6 +566,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 obj.className = 'other-action';
                                 obj.otherAction = tone;
                                 data.push(obj);
+                                toneSet.clear();
                             }
                         }
                         inMacro = false;
