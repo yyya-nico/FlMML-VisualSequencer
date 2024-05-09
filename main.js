@@ -480,10 +480,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else if (str.startsWith('r')) {
                         obj.className = 'material-icons rest';
                         obj.rest = str;
-                    } else if (/o[0-8]|[><]+/i.test(str)) {
+                    } else if (/^o[0-8]|[><]+$/i.test(str)) {
                         obj.className = 'material-icons octave';
                         obj.octave = str;
-                    } else if (/@v[0-9]+|[\)\(][0-9]+/i.test(str)) {
+                    } else if (/^@v[0-9]+|[\)\(][0-9]+$/i.test(str)) {
                         obj.className = 'material-icons velocity';
                         obj.velocity = str;
                     } else if (str.startsWith('@ns') || str.startsWith('ns')) {
@@ -510,7 +510,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else if (str.startsWith('[') || str.startsWith(']')) {
                         obj.className = 'poly-start-end';
                         obj.polyStartEnd = str;
-                    } else if (/\$.*?=/.test(str)) {
+                    } else if (/^\$.*?=$/.test(str)) {
                         obj.className = 'macro-def';
                         obj.macroDef = str.replaceAll(' ', '');
                         macroDefSet.add(obj.macroDef.slice(0, -1));
