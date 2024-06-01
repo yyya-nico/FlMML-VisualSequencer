@@ -1557,6 +1557,13 @@ document.addEventListener('DOMContentLoaded', () => {
     blockManager.checkSavedBlocksData();
 
     const playMusicNote = block => {
+        const findNoteValueElem = () => {
+            let findTemp = block.parentElement;
+            while (findTemp && !('noteValue' in findTemp.firstElementChild.dataset)) {
+                findTemp = findTemp.previousElementSibling;
+            };
+            return findTemp?.firstElementChild || null;
+        };
         const findOctaveElem = () => {
             let findTemp = block.parentElement;
             while (findTemp && !(findTemp.firstElementChild.dataset.octave?.startsWith('o'))) {
@@ -1573,6 +1580,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             return ties;
         };
+        const scoreNoteValueMml = findNoteValueElem()?.dataset.noteValue || '';
         const absoluteOctaveMml = findOctaveElem()?.dataset.octave || '';
         const currentIndex = [...blockManager.activeTrack.children].indexOf(block.parentElement);
         const concatAllOctave = [...blockManager.activeTrack.children]
@@ -1595,7 +1603,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         })();
         const ties = concatTies();
-        flmml.play(block.dataset.tone + absoluteOctaveMml + currentRelativeOctave + block.dataset.tonePitch + ties);
+        flmml.play(block.dataset.tone + scoreNoteValueMml + absoluteOctaveMml + currentRelativeOctave + block.dataset.tonePitch + ties);
     };
 
     history.onPopstate = obj => {
