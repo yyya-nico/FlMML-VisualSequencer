@@ -618,8 +618,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             addTrackBtn.disabled = true;
             removeTrackBtn.disabled = true;
-            const rendPerTrack = data => {
-                let scoreNoteValue = 4;
+            const rendPerTrack = (data, {scoreNoteValue = 4} = {}) => {
                 let skip = false, jump = -1, nest = -1, inMacro = false;
                 let scrWaiting = false;
                 const repeatStart = [], repeatEnd = [], remainingRepeat = [];
@@ -671,7 +670,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const attachMotion = async () => {
                     const current = data[i];
                     if (!current || i >= data.length) {
-                        resolve(scoreNoteValue);
+                        resolve({
+                            scoreNoteValue
+                        });
                         return;
                     }
                     scrollTask(current);
@@ -790,7 +791,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 targetMacro.end = findMacroEndIndex(targetMacro.start);
                                 targetMacro.blocks = allData.slice(targetMacro.start + 1, targetMacro.end);
                                 const start = performance.now();
-                                scoreNoteValue = await rendPerTrack(targetMacro.blocks);
+                                scoreNoteValue = (await rendPerTrack(targetMacro.blocks, {scoreNoteValue})).scoreNoteValue;
                                 const end = performance.now();
                                 totalDelay += end - start;
                             }
