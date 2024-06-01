@@ -715,11 +715,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else if (current.polyStartEnd) {
                         skip = current.polyStartEnd === '[';
                         resetAnimation(current.elem, 'pop');
-                        i++;
                         if (!skip) {
-                            const previousNoteValue = noteValueStrCalc(data[i - 1].tone.tonePitch);
+                            const previousNoteValue = noteValueStrCalc(data[i++ - 1].tone.tonePitch);
                             delayAttachMotion(previousNoteValue);
                         } else {
+                            i++;
                             attachMotion();
                         }
                     } else if (current.macroDef && current.macroDef !== ';') {
