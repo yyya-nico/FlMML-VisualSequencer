@@ -2632,7 +2632,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     newNode = item.parentElement;
                     break;
             }
-            if (targetIsButton) {
+            if (targetIsButton && e.target.id !== 'add-track' && e.target.id !== 'remove-track') {
                 const position = e.dataTransfer.dropEffect === 'copy' || targetIndex < itemIndex ? 'beforebegin' : 'afterend';
                 e.target.parentElement.insertAdjacentElement(position, newNode);
             } else {
