@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlMML ビジュアルシーケンサー</title>
+    <meta name="color-scheme" content="dark">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script type="module" crossorigin src="/flmml-visualsequencer/assets/index-SkqMABrw.js"></script>
+  <link rel="stylesheet" crossorigin href="/flmml-visualsequencer/assets/index-DuteyOuC.css">
+</head>
+<body>
+    <header><a href=".">FlMML ビジュアルシーケンサー</a></header>
+    <div class="wrap">
+        <div class="editor">
+            <div id="tones">
+                <div class="guide-text">
+                    音色
+                    <small>空いているところをクリックで追加</small>
+                </div>
+                <ul>
+                    <li><button class="material-icons note note-1" aria-label="無調整" draggable="true" data-tone="" data-tone-pitch="c">music_note</button></li>
+                </ul>
+            </div>
+            <div id="action">
+                <div class="guide-text">
+                    作用
+                </div>
+                <ul>
+                    <li><button class="material-icons tempo" aria-label="テンポ" draggable="true" data-tempo="t120">fast_forward</button></li>
+                    <li><button class="material-icons note-value" aria-label="音価" draggable="true" data-note-value="l4">expand</button></li>
+                    <li><button class="material-icons rest" aria-label="休符" draggable="true" data-rest="r">pause</button></li>
+                    <li><button class="material-icons octave" aria-label="オクターブ" draggable="true" data-octave="o4">stairs</button></li>
+                    <li><button class="material-icons velocity" aria-label="音量" draggable="true" data-velocity="@v100">volume_up</button></li>
+                    <li><button class="material-icons note-shift" aria-label="ノートシフト" draggable="true" data-note-shift="ns0">arrow_upward</button></li>
+                    <li><button class="material-icons detune" aria-label="デチューン" draggable="true" data-detune="@d0">arrow_downward</button></li>
+                    <li><button class="tie-slur" aria-label="タイまたはスラー" draggable="true" data-tie-slur="&">&</button></li>
+                    <li><button class="material-icons repeat-start-end" aria-label="リピート" draggable="true" data-repeat-start-end="/::/">repeat</button></li>
+                    <li><button class="repeat-break" aria-label="リピート脱出" draggable="true" data-repeat-break="/">/</button></li>
+                    <li><button class="poly-start-end" aria-label="和音区切り" draggable="true" data-poly-start-end="[">][</button></li>
+                    <li><button class="macro-def" aria-label="マクロ定義" draggable="true" data-macro-def="$=;">$=;</button></li>
+                    <li><button class="macro-arg-use" aria-label="マクロ引数使用" draggable="true" data-macro-arg-use="%">%</button></li>
+                    <li><button class="macro-use" aria-label="マクロ使用" draggable="true" data-macro-use="$">$</button></li>
+                    <li><button class="meta-data" aria-label="メタデータ" draggable="true" data-meta-data="">#</button></li>
+                    <li hidden><hr class="break" aria-label="区切り"></li>
+                    <li><button class="other-action" aria-label="その他の作用" draggable="true" data-other-action=""></button></li>
+                    <li><button class="material-icons remove danger" aria-label="一部の消去" draggable="true" data-remove="">delete</button></li>
+                </ul>
+            </div>
+            <div class="guide-text">
+                <p>
+                    ブロックをドラッグで下に音符を追加
+                </p>
+            </div>
+            <div id="musical-score">
+                <ul class="track active"></ul>
+                <button id="add-track"><span class="material-icons">add</span>トラックを追加</button>
+                <button id="remove-track"><span class="material-icons">remove</span>トラックを削除</button>
+            </div>
+            <dialog id="dialog">
+                <form id="dialog-form" method="dialog">
+                    <div class="form-title">
+                    </div>
+                    <div class="inputs">
+                    </div>
+                    <div class="buttons">
+                    </div>
+                </form>
+            </dialog>
+            <div class="buttons right">
+                <button id="play" class="primaly"><span class="material-icons">play_arrow</span>再生</button>
+                <button id="clear" class="danger"><span class="material-icons">delete</span>消去</button>
+            </div>
+        </div>
+        <div class="warnings">
+            <output id="warn-out" for="mml-text play"></output>
+        </div>
+        <details class="mml">
+            <summary>現在のMML</summary>
+            <div>
+                <output id="mml">(なし)</output>
+            </div>
+        </details>
+        <div class="buttons left">
+            <button id="copy" disabled><span class="material-icons">content_copy</span>MMLをコピー</button>
+            <button id="paste"><span class="material-icons">content_paste</span>MMLを貼り付け</button>
+            <button id="save" disabled><span class="material-icons">save</span>ファイルに保存</button>
+            <button id="open"><span class="material-icons">file_open</span>ファイルを開く</button>
+        </div>
+        <div class="for-mobile buttons left">
+            <div class="toggle-sw ctrl-sw">
+                <input type="checkbox" id="ctrl">
+                <label for="ctrl">モード</label>
+            </div>
+            <button id="undo" aria-label="元に戻す"><span class="material-icons">undo</span></button>
+            <button id="redo" aria-label="やり直し"><span class="material-icons">redo</span></button>
+        </div>
+        <div class="author">
+            <p>
+                &copy;2024 <a href="https://github.com/yyya-nico" target="_blank" rel="noopener noreferrer">yyya_nico</a><br>
+                <a href="https://github.com/yyya-nico/FlMML-VisualSequencer" target="_blank" rel="noopener noreferrer">View source on GitHub</a><br>
+                Inspired by <a href="https://thirtydollar.website/" target="_blank" rel="noopener noreferrer">GD Colon's Thirty Dollar Website</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>
