@@ -455,128 +455,126 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!str) {
                         return;
                     }
-                    const obj = {};
-                    obj.tone = {};
-                    obj.trackNo = trackNo;
-                    if (/((@(l|q|x|p|u|mh|w|n|f|e|'[aeiou]?'|o|i|r|s)?|q|x)[0-9\-, ]+)+/i.test(str)) {
-                        toneCache = str;
-                        toneSet.add(toneCache);
-                        return;
-                    } else if (/^[><]*?[a-g]\+?[0-9]*\.*$/i.test(str)) {
-                        if (!toneSet.has(toneCache)) {
+                    const makeAndPushObj = str => {
+                        const obj = {};
+                        obj.tone = {};
+                        obj.trackNo = trackNo;
+                        if (/((@(l|q|x|p|u|mh|w|n|f|e|'[aeiou]?'|o|i|r|s)?|q|x)[0-9\-, ]+)+/i.test(str)) {
+                            toneCache = str;
                             toneSet.add(toneCache);
-                        }
-                        const noteCount = [...toneSet].indexOf(toneCache) + 1;
-                        obj.label = '無調整';
-                        obj.className = `material-icons note note-${noteCount}`;
-                        obj.tone.tone = toneCache;
-                        obj.tone.tonePitch = str;
-                        inMacro && (noteExist = true);
-                    } else if (str.startsWith('t')) {
-                        obj.className = 'material-icons tempo';
-                        obj.tempo = str;
-                    } else if (str.startsWith('l')) {
-                        obj.className = 'material-icons note-value';
-                        obj.noteValue = str;
-                    } else if (str.startsWith('r')) {
-                        obj.className = 'material-icons rest';
-                        obj.rest = str;
-                    } else if (/^o[0-8]|[><]+$/i.test(str)) {
-                        obj.className = 'material-icons octave';
-                        obj.octave = str;
-                    } else if (/^@v[0-9]+|[\)\(][0-9]+$/i.test(str)) {
-                        obj.className = 'material-icons velocity';
-                        obj.velocity = str;
-                    } else if (str.startsWith('@ns') || str.startsWith('ns')) {
-                        obj.className = 'material-icons note-shift';
-                        obj.noteShift = str;
-                    } else if (str.startsWith('@d')) {
-                        obj.className = 'material-icons detune';
-                        obj.detune = str;
-                    } else if (str.startsWith('&')) {
-                        obj.className = 'tie-slur';
-                        obj.tieSlur = str;
-                    } else if (str.startsWith('/*')) {
-                        obj.className = 'other-action';
-                        obj.otherAction = str;
-                    } else if (str.startsWith('/:')) {
-                        obj.className = 'repeat-start-end';
-                        obj.repeatStartEnd = str;
-                    } else if (str.startsWith(':/')) {
-                        obj.className = 'material-icons repeat-start-end';
-                        obj.repeatStartEnd = str;
-                    } else if (str.startsWith('/')) {
-                        obj.className = 'repeat-break';
-                        obj.repeatBreak = str;
-                    } else if (str.startsWith('[') || str.startsWith(']')) {
-                        obj.className = 'poly-start-end';
-                        obj.polyStartEnd = str;
-                    } else if (/^\$.*?=$/.test(str)) {
-                        obj.className = 'macro-def';
-                        obj.macroDef = str.replaceAll(' ', '');
-                        macroDefSet.add(obj.macroDef.slice(0, -1));
-                        inMacro = true;
-                    } else if (str.startsWith('%')) {
-                        obj.className = 'macro-arg-use';
-                        obj.macroArgUse = str;
-                    } else if (str.startsWith('$')) {
-                        obj.className = 'macro-use';
-                        const findMacroDef = [...macroDefSet].sort((a, b) => b.length - a.length).find(def => str.includes(def));
-                        if (findMacroDef) {
-                            obj.macroUse = findMacroDef;
-                            data.push(obj);
-                            const remaining = str.replace(findMacroDef, '');
-                            if (remaining !== '') {
-                                const obj2 = {};
-                                obj2.tone = {};
-                                obj2.trackNo = trackNo;
-                                obj2.className = 'other-action';
-                                obj2.otherAction = remaining;
-                                data.push(obj2);
+                            return;
+                        } else if (/^[><]*?[a-g]\+?[0-9]*\.*$/i.test(str)) {
+                            if (!toneSet.has(toneCache)) {
+                                toneSet.add(toneCache);
                             }
-                            return
-                        } else {
-                            obj.macroUse = str;
-                        }
-                    } else if (str.startsWith('#')) {
-                        const typeDefs = {
-                            '#TITLE': 'タイトル',
-                            '#ARTIST': 'アーティスト',
-                            '#COMMENT': 'コメント',
-                            '#CODING': '作成者',
-                            '#PRAGMA': 'PRAGMA',
-                            '#OCTAVE': '相対オクターブ反転',
-                            '#VELOCITY REVERSE': '相対ベロシティ反転',
-                            '#WAV9': '@9 波形データ',
-                            '#WAV10': '@10 波形データ',
-                            '#WAV13': '@13 波形データ',
-                            '#OPM': '@14 OPM音色データ',
-                            '#OPN': '@14 OPN音色データ',
-                            '#FMGAIN': '@14 音量利得',
-                            '#USING': '和音利用宣言',
-                        };
-                        obj.label = (Object.entries(typeDefs).find(def => str.startsWith(def[0])) || [,undefined])[1];
-                        obj.className = 'meta-data';
-                        obj.metaData = str + '\n';
-                    } else if (str.startsWith(';')) {
-                        trackNo++;
-                        if (inMacro && !noteExist) {
-                            const tone = [...toneSet].join(' ');
-                            if (tone) {
-                                obj.className = 'other-action';
-                                obj.otherAction = tone;
+                            const noteCount = [...toneSet].indexOf(toneCache) + 1;
+                            obj.label = '無調整';
+                            obj.className = `material-icons note note-${noteCount}`;
+                            obj.tone.tone = toneCache;
+                            obj.tone.tonePitch = str;
+                            inMacro && (noteExist = true);
+                        } else if (str.startsWith('t')) {
+                            obj.className = 'material-icons tempo';
+                            obj.tempo = str;
+                        } else if (str.startsWith('l')) {
+                            obj.className = 'material-icons note-value';
+                            obj.noteValue = str;
+                        } else if (str.startsWith('r')) {
+                            obj.className = 'material-icons rest';
+                            obj.rest = str;
+                        } else if (/^o[0-8]|[><]+$/i.test(str)) {
+                            obj.className = 'material-icons octave';
+                            obj.octave = str;
+                        } else if (/^@?v[0-9]+|[\)\(][0-9]+$/i.test(str)) {
+                            obj.className = 'material-icons velocity';
+                            obj.velocity = str;
+                        } else if (str.startsWith('@ns') || str.startsWith('ns')) {
+                            obj.className = 'material-icons note-shift';
+                            obj.noteShift = str;
+                        } else if (str.startsWith('@d')) {
+                            obj.className = 'material-icons detune';
+                            obj.detune = str;
+                        } else if (str.startsWith('&')) {
+                            obj.className = 'tie-slur';
+                            obj.tieSlur = str;
+                        } else if (str.startsWith('/*')) {
+                            obj.className = 'other-action';
+                            obj.otherAction = str;
+                        } else if (str.startsWith('/:')) {
+                            obj.className = 'repeat-start-end';
+                            obj.repeatStartEnd = str;
+                        } else if (str.startsWith(':/')) {
+                            obj.className = 'material-icons repeat-start-end';
+                            obj.repeatStartEnd = str;
+                        } else if (str.startsWith('/')) {
+                            obj.className = 'repeat-break';
+                            obj.repeatBreak = str;
+                        } else if (str.startsWith('[') || str.startsWith(']')) {
+                            obj.className = 'poly-start-end';
+                            obj.polyStartEnd = str;
+                        } else if (/^\$.*?=$/.test(str)) {
+                            obj.className = 'macro-def';
+                            obj.macroDef = str.replaceAll(' ', '');
+                            macroDefSet.add(obj.macroDef.slice(0, -1));
+                            inMacro = true;
+                        } else if (str.startsWith('%')) {
+                            obj.className = 'macro-arg-use';
+                            obj.macroArgUse = str;
+                        } else if (str.startsWith('$')) {
+                            obj.className = 'macro-use';
+                            const findMacroDef = [...macroDefSet].sort((a, b) => b.length - a.length).find(def => str.includes(def));
+                            if (findMacroDef) {
+                                obj.macroUse = findMacroDef;
                                 data.push(obj);
-                                toneSet.clear();
+                                const remaining = str.replace(findMacroDef, '');
+                                if (remaining !== '') {
+                                    makeAndPushObj(remaining);
+                                }
+                                return
+                            } else {
+                                obj.macroUse = str;
                             }
+                        } else if (str.startsWith('#')) {
+                            const typeDefs = {
+                                '#TITLE': 'タイトル',
+                                '#ARTIST': 'アーティスト',
+                                '#COMMENT': 'コメント',
+                                '#CODING': '作成者',
+                                '#PRAGMA': 'PRAGMA',
+                                '#OCTAVE': '相対オクターブ反転',
+                                '#VELOCITY REVERSE': '相対ベロシティ反転',
+                                '#WAV9': '@9 波形データ',
+                                '#WAV10': '@10 波形データ',
+                                '#WAV13': '@13 波形データ',
+                                '#OPM': '@14 OPM音色データ',
+                                '#OPN': '@14 OPN音色データ',
+                                '#FMGAIN': '@14 音量利得',
+                                '#USING': '和音利用宣言',
+                            };
+                            obj.label = (Object.entries(typeDefs).find(def => str.startsWith(def[0])) || [,undefined])[1];
+                            obj.className = 'meta-data';
+                            obj.metaData = str + '\n';
+                        } else if (str.startsWith(';')) {
+                            trackNo++;
+                            if (inMacro && !noteExist) {
+                                const tone = [...toneSet].join(' ');
+                                if (tone) {
+                                    obj.className = 'other-action';
+                                    obj.otherAction = tone;
+                                    data.push(obj);
+                                    toneSet.clear();
+                                }
+                            }
+                            inMacro = false;
+                            noteExist = false;
+                            return;
+                        } else {
+                            obj.className = 'other-action';
+                            obj.otherAction = str;
                         }
-                        inMacro = false;
-                        noteExist = false;
-                        return;
-                    } else {
-                        obj.className = 'other-action';
-                        obj.otherAction = str;
-                    }
-                    data.push(obj);
+                        data.push(obj);
+                    };
+                    makeAndPushObj(str);
                 });
             });
             this.tonesElem.querySelector('ul').textContent = '';
