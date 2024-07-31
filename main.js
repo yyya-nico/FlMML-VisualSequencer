@@ -2345,9 +2345,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         target.dataset.velocity = (velocity + increase >= 0 ? '(' : ')') + Math.abs(velocity + increase);
                     }
                 } else if ('noteShift' in target.dataset) {
-                    const noteShift = Number((target.dataset.noteShift.match(/[0-9]+/) || [''])[0]);
+                    const noteShift = Number((target.dataset.noteShift.match(/-?[0-9]+/) || [''])[0]);
                     const increase = increaseBase;
-                    target.dataset.noteShift = target.dataset.noteShift.match(/ns|@ns/)[0] + (noteShift + increase);
+                    target.dataset.noteShift = target.dataset.noteShift.match(/@?ns/)[0] + (noteShift + increase);
                 } else if ('detune' in target.dataset) {
                     const detune = Number(target.dataset.detune.replace('@d', ''));
                     const increase = increaseBase;
