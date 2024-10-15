@@ -1799,7 +1799,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const actionPromptSwitcher = async item => {
-        const dataset = item.dataset;
+        const { dataset } = item;
         const promptDefinitions = {
             tempo: mmlText => ({
                 'tempo': mmlText.replace('t', '')
@@ -1953,11 +1953,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }),
             remove: () => ({})
         };
-        const keys = Object.keys(dataset);
-        for (const key of keys) {
-            if (key in promptDefinitions) {
-                let mmlText = dataset[key];
-                switch (key) {
+        for (const type of Object.keys(dataset)) {
+            const initValsGenerator = promptDefinitions[type];
+
+            if (initValsGenerator) {
+                let mmlText = dataset[type];
+                switch (type) {
                     case 'repeatStartEnd':
                         if (mmlText === ':/') {
                             const findRepeatStartElem = () => {
@@ -1988,8 +1989,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                         break;
                 }
-                const type = key;
-                const initVals = promptDefinitions[key](mmlText);
+                const initVals = initValsGenerator(mmlText);
                 await dialogFormManager.prompt(type, initVals, item);
                 break;
             }
