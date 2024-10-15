@@ -843,7 +843,12 @@ document.addEventListener('DOMContentLoaded', () => {
     class History {
         #histArr = [[],[]];
         #maxArrLength = 70;
+        #pushstateHandler = obj => {};
         #popstateHandler = obj => {};
+
+        set onPushstate(fn) {
+            this.#pushstateHandler = fn;
+        }
 
         set onPopstate(fn) {
             this.#popstateHandler = fn;
@@ -851,6 +856,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         pushState(obj) {
             this.#histArr[0].push(obj);
+            this.#pushstateHandler(obj);
             if (this.#histArr[0].length > this.#maxArrLength) {
                 this.#histArr[0].shift();
             }
@@ -866,6 +872,11 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             data && this.#histArr[1].unshift(data);
             console.log(this.#histArr);
+            const status = {
+                canUndo: Boolean(this.#histArr[0].length),
+                canRedo: Boolean(this.#histArr[1].length)
+            };
+            return status;
         }
 
         redo() {
@@ -876,6 +887,11 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             data && this.#histArr[0].push(data);
             console.log(this.#histArr);
+            const status = {
+                canUndo: Boolean(this.#histArr[0].length),
+                canRedo: Boolean(this.#histArr[1].length)
+            };
+            return status;
         }
 
         clear() {
@@ -2865,6 +2881,19 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.classList.add('mobile');
     }
 
-    undoBtn.addEventListener('click', () => history.undo());
-    redoBtn.addEventListener('click', () => history.redo());
+    history.onPushstate = obj => {
+        undoBtn.disabled = false;
+        redoBtn.disabled = true;
+    };
+
+    undoBtn.addEventListener('click', () => {
+        const { canUndo, canRedo } = history.undo();
+        undoBtn.disabled = !canUndo;
+        redoBtn.disabled = !canRedo;
+    });
+    redoBtn.addEventListener('click', () => {
+        const { canUndo, canRedo } = history.redo()
+        undoBtn.disabled = !canUndo;
+        redoBtn.disabled = !canRedo;
+    });
 });

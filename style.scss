@@ -790,7 +790,7 @@ header {
                 }
             }
 
-            button:not(:hover, :active, :disabled) {
+            button:not(:hover, :active) {
                 background-color: transparent;
             }
         }
