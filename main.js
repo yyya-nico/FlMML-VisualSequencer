@@ -2803,6 +2803,7 @@ clearBtn.addEventListener('click', () => {
                 blockManager.activeTrack = track;
             }
         });
+        flmml.play('');
         blockManager.blocksDataUpdate();
         blockManager.saveBlocksData();
         blockManager.exportMml(mml);
