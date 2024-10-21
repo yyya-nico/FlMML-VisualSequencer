@@ -919,7 +919,7 @@ class DialogFormManager {
             ],
             buttons: [
                 {
-                    class: 'primaly',
+                    className: 'primaly',
                     value: 'set-tone',
                     textContent: '確定'
                 }
@@ -944,7 +944,7 @@ class DialogFormManager {
             ],
             buttons: [
                 {
-                    class: 'primaly',
+                    className: 'primaly',
                     value: 'set-tone-pitch',
                     textContent: '確定'
                 }
@@ -962,7 +962,7 @@ class DialogFormManager {
             ],
             buttons: [
                 {
-                    class: 'primaly',
+                    className: 'primaly',
                     value: 'set-tempo',
                     textContent: '確定'
                 }
@@ -987,7 +987,7 @@ class DialogFormManager {
             ],
             buttons: [
                 {
-                    class: 'primaly',
+                    className: 'primaly',
                     value: 'set-note-value',
                     textContent: '確定'
                 }
@@ -1012,7 +1012,7 @@ class DialogFormManager {
             ],
             buttons: [
                 {
-                    class: 'primaly',
+                    className: 'primaly',
                     value: 'set-rest',
                     textContent: '確定'
                 }
@@ -1031,7 +1031,7 @@ class DialogFormManager {
             ],
             buttons: [
                 {
-                    class: 'primaly',
+                    className: 'primaly',
                     value: 'set-octave',
                     textContent: '絶対指定'
                 },
@@ -1054,7 +1054,7 @@ class DialogFormManager {
             ],
             buttons: [
                 {
-                    class: 'primaly',
+                    className: 'primaly',
                     value: 'set-velocity',
                     textContent: '絶対指定'
                 },
@@ -1075,7 +1075,7 @@ class DialogFormManager {
             ],
             buttons: [
                 {
-                    class: 'primaly',
+                    className: 'primaly',
                     value: 'set-note-shift',
                     textContent: '絶対指定'
                 },
@@ -1096,7 +1096,7 @@ class DialogFormManager {
             ],
             buttons: [
                 {
-                    class: 'primaly',
+                    className: 'primaly',
                     value: 'set-detune',
                     textContent: '確定'
                 }
@@ -1121,7 +1121,7 @@ class DialogFormManager {
             ],
             buttons: [
                 {
-                    class: 'primaly',
+                    className: 'primaly',
                     value: 'set-tie-slur',
                     textContent: '確定'
                 }
@@ -1139,7 +1139,7 @@ class DialogFormManager {
             ],
             buttons: [
                 {
-                    class: 'primaly',
+                    className: 'primaly',
                     value: 'set-repeat',
                     textContent: '確定'
                 }
@@ -1161,7 +1161,7 @@ class DialogFormManager {
             ],
             buttons: [
                 {
-                    class: 'primaly',
+                    className: 'primaly',
                     value: 'set-macro-def',
                     textContent: '確定'
                 }
@@ -1178,7 +1178,7 @@ class DialogFormManager {
             ],
             buttons: [
                 {
-                    class: 'primaly',
+                    className: 'primaly',
                     value: 'set-macro-arg-use',
                     textContent: '確定'
                 }
@@ -1200,7 +1200,7 @@ class DialogFormManager {
             ],
             buttons: [
                 {
-                    class: 'primaly',
+                    className: 'primaly',
                     value: 'set-macro-use',
                     textContent: '確定'
                 }
@@ -1242,7 +1242,7 @@ class DialogFormManager {
             ],
             buttons: [
                 {
-                    class: 'primaly',
+                    className: 'primaly',
                     value: 'set-meta-data',
                     textContent: '確定'
                 }
@@ -1259,7 +1259,7 @@ class DialogFormManager {
             ],
             buttons: [
                 {
-                    class: 'primaly',
+                    className: 'primaly',
                     value: 'set-other-action',
                     textContent: '確定'
                 }
