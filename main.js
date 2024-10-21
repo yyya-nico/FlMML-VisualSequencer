@@ -1317,12 +1317,8 @@ class DialogFormManager {
                 case 'buttons':
                     def.buttons.forEach(buttonDef => {
                         const button = document.createElement('button');
-                        Object.entries(buttonDef).forEach(entry => {
-                            if (entry[0] === 'textContent') {
-                                button.textContent = entry[1];
-                            } else {
-                                button.setAttribute(entry[0], entry[1]);
-                            }
+                        Object.entries(buttonDef).forEach(([key, value]) => {
+                            button[key] = value;
                         });
                         dialogForm.buttons.appendChild(button);
                     });
