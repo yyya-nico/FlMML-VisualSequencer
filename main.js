@@ -822,6 +822,9 @@ class BlockManager {
     }
 
     calcPoly() {
+        if (!this.#blocksData.length) {
+            return;            
+        }
         const numOfTracks = this.#blocksData.at(-1).trackNo + 1;
         for (let trackNo = 0; trackNo < numOfTracks; trackNo++) {
             const polyBlocksData = this.#blocksData.filter(block => block.polyStartEnd && block.trackNo === trackNo);
