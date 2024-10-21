@@ -1290,25 +1290,25 @@ class DialogFormManager {
                     def.inputs.forEach(inputDef => {
                         const input = document.createElement('input');
                         let appendElem = input;
-                        Object.entries(inputDef).forEach(entry => {
-                            if (entry[0] === 'label') {
+                        Object.entries(inputDef).forEach(([key, value]) => {
+                            if (key === 'label') {
                                 const label = document.createElement('label');
-                                label.innerHTML = entry[1];
+                                label.innerHTML = value;
                                 label.appendChild(input);
                                 appendElem = label;
-                            } else if (entry[0] === 'select') {
+                            } else if (key === 'select') {
                                 const select = document.createElement('select');
                                 select.name = inputDef.name;
-                                const selectOptionsDef = entry[1];
-                                Object.entries(selectOptionsDef).forEach(entry => {
+                                const selectOptionsDef = value;
+                                Object.entries(selectOptionsDef).forEach(([value, text]) => {
                                     const option = document.createElement('option');
-                                    option.value = entry[0];
-                                    option.textContent = entry[1];
+                                    option.value = value;
+                                    option.textContent = text;
                                     select.appendChild(option);
                                 });
                                 input.replaceWith(select);
                             } else {
-                                input.setAttribute(entry[0], entry[1]);
+                                input[key] = value;
                             }
                         });
                         dialogForm.inputs.appendChild(appendElem);
