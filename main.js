@@ -2058,8 +2058,8 @@ editor.addEventListener('click', async e => {
             const ul = blockManager.activeTrack;
             const li = document.createElement('li');
             const newItem = e.target.cloneNode(true);
-            if ('metaData' in newItem.dataset || 'macroDef' in newItem.dataset
-                || 'macroArgUse' in newItem.dataset || 'macroUse' in newItem.dataset) {
+            if (['metaData', 'macroDef', 'macroArgUse', 'macroUse']
+                .some(type => type in newItem.dataset)) {
                 await actionPromptSwitcher(newItem);
             }
             if ('tieSlur' in newItem.dataset) {
@@ -2088,8 +2088,8 @@ editor.addEventListener('click', async e => {
                 newElem: li,
                 parent: ul
             });
-            if ('repeatStartEnd' in lastTouchedButton.dataset || 'polyStartEnd' in lastTouchedButton.dataset
-                || 'macroDef' in lastTouchedButton.dataset) {
+            if (['repeatStartEnd', 'polyStartEnd', 'macroDef']
+                .some(type => type in lastTouchedButton.dataset)) {
                 const li = document.createElement('li')
                 const newItem = e.target.cloneNode(true);
                 if ('repeatStartEnd' in lastTouchedButton.dataset) {
