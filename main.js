@@ -801,7 +801,7 @@ class BlockManager {
             attachMotion();
             return promise;
         }
-        const numOfTracks = Math.max(...allData.map(block => block.trackNo)) + 1;
+        const numOfTracks = allData.at(-1).trackNo + 1;
         for (let trackNo = 0; trackNo < numOfTracks; trackNo++) {
             rendPerTrack(allData.filter(block => block.trackNo === trackNo));
         }
@@ -822,7 +822,7 @@ class BlockManager {
     }
 
     calcPoly() {
-        const numOfTracks = Math.max(...this.#blocksData.map(block => block.trackNo)) + 1;
+        const numOfTracks = this.#blocksData.at(-1).trackNo + 1;
         for (let trackNo = 0; trackNo < numOfTracks; trackNo++) {
             const polyBlocksData = this.#blocksData.filter(block => block.polyStartEnd && block.trackNo === trackNo);
             polyBlocksData.forEach((block, i) => {
