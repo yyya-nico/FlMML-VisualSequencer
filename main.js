@@ -1293,7 +1293,7 @@ class DialogFormManager {
                         Object.entries(inputDef).forEach(([key, value]) => {
                             if (key === 'label') {
                                 const label = document.createElement('label');
-                                label.innerHTML = value;
+                                label.textContent = value;
                                 label.appendChild(input);
                                 appendElem = label;
                             } else if (key === 'select') {
