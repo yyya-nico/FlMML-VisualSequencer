@@ -1008,11 +1008,11 @@ const stepRecorder = () => {
         const setNoteValue = noteValue => {
             const target = setNoteValueTarget;
             if ('tonePitch' in target.dataset) {
-                // const dots = '.'.repeat((target.dataset.tonePitch.match(/\.+/) || [''])[0].length);
+                // const dots = (target.dataset.tonePitch.match(/\.+/) || [''])[0];
                 const newNoteValue = noteValue !== stepParams.scoreNoteValue ? noteValue : '';
                 target.dataset.tonePitch = target.dataset.tonePitch + newNoteValue/*  + dots */;
             } else if ('rest' in target.dataset) {
-                // const dots = '.'.repeat((target.dataset.rest.match(/\.+/) || [''])[0].length);
+                // const dots = (target.dataset.rest.match(/\.+/) || [''])[0];
                 const newRest = noteValue !== stepParams.scoreNoteValue ? noteValue : '';
                 target.dataset.rest = 'r' + newRest/*  + dots */;
             }
@@ -2481,7 +2481,7 @@ const wheelHandler = e => {
             ];
             const octaveStr = octave[0].repeat(octaveCount[0]) + octave[1].repeat(octaveCount[1]);
             const noteValue = (currentPitch.match(/[0-9]+/) || [''])[0];
-            const dots = '.'.repeat((target.dataset.tonePitch.match(/\.+/) || [''])[0].length);
+            const dots = (target.dataset.tonePitch.match(/\.+/) || [''])[0];
             if (isPositive) { // Up
                 if (currentPitchIndex === pitches.length - 1) {
                     if (octaveCount[0]) {
@@ -2509,7 +2509,7 @@ const wheelHandler = e => {
             const minmax = (current, min = -Infinity, max = Infinity) => current + increaseBase < min ? 0 : current + increaseBase > max ? 0 : increaseBase;
             if (ctrlKey && 'tonePitch' in target.dataset) {
                 const noteValue = Number((target.dataset.tonePitch.match(/[0-9]+/) || [''])[0]);
-                const dots = '.'.repeat((target.dataset.tonePitch.match(/\.+/) || [''])[0].length);
+                const dots = (target.dataset.tonePitch.match(/\.+/) || [''])[0];
                 const increase = minmax(noteValue, 0, 384);
                 const newNoteValue = noteValue + increase !== 0 ? noteValue + increase : '';
                 target.dataset.tonePitch = target.dataset.tonePitch.replace(/[0-9]*\.*/g, '') + newNoteValue + dots;
@@ -2524,7 +2524,7 @@ const wheelHandler = e => {
                 target.dataset.noteValue = target.dataset.noteValue.replace(/[0-9]+/, noteValue + increase);
             } else if ('rest' in target.dataset) {
                 const rest = Number((target.dataset.rest.match(/[0-9]+/) || [''])[0]);
-                const dots = '.'.repeat((target.dataset.rest.match(/\.+/) || [''])[0].length);
+                const dots = (target.dataset.rest.match(/\.+/) || [''])[0];
                 const increase = minmax(rest, 0, 384);
                 const newRest = rest + increase !== 0 ? rest + increase : '';
                 target.dataset.rest = 'r' + newRest + dots;
@@ -2560,7 +2560,7 @@ const wheelHandler = e => {
                 target.dataset.detune = '@d' + (detune + increase);
             } else if ('tieSlur' in target.dataset) {
                 const tieSlur = Number((target.dataset.tieSlur.match(/[0-9]+/) || [''])[0]);
-                const dots = '.'.repeat((target.dataset.tieSlur.match(/\.+/) || [''])[0].length);
+                const dots = (target.dataset.tieSlur.match(/\.+/) || [''])[0];
                 const increase = minmax(tieSlur, 0, 384);
                 const newTieSlur = tieSlur + increase !== 0 ? tieSlur + increase : '';
                 target.dataset.tieSlur = '&' + newTieSlur + dots;
