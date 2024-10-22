@@ -924,6 +924,7 @@ const stepRecorder = () => {
     clearTimeout(stepTimer);
     if (lastTouchedButton && lastTouchedButton.closest('.track') !== blockManager.activeTrack) {
         lastTouchedButton = blockManager.activeTrack.querySelector('button');
+        return;
     }
     let current = lastTouchedButton;
     if (!current) {
