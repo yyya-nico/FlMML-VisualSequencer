@@ -2087,17 +2087,6 @@ const stepRecorder = () => {
     const toNextBtn = () => {
         lastTouchedButton = current = current.parentElement.nextElementSibling?.firstElementChild || null;
     };
-    if (!['tonePitch', 'rest'].some(type => type in current.dataset)) {
-        flmml.stop();
-        if ('tempo' in current.dataset) {
-            const tempo = Number(current.dataset.tempo.replace('t', ''));
-            stepParams.tempo = tempo;
-        }
-        toNextBtn();
-        stepRecorder();    
-        console.log('end3');
-        return;
-    }
     const setEditingState = () => {
         if ('tonePitch' in current.dataset) {
             current.dataset.tonePitch = current.dataset.tonePitch.replace(/[0-9]*\.*/g, '');
@@ -2111,21 +2100,32 @@ const stepRecorder = () => {
         current.classList.add('done');
     };
     setEditingState();
+    if (!['tonePitch', 'rest'].some(type => type in current.dataset)) {
+        flmml.stop();
+        if ('tempo' in current.dataset) {
+            const tempo = Number(current.dataset.tempo.replace('t', ''));
+            stepParams.tempo = tempo;
+        }
+        toNextBtn();
+        stepRecorder();    
+        console.log('end3');
+        return;
+    }
     const timeoutTask = () => {
         const maxDelay = 60 / stepParams.tempo * 4 * 1000;
         stepTimer = setTimeout(stepRecorder, maxDelay);
     };
     timeoutTask();
-    if (stepParams.timeStamp === -1) {
-        stepParams.timeStamp = performance.now();
+    if (!performance.getEntriesByName('stepPoint')[0]) {
+        performance.mark('stepPoint');
         toNextBtn();
         console.log('end4');
         return;
     }
     const applyNoteValue = () => {
-        const beforeTimeStamp = stepParams.timeStamp
-        stepParams.timeStamp = performance.now();
-        const elapsed = stepParams.timeStamp - beforeTimeStamp;
+        const elapsedMeasure = performance.measure('stepElapsed', 'stepPoint');
+        performance.mark('stepPoint');
+        const elapsed = elapsedMeasure.duration;
         const msecToNoteValueCalc = ms => {
             const validNoteValues = [1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96, 128, 192, 384];
             const rawNoteValue =  60 / stepParams.tempo * 4 * 1000 / ms;
