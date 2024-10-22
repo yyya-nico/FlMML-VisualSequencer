@@ -965,7 +965,15 @@ const stepRecorder = () => {
             const tempo = Number(current.dataset.tempo.replace('t', ''));
             stepParams.tempo = tempo;
         } else if ('noteValue' in current.dataset) {
-            const scoreNoteValue = noteValueStrCalc(current.noteValue);
+            const noteValueStrCalc = str => {
+                if (!str) {
+                    return stepParams.scoreNoteValue;
+                }
+                const noteValue = Number((str.match(/[0-9]+/) || [stepParams.scoreNoteValue[0]])[0]);
+                // const dots = (str.match(/\.+/) || [''])[0].length;
+                return noteValue;
+            };
+            const scoreNoteValue = noteValueStrCalc(current.dataset.noteValue);
             stepParams.scoreNoteValue = scoreNoteValue;
         }
         toNextBtn();
