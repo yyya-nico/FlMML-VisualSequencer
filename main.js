@@ -2060,6 +2060,7 @@ const stepParams = {
 };
 let stepTimer = null;
 let stepResumeWait = false;
+let setNoteValueTarget = null;
 const stepReset = () => {
     blockManager.activeTrack.querySelectorAll('button').forEach(button => {
         button.classList.remove('done');
@@ -2083,10 +2084,7 @@ const stepRecorder = () => {
         console.log('end2');
         return;
     }
-    console.log(lastTouchedButton.ariaLabel, [...blockManager.activeTrack.children].findIndex(elem => elem.contains(current)));
-    const toNextBtn = () => {
-        lastTouchedButton = current = current.parentElement.nextElementSibling?.firstElementChild || null;
-    };
+    console.log([...blockManager.activeTrack.children].findIndex(elem => elem.contains(current)), lastTouchedButton.ariaLabel);
     const setEditingState = () => {
         if ('tonePitch' in current.dataset) {
             current.dataset.tonePitch = current.dataset.tonePitch.replace(/[0-9]*\.*/g, '');
@@ -2100,8 +2098,13 @@ const stepRecorder = () => {
         current.classList.add('done');
     };
     setEditingState();
-    if (!['tonePitch', 'rest'].some(type => type in current.dataset)) {
+    const toNextBtn = () => {
+        lastTouchedButton = current = current.parentElement.nextElementSibling?.firstElementChild || null;
+    };
+    if (!('tonePitch' in current.dataset)) {
         flmml.stop();
+    }
+    if (!['tonePitch', 'rest'].some(type => type in current.dataset)) {
         if ('tempo' in current.dataset) {
             const tempo = Number(current.dataset.tempo.replace('t', ''));
             stepParams.tempo = tempo;
@@ -2118,6 +2121,7 @@ const stepRecorder = () => {
     timeoutTask();
     if (!performance.getEntriesByName('stepPoint')[0]) {
         performance.mark('stepPoint');
+        setNoteValueTarget = current;
         toNextBtn();
         console.log('end4');
         return;
@@ -2134,14 +2138,15 @@ const stepRecorder = () => {
         };
         const noteValue = msecToNoteValueCalc(elapsed);
         const setNoteValue = noteValue => {
-            if ('tonePitch' in current.dataset) {
-                // const dots = '.'.repeat((current.dataset.tonePitch.match(/\.+/) || [''])[0].length);
+            const target = setNoteValueTarget;
+            if ('tonePitch' in target.dataset) {
+                // const dots = '.'.repeat((target.dataset.tonePitch.match(/\.+/) || [''])[0].length);
                 const newNoteValue = noteValue !== stepParams.scoreNoteValue ? noteValue : '';
-                current.dataset.tonePitch = current.dataset.tonePitch + newNoteValue/*  + dots */;
-            } else if ('rest' in current.dataset) {
-                // const dots = '.'.repeat((current.dataset.rest.match(/\.+/) || [''])[0].length);
+                target.dataset.tonePitch = target.dataset.tonePitch + newNoteValue/*  + dots */;
+            } else if ('rest' in target.dataset) {
+                // const dots = '.'.repeat((target.dataset.rest.match(/\.+/) || [''])[0].length);
                 const newRest = noteValue !== stepParams.scoreNoteValue ? noteValue : '';
-                current.dataset.rest = 'r' + newRest/*  + dots */;
+                target.dataset.rest = 'r' + newRest/*  + dots */;
             }
         };
         setNoteValue(noteValue);
@@ -2150,6 +2155,7 @@ const stepRecorder = () => {
         blockManager.exportMml(mml);
     };
     applyNoteValue();
+    setNoteValueTarget = current;
     toNextBtn();
 };
 const stepKeydown = e => {
