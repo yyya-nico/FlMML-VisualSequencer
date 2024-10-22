@@ -906,6 +906,15 @@ class History {
 
 let stepGuidanceDisplayed = false, stepEnable = false;
 
+const stepKeydown = e => {
+    switch (e.key) {
+        case ' ':
+            e.preventDefault();
+            stepRecorder();
+            break;
+    }
+};
+
 class DialogFormManager {
     #dialogDefinitions = {
         tone: {
@@ -1290,7 +1299,9 @@ class DialogFormManager {
 `ステップ音価記録は、簡単に音価を指定できる機能です。
 
 各トラックの空白部分をテンポよくクリック、またはスペースキーを押して最初の音符から順に音価を決定します。
-途中から指定をやり直したいときは、やり直したい音符をクリックすることでそこからやり直せます。`,
+途中から指定をやり直したいときは、やり直したい音符をクリックすることでそこからやり直せます。
+
+この画面は、Shiftキーを押しながらステップ音価記録ブロックをクリックすることで再度表示できます。`,
             buttons: [
                 {
                     className: 'primaly',
@@ -1491,8 +1502,10 @@ class DialogFormManager {
                     break;
                 case 'set-step':
                     stepGuidanceDisplayed = true;
+                    stepEnable = true;
                     break;
                 case 'cancel-step':
+                    stepEnable = false;
                     break;
             }
             const afterChange = JSON.parse(JSON.stringify(submitTarget.dataset));
@@ -1822,7 +1835,10 @@ document.addEventListener('keydown', e => {
     const ctrlKey = e.ctrlKey || ctrlSw.checked;
     switch (e.key?.toLowerCase()) {
         case ' ':
-            if (document.activeElement.tagName.toLowerCase() !== 'input' && !stepEnable) { // contentEditableのことは考えていない
+            if (stepEnable) {
+                e.preventDefault();
+                stepKeydown();
+            } else if (document.activeElement.tagName.toLowerCase() !== 'input') { // contentEditableのことは考えていない
                 e.preventDefault();
                 playBtn.click();
             }
@@ -2079,7 +2095,10 @@ const stepRecorder = () => {
             return;
         }
         stepParams.timeStamp = -1;
-        setTimeout(stepReset, 2000);
+        setTimeout(() => {
+            lastTouchedButton = blockManager.activeTrack.querySelector('button');
+            stepReset();
+        }, 2000);
         stepResumeWait = true;
         console.log('end2');
         return;
@@ -2158,14 +2177,6 @@ const stepRecorder = () => {
     setNoteValueTarget = current;
     toNextBtn();
 };
-const stepKeydown = e => {
-    switch (e.key) {
-        case ' ':
-            e.preventDefault();
-            stepRecorder();
-            break;
-    }
-};
 editor.addEventListener('click', async e => {
     const ctrlKey = e.ctrlKey || ctrlSw.checked;
     const is = id => Boolean(e.target.closest('#' + id));
@@ -2214,23 +2225,21 @@ editor.addEventListener('click', async e => {
             if ('otherAction' in e.target.dataset) {
                 await actionPromptSwitcher(e.target);
             } else if ('step' in e.target.dataset) {
-                if (!stepGuidanceDisplayed) {
+                if (stepGuidanceDisplayed && !e.shiftKey) {
+                    stepEnable = !stepEnable;
+                } else {
                     await actionPromptSwitcher(e.target);
                 }
-                if (stepGuidanceDisplayed) {
-                    e.target.classList.toggle('enable');
-                    stepEnable = !stepEnable;
-                    if (stepEnable) {
-                        e.target.ariaLabel = 'ステップ音価記録(有効)';
-                        lastTouchedButton = blockManager.activeTrack.querySelector('button');
-                        document.addEventListener('keydown', stepKeydown);
-                    } else {
-                        e.target.ariaLabel = 'ステップ音価記録(無効)';
-                        document.removeEventListener('keydown', stepKeydown);
-                        stepReset();
-                        flmml.stop();
-                        clearTimeout(stepTimer);
-                    }
+                if (stepEnable) {
+                    e.target.classList.add('enable');
+                    e.target.ariaLabel = 'ステップ音価記録(有効)';
+                    lastTouchedButton = blockManager.activeTrack.querySelector('button');
+                } else {
+                    e.target.classList.remove('enable');
+                    e.target.ariaLabel = 'ステップ音価記録(無効)';
+                    stepReset();
+                    flmml.stop();
+                    clearTimeout(stepTimer);
                 }
                 return;
             }
