@@ -904,15 +904,118 @@ class History {
     }
 }
 
+let lastTouchedButton = tones.querySelector('button');
 let stepGuidanceDisplayed = false, stepEnable = false;
-
-const stepKeydown = e => {
-    switch (e.key) {
-        case ' ':
-            e.preventDefault();
-            stepRecorder();
-            break;
+const stepParams = {
+    timeStamp: -1,
+    tempo: 120,
+    scoreNoteValue : 4
+};
+let stepTimer = null;
+let stepResumeWait = false;
+let setNoteValueTarget = null;
+const stepReset = () => {
+    blockManager.activeTrack.querySelectorAll('button').forEach(button => {
+        button.classList.remove('done');
+    });
+    stepResumeWait = false;
+};
+const stepRecorder = () => {
+    clearTimeout(stepTimer);
+    if (lastTouchedButton && lastTouchedButton.closest('.track') !== blockManager.activeTrack) {
+        lastTouchedButton = blockManager.activeTrack.querySelector('button');
     }
+    let current = lastTouchedButton;
+    if (!current) {
+        if (stepResumeWait) {
+            console.log('end1');
+            return;
+        }
+        stepParams.timeStamp = -1;
+        setTimeout(() => {
+            lastTouchedButton = blockManager.activeTrack.querySelector('button');
+            stepReset();
+        }, 2000);
+        stepResumeWait = true;
+        console.log('end2');
+        return;
+    }
+    console.log([...blockManager.activeTrack.children].findIndex(elem => elem.contains(current)), lastTouchedButton.ariaLabel);
+    const setEditingState = () => {
+        if ('tonePitch' in current.dataset) {
+            current.dataset.tonePitch = current.dataset.tonePitch.replace(/[0-9]*\.*/g, '');
+            playMusicNote(current, {noteValue: 1});
+            current.classList.add('bounce');
+            return;
+        }
+        if ('rest' in current.dataset) {
+            current.dataset.rest = 'r';
+        }
+        current.classList.add('done');
+    };
+    setEditingState();
+    const toNextBtn = () => {
+        lastTouchedButton = current = current.parentElement.nextElementSibling?.firstElementChild || null;
+    };
+    if (!('tonePitch' in current.dataset)) {
+        flmml.stop();
+    }
+    if (!['tonePitch', 'rest'].some(type => type in current.dataset)) {
+        if ('tempo' in current.dataset) {
+            const tempo = Number(current.dataset.tempo.replace('t', ''));
+            stepParams.tempo = tempo;
+        } else if ('noteValue' in current.dataset) {
+            const scoreNoteValue = noteValueStrCalc(current.noteValue);
+            stepParams.scoreNoteValue = scoreNoteValue;
+        }
+        toNextBtn();
+        stepRecorder();    
+        console.log('end3');
+        return;
+    }
+    const timeoutTask = () => {
+        const maxDelay = 60 / stepParams.tempo * 4 * 1000;
+        stepTimer = setTimeout(stepRecorder, maxDelay);
+    };
+    timeoutTask();
+    if (!performance.getEntriesByName('stepPoint')[0]) {
+        performance.mark('stepPoint');
+        setNoteValueTarget = current;
+        toNextBtn();
+        console.log('end4');
+        return;
+    }
+    const applyNoteValue = () => {
+        const elapsedMeasure = performance.measure('stepElapsed', 'stepPoint');
+        performance.mark('stepPoint');
+        const elapsed = elapsedMeasure.duration;
+        const msecToNoteValueCalc = ms => {
+            const validNoteValues = [1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96, 128, 192, 384];
+            const rawNoteValue =  60 / stepParams.tempo * 4 * 1000 / ms;
+            const noteValue = Math.max(1, ...validNoteValues.filter(val => val < rawNoteValue));
+            return noteValue;
+        };
+        const noteValue = msecToNoteValueCalc(elapsed);
+        const setNoteValue = noteValue => {
+            const target = setNoteValueTarget;
+            if ('tonePitch' in target.dataset) {
+                // const dots = '.'.repeat((target.dataset.tonePitch.match(/\.+/) || [''])[0].length);
+                const newNoteValue = noteValue !== stepParams.scoreNoteValue ? noteValue : '';
+                target.dataset.tonePitch = target.dataset.tonePitch + newNoteValue/*  + dots */;
+            } else if ('rest' in target.dataset) {
+                // const dots = '.'.repeat((target.dataset.rest.match(/\.+/) || [''])[0].length);
+                const newRest = noteValue !== stepParams.scoreNoteValue ? noteValue : '';
+                target.dataset.rest = 'r' + newRest/*  + dots */;
+            }
+        };
+        setNoteValue(noteValue);
+        blockManager.blocksDataUpdate();
+        blockManager.saveBlocksData();
+        blockManager.exportMml(mml);
+    };
+    applyNoteValue();
+    setNoteValueTarget = current;
+    toNextBtn();
 };
 
 class DialogFormManager {
@@ -1837,7 +1940,7 @@ document.addEventListener('keydown', e => {
         case ' ':
             if (stepEnable) {
                 e.preventDefault();
-                stepKeydown();
+                stepRecorder();
             } else if (document.activeElement.tagName.toLowerCase() !== 'input') { // contentEditableのことは考えていない
                 e.preventDefault();
                 playBtn.click();
@@ -2061,121 +2164,6 @@ const actionPromptSwitcher = async item => {
             break;
         }
     }
-};
-let lastTouchedButton = tones.querySelector('button');
-const stepParams = {
-    timeStamp: -1,
-    tempo: 120,
-    scoreNoteValue : 4,
-    skip: false,
-    jump: -1,
-    nest: -1,
-    repeatStart: [],
-    repeatEnd: [],
-    remainingRepeat: []
-};
-let stepTimer = null;
-let stepResumeWait = false;
-let setNoteValueTarget = null;
-const stepReset = () => {
-    blockManager.activeTrack.querySelectorAll('button').forEach(button => {
-        button.classList.remove('done');
-    });
-    stepResumeWait = false;
-};
-const stepRecorder = () => {
-    clearTimeout(stepTimer);
-    if (lastTouchedButton && lastTouchedButton.closest('.track') !== blockManager.activeTrack) {
-        lastTouchedButton = blockManager.activeTrack.querySelector('button');
-    }
-    let current = lastTouchedButton;
-    if (!current) {
-        if (stepResumeWait) {
-            console.log('end1');
-            return;
-        }
-        stepParams.timeStamp = -1;
-        setTimeout(() => {
-            lastTouchedButton = blockManager.activeTrack.querySelector('button');
-            stepReset();
-        }, 2000);
-        stepResumeWait = true;
-        console.log('end2');
-        return;
-    }
-    console.log([...blockManager.activeTrack.children].findIndex(elem => elem.contains(current)), lastTouchedButton.ariaLabel);
-    const setEditingState = () => {
-        if ('tonePitch' in current.dataset) {
-            current.dataset.tonePitch = current.dataset.tonePitch.replace(/[0-9]*\.*/g, '');
-            playMusicNote(current, {noteValue: 1});
-            current.classList.add('bounce');
-            return;
-        }
-        if ('rest' in current.dataset) {
-            current.dataset.rest = 'r';
-        }
-        current.classList.add('done');
-    };
-    setEditingState();
-    const toNextBtn = () => {
-        lastTouchedButton = current = current.parentElement.nextElementSibling?.firstElementChild || null;
-    };
-    if (!('tonePitch' in current.dataset)) {
-        flmml.stop();
-    }
-    if (!['tonePitch', 'rest'].some(type => type in current.dataset)) {
-        if ('tempo' in current.dataset) {
-            const tempo = Number(current.dataset.tempo.replace('t', ''));
-            stepParams.tempo = tempo;
-        }
-        toNextBtn();
-        stepRecorder();    
-        console.log('end3');
-        return;
-    }
-    const timeoutTask = () => {
-        const maxDelay = 60 / stepParams.tempo * 4 * 1000;
-        stepTimer = setTimeout(stepRecorder, maxDelay);
-    };
-    timeoutTask();
-    if (!performance.getEntriesByName('stepPoint')[0]) {
-        performance.mark('stepPoint');
-        setNoteValueTarget = current;
-        toNextBtn();
-        console.log('end4');
-        return;
-    }
-    const applyNoteValue = () => {
-        const elapsedMeasure = performance.measure('stepElapsed', 'stepPoint');
-        performance.mark('stepPoint');
-        const elapsed = elapsedMeasure.duration;
-        const msecToNoteValueCalc = ms => {
-            const validNoteValues = [1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96, 128, 192, 384];
-            const rawNoteValue =  60 / stepParams.tempo * 4 * 1000 / ms;
-            const noteValue = Math.max(1, ...validNoteValues.filter(val => val < rawNoteValue));
-            return noteValue;
-        };
-        const noteValue = msecToNoteValueCalc(elapsed);
-        const setNoteValue = noteValue => {
-            const target = setNoteValueTarget;
-            if ('tonePitch' in target.dataset) {
-                // const dots = '.'.repeat((target.dataset.tonePitch.match(/\.+/) || [''])[0].length);
-                const newNoteValue = noteValue !== stepParams.scoreNoteValue ? noteValue : '';
-                target.dataset.tonePitch = target.dataset.tonePitch + newNoteValue/*  + dots */;
-            } else if ('rest' in target.dataset) {
-                // const dots = '.'.repeat((target.dataset.rest.match(/\.+/) || [''])[0].length);
-                const newRest = noteValue !== stepParams.scoreNoteValue ? noteValue : '';
-                target.dataset.rest = 'r' + newRest/*  + dots */;
-            }
-        };
-        setNoteValue(noteValue);
-        blockManager.blocksDataUpdate();
-        blockManager.saveBlocksData();
-        blockManager.exportMml(mml);
-    };
-    applyNoteValue();
-    setNoteValueTarget = current;
-    toNextBtn();
 };
 editor.addEventListener('click', async e => {
     const ctrlKey = e.ctrlKey || ctrlSw.checked;
