@@ -171,6 +171,7 @@ button {
     border: 0;
     border-radius: 5px;
     background-color: #333333;
+    transition: color .1s, background-color .1s;
     color: lightgray;
     font-size: 1em;
     font-family: inherit;
@@ -209,6 +210,22 @@ button {
         &:disabled {
             background-color: #816d4e;
             color: #111111;
+        }
+    }
+
+    &.enable {
+        color: #5590ef;
+
+        &:hover {
+            color: #76afff;
+        }
+
+        &:active {
+            color: #275494;
+        }
+
+        &:disabled {
+            color: #213552;
         }
     }
 
@@ -401,7 +418,6 @@ header {
                     position: absolute;
                     bottom: 0px;
                     left: 50%;
-                    z-index: 1;
                     overflow: hidden;
                     width: 100%;
                     transform: translateX(-50%);

@@ -19,6 +19,7 @@ const removeTrackBtn = document.getElementById('remove-track');
 const dialog = document.getElementById('dialog');
 const dialogForm = document.forms['dialog-form'];
 dialogForm._title = dialogForm.querySelector('.form-title');
+dialogForm.description = dialogForm.querySelector('.description');
 dialogForm.inputs = dialogForm.querySelector('.inputs');
 dialogForm.buttons = dialogForm.querySelector('.buttons');
 const playBtn = document.getElementById('play');
@@ -903,6 +904,8 @@ class History {
     }
 }
 
+let stepGuidanceDisplayed = false, stepEnable = false;
+
 class DialogFormManager {
     #dialogDefinitions = {
         tone: {
@@ -1280,6 +1283,25 @@ class DialogFormManager {
                     textContent: 'このブロックから右をすべて消去'
                 },
             ]
+        },
+        step: {
+            title: 'ステップ音価記録',
+            description: 
+`ステップ音価記録は、簡単に音価を指定できる機能です。
+
+各トラックの空白部分をテンポよくクリック、またはスペースキーを押して最初の音符から順に音価を決定します。
+途中から指定をやり直したいときは、やり直したい音符をクリックすることでそこからやり直せます。`,
+            buttons: [
+                {
+                    className: 'primaly',
+                    value: 'set-step',
+                    textContent: '開始'
+                },
+                {
+                    value: 'cancel-step',
+                    textContent: 'やめる'
+                },
+            ]
         }
     }
     #createElems = (type) => {
@@ -1288,6 +1310,13 @@ class DialogFormManager {
             switch (key) {
                 case 'title':
                     dialogForm._title.textContent = def.title;
+                    break;
+                case 'description':
+                    (() => {
+                        const p = document.createElement('p');
+                        p.innerHTML = def.description.replaceAll('\n', '<br>');
+                        dialogForm.description.appendChild(p);
+                    })();
                     break;
                 case 'inputs':
                     def.inputs.forEach(inputDef => {
@@ -1332,6 +1361,7 @@ class DialogFormManager {
 
     #set = (type, initVals) => {
         dialogForm._title.textContent = '';
+        dialogForm.description.textContent = '';
         dialogForm.inputs.textContent = '';
         dialogForm.buttons.textContent = '';
         this.#createElems(type);
@@ -1459,6 +1489,11 @@ class DialogFormManager {
                     blockManager.saveBlocksData();
                     blockManager.exportMml(mml);
                     break;
+                case 'set-step':
+                    stepGuidanceDisplayed = true;
+                    break;
+                case 'cancel-step':
+                    break;
             }
             const afterChange = JSON.parse(JSON.stringify(submitTarget.dataset));
             if (JSON.stringify(beforeChange) !== JSON.stringify(afterChange)) {
@@ -1568,7 +1603,7 @@ mml.onError = (error, reason) => {
 
 blockManager.checkSavedBlocksData();
 
-const playMusicNote = block => {
+const playMusicNote = (block, options = {}) => {
     const findNoteValueElem = () => {
         let findTemp = block.parentElement;
         while (findTemp && !('noteValue' in findTemp.firstElementChild.dataset)) {
@@ -1615,7 +1650,8 @@ const playMusicNote = block => {
         }
     })();
     const ties = concatTies();
-    flmml.play(block.dataset.tone + scoreNoteValueMml + absoluteOctaveMml + currentRelativeOctave + block.dataset.tonePitch + ties);
+    const tonePitch = options.noteValue ? block.dataset.tonePitch.replace(/[0-9]+\.*/, '') + options.noteValue : block.dataset.tonePitch;
+    flmml.play(block.dataset.tone + scoreNoteValueMml + absoluteOctaveMml + currentRelativeOctave + tonePitch + ties);
 };
 
 history.onPopstate = obj => {
@@ -1786,7 +1822,7 @@ document.addEventListener('keydown', e => {
     const ctrlKey = e.ctrlKey || ctrlSw.checked;
     switch (e.key?.toLowerCase()) {
         case ' ':
-            if (document.activeElement.tagName.toLowerCase() !== 'input') { // contentEditableのことは考えていない
+            if (document.activeElement.tagName.toLowerCase() !== 'input' && !stepEnable) { // contentEditableのことは考えていない
                 e.preventDefault();
                 playBtn.click();
             }
@@ -1965,7 +2001,8 @@ const actionPromptSwitcher = async item => {
         otherAction: mmlText => ({
             'other-action': mmlText
         }),
-        remove: () => ({})
+        remove: () => ({}),
+        step: () => ({}),
     };
     for (const type of Object.keys(dataset)) {
         const initValsGenerator = promptDefinitions[type];
@@ -2010,6 +2047,119 @@ const actionPromptSwitcher = async item => {
     }
 };
 let lastTouchedButton = tones.querySelector('button');
+const stepParams = {
+    timeStamp: -1,
+    tempo: 120,
+    scoreNoteValue : 4,
+    skip: false,
+    jump: -1,
+    nest: -1,
+    repeatStart: [],
+    repeatEnd: [],
+    remainingRepeat: []
+};
+let stepTimer = null;
+let stepResumeWait = false;
+const stepReset = () => {
+    blockManager.activeTrack.querySelectorAll('button').forEach(button => {
+        button.classList.remove('done');
+    });
+    stepResumeWait = false;
+};
+const stepRecorder = () => {
+    clearTimeout(stepTimer);
+    if (lastTouchedButton && lastTouchedButton.closest('.track') !== blockManager.activeTrack) {
+        lastTouchedButton = blockManager.activeTrack.querySelector('button');
+    }
+    let current = lastTouchedButton;
+    if (!current) {
+        if (stepResumeWait) {
+            console.log('end1');
+            return;
+        }
+        stepParams.timeStamp = -1;
+        setTimeout(stepReset, 2000);
+        stepResumeWait = true;
+        console.log('end2');
+        return;
+    }
+    console.log(lastTouchedButton.ariaLabel, [...blockManager.activeTrack.children].findIndex(elem => elem.contains(current)));
+    const toNextBtn = () => {
+        lastTouchedButton = current = current.parentElement.nextElementSibling?.firstElementChild || null;
+    };
+    if (!['tonePitch', 'rest'].some(type => type in current.dataset)) {
+        flmml.stop();
+        if ('tempo' in current.dataset) {
+            const tempo = Number(current.dataset.tempo.replace('t', ''));
+            stepParams.tempo = tempo;
+        }
+        toNextBtn();
+        stepRecorder();    
+        console.log('end3');
+        return;
+    }
+    const setEditingState = () => {
+        if ('tonePitch' in current.dataset) {
+            current.dataset.tonePitch = current.dataset.tonePitch.replace(/[0-9]*\.*/g, '');
+            playMusicNote(current, {noteValue: 1});
+            current.classList.add('bounce');
+            return;
+        }
+        if ('rest' in current.dataset) {
+            current.dataset.rest = 'r';
+        }
+        current.classList.add('done');
+    };
+    setEditingState();
+    const timeoutTask = () => {
+        const maxDelay = 60 / stepParams.tempo * 4 * 1000;
+        stepTimer = setTimeout(stepRecorder, maxDelay);
+    };
+    timeoutTask();
+    if (stepParams.timeStamp === -1) {
+        stepParams.timeStamp = performance.now();
+        toNextBtn();
+        console.log('end4');
+        return;
+    }
+    const applyNoteValue = () => {
+        const beforeTimeStamp = stepParams.timeStamp
+        stepParams.timeStamp = performance.now();
+        const elapsed = stepParams.timeStamp - beforeTimeStamp;
+        const msecToNoteValueCalc = ms => {
+            const validNoteValues = [1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96, 128, 192, 384];
+            const rawNoteValue =  60 / stepParams.tempo * 4 * 1000 / ms;
+            const noteValue = Math.max(1, ...validNoteValues.filter(val => val < rawNoteValue));
+            return noteValue;
+        };
+        const noteValue = msecToNoteValueCalc(elapsed);
+        const setNoteValue = noteValue => {
+            if ('tonePitch' in current.dataset) {
+                // const dots = '.'.repeat((current.dataset.tonePitch.match(/\.+/) || [''])[0].length);
+                const newNoteValue = noteValue !== stepParams.scoreNoteValue ? noteValue : '';
+                current.dataset.tonePitch = current.dataset.tonePitch + newNoteValue/*  + dots */;
+            } else if ('rest' in current.dataset) {
+                // const dots = '.'.repeat((current.dataset.rest.match(/\.+/) || [''])[0].length);
+                const newRest = noteValue !== stepParams.scoreNoteValue ? noteValue : '';
+                current.dataset.rest = 'r' + newRest/*  + dots */;
+            }
+        };
+        setNoteValue(noteValue);
+        blockManager.blocksDataUpdate();
+        blockManager.saveBlocksData();
+        blockManager.exportMml(mml);
+    };
+    applyNoteValue();
+    toNextBtn();
+};
+const stepKeydown = e => {
+    switch (e.key) {
+        case ' ':
+            e.preventDefault();
+            stepRecorder();
+            break;
+    }
+};
 editor.addEventListener('click', async e => {
     const ctrlKey = e.ctrlKey || ctrlSw.checked;
     const is = id => Boolean(e.target.closest('#' + id));
@@ -2057,6 +2207,26 @@ editor.addEventListener('click', async e => {
         if (isButton) {
             if ('otherAction' in e.target.dataset) {
                 await actionPromptSwitcher(e.target);
+            } else if ('step' in e.target.dataset) {
+                if (!stepGuidanceDisplayed) {
+                    await actionPromptSwitcher(e.target);
+                }
+                if (stepGuidanceDisplayed) {
+                    e.target.classList.toggle('enable');
+                    stepEnable = !stepEnable;
+                    if (stepEnable) {
+                        e.target.ariaLabel = 'ステップ音価記録(有効)';
+                        lastTouchedButton = blockManager.activeTrack.querySelector('button');
+                        document.addEventListener('keydown', stepKeydown);
+                    } else {
+                        e.target.ariaLabel = 'ステップ音価記録(無効)';
+                        document.removeEventListener('keydown', stepKeydown);
+                        stepReset();
+                        flmml.stop();
+                        clearTimeout(stepTimer);
+                    }
+                }
+                return;
             }
             const ul = blockManager.activeTrack;
             const li = document.createElement('li');
@@ -2121,26 +2291,30 @@ editor.addEventListener('click', async e => {
     } else if (is('musical-score')) {
         if (isButton && e.target !== addTrackBtn && e.target !== removeTrackBtn) {
             e.target.closest('.track') && (blockManager.activeTrack = e.target.closest('.track'));
-            if ('tone' in e.target.dataset) {
-                playMusicNote(e.target);
-                resetAnimation(e.target, 'bounce');
-                if (ctrlKey) {
-                    await dialogFormManager.prompt('tonePitch', {
-                        'tone-pitch': (e.target.dataset.tonePitch.match(/[0-9]+/) || [''])[0],
-                        'dot': (e.target.dataset.tonePitch.match(/\.+/) || [''])[0].length
-                    }, e.target);
+            if (!stepEnable) {
+                if ('tone' in e.target.dataset) {
                     playMusicNote(e.target);
+                    resetAnimation(e.target, 'bounce');
+                    if (ctrlKey) {
+                        await dialogFormManager.prompt('tonePitch', {
+                            'tone-pitch': (e.target.dataset.tonePitch.match(/[0-9]+/) || [''])[0],
+                            'dot': (e.target.dataset.tonePitch.match(/\.+/) || [''])[0].length
+                        }, e.target);
+                        playMusicNote(e.target);
+                    }
+                } else {
+                    await actionPromptSwitcher(e.target);
                 }
-            } else {
-                await actionPromptSwitcher(e.target);
+                blockManager.blocksDataUpdate();
+                blockManager.saveBlocksData();
+                blockManager.exportMml(mml);
             }
             lastTouchedButton = e.target;
-            blockManager.blocksDataUpdate();
-            blockManager.saveBlocksData();
-            blockManager.exportMml(mml);
         } else {
-            if (lastTouchedButton) {
-                e.target.closest('.track') && (blockManager.activeTrack = e.target.closest('.track'));
+            e.target.closest('.track') && (blockManager.activeTrack = e.target.closest('.track'));
+            if (stepEnable) {
+                stepRecorder();
+            } else if (lastTouchedButton) {
                 const ul = blockManager.activeTrack;
                 const li = document.createElement('li');
                 const newItem = lastTouchedButton.cloneNode(true);
@@ -2192,6 +2366,9 @@ editor.addEventListener('click', async e => {
 });
 
 editor.addEventListener('contextmenu', e => {
+    if (stepEnable) {
+        return;
+    }
     const parent = target => target.closest('#tones, #musical-score');
     const is = id => Boolean(e.target.closest('#' + id));
     const isButton =  e.target.tagName.toLowerCase() === 'button';
@@ -2244,6 +2421,9 @@ editor.addEventListener('touchstart', e => {
     }, 500);
 });
 const wheelHandler = e => {
+    if (stepEnable) {
+        return;
+    }
     const ctrlKey = e.ctrlKey || ctrlSw.checked;
     const is = id => Boolean(e.target.closest('#' + id));
     const isButton =  e.target.tagName.toLowerCase() === 'button';
