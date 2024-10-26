@@ -2817,9 +2817,8 @@ let dropEffect = null;
                 } else if (from === action) {
                     if ('tieSlur' in newItem.dataset) {
                         newItem.ariaLabel = 'スラー';
-                    } else if ('metaData' in newItem.dataset || 'macroDef' in newItem.dataset
-                        || 'macroArgUse' in newItem.dataset || 'macroUse' in newItem.dataset
-                        || 'otherAction' in newItem.dataset) {
+                    } else if (['metaData', 'macroDef','macroArgUse', 'macroUse','otherAction']
+                        .some(type => type in newItem.dataset)) {
                         await actionPromptSwitcher(newItem);
                     }
                 }
@@ -2880,8 +2879,7 @@ let dropEffect = null;
                 });
                 break;
         }
-        if (e.dataTransfer.dropEffect === 'copy' && ('repeatStartEnd' in lastTouchedButton.dataset
-            || 'polyStartEnd' in lastTouchedButton.dataset || 'macroDef' in lastTouchedButton.dataset)) {
+        if (e.dataTransfer.dropEffect === 'copy'&& (['repeatStartEnd', 'polyStartEnd', 'macroDef'].some(type => type in lastTouchedButton.dataset))) {
             const li = document.createElement('li')
             const newItem = item.cloneNode(true);
             if ('repeatStartEnd' in lastTouchedButton.dataset) {
