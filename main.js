@@ -904,6 +904,7 @@ class History {
     }
 }
 
+const validNoteValues = [1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96, 128, 192, 384];
 let lastTouchedButton = tones.querySelector('button');
 let stepGuidanceDisplayed = false, stepEnable = false;
 const stepParams = {
@@ -990,7 +991,6 @@ const stepRecorder = () => {
         performance.mark('stepPoint');
         const elapsed = elapsedMeasure.duration;
         const msecToNoteValueCalc = ms => {
-            const validNoteValues = [1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96, 128, 192, 384];
             const rawNoteValue = 60 / stepParams.tempo * 4 / ms * 1000;
             const {noteValue, dots} = validNoteValues.reduce((params, candidate, index) => {    
                 const rawDots = Math.log2(rawNoteValue / (2 * rawNoteValue - candidate));
@@ -1036,6 +1036,8 @@ const stepRecorder = () => {
 };
 
 class DialogFormManager {
+    #buildNoteValueOptions = () => (Object.fromEntries(validNoteValues.map(validNoteValue => [validNoteValue, validNoteValue === 1 ? '全音符' : `${validNoteValue}分音符`])))
+
     #dialogDefinitions = {
         tone: {
             title: '音色設定',
@@ -1065,10 +1067,8 @@ class DialogFormManager {
             inputs: [
                 {
                     label: '音価(音の長さ)',
-                    type: 'number',
-                    name: 'tone-pitch',
-                    min: '1',
-                    max: '384'
+                    select: this.#buildNoteValueOptions(),
+                    name: 'tone-pitch'
                 },
                 {
                     label: '付点の数',
@@ -1108,10 +1108,8 @@ class DialogFormManager {
             inputs: [
                 {
                     label: '音価(音の長さ)',
-                    type: 'number',
-                    name: 'note-value',
-                    min: '1',
-                    max: '384'
+                    select: this.#buildNoteValueOptions(),
+                    name: 'note-value'
                 },
                 {
                     label: '付点の数',
@@ -1133,10 +1131,8 @@ class DialogFormManager {
             inputs: [
                 {
                     label: '休符の長さ',
-                    type: 'number',
-                    name: 'rest',
-                    min: '1',
-                    max: '384'
+                    select: this.#buildNoteValueOptions(),
+                    name: 'rest'
                 },
                 {
                     label: '付点の数',
@@ -1242,10 +1238,8 @@ class DialogFormManager {
             inputs: [
                 {
                     label: '音価(音の長さ)',
-                    type: 'number',
-                    name: 'tie-slur',
-                    min: '1',
-                    max: '384'
+                    select: this.#buildNoteValueOptions(),
+                    name: 'tie-slur'
                 },
                 {
                     label: '付点の数',
@@ -2519,7 +2513,8 @@ const wheelHandler = e => {
                 const noteValue = Number((target.dataset.tonePitch.match(/[0-9]+/) || [''])[0]);
                 const dots = (target.dataset.tonePitch.match(/\.+/) || [''])[0];
                 const increase = minmax(noteValue, 0, 384);
-                const newNoteValue = noteValue + increase !== 0 ? noteValue + increase : '';
+                const currentNoteValueIndex = validNoteValues.findIndex(validNoteValue => validNoteValue === noteValue);
+                const newNoteValue = noteValue + increase !== 0 ? validNoteValues[currentNoteValueIndex + increase] : '';
                 target.dataset.tonePitch = target.dataset.tonePitch.replace(/[0-9]*\.*/g, '') + newNoteValue + dots;
                 playMusicNote(target);
             } else if ('tempo' in target.dataset) {
@@ -2529,12 +2524,14 @@ const wheelHandler = e => {
             } else if ('noteValue' in target.dataset) {
                 const noteValue = Number((target.dataset.noteValue.match(/[0-9]+/) || [''])[0]);
                 const increase = minmax(noteValue, 1, 384);
-                target.dataset.noteValue = target.dataset.noteValue.replace(/[0-9]+/, noteValue + increase);
+                const currentNoteValueIndex = validNoteValues.findIndex(validNoteValue => validNoteValue === noteValue);
+                target.dataset.noteValue = target.dataset.noteValue.replace(/[0-9]+/, validNoteValues[currentNoteValueIndex + increase]);
             } else if ('rest' in target.dataset) {
                 const rest = Number((target.dataset.rest.match(/[0-9]+/) || [''])[0]);
                 const dots = (target.dataset.rest.match(/\.+/) || [''])[0];
                 const increase = minmax(rest, 0, 384);
-                const newRest = rest + increase !== 0 ? rest + increase : '';
+                const currentNoteValueIndex = validNoteValues.findIndex(validNoteValue => validNoteValue === rest);
+                const newRest = rest + increase !== 0 ? validNoteValues[currentNoteValueIndex + increase] : '';
                 target.dataset.rest = 'r' + newRest + dots;
             } else if ('octave' in target.dataset) {
                 const isAbsolute = target.dataset.octave.startsWith('o');
@@ -2570,7 +2567,8 @@ const wheelHandler = e => {
                 const tieSlur = Number((target.dataset.tieSlur.match(/[0-9]+/) || [''])[0]);
                 const dots = (target.dataset.tieSlur.match(/\.+/) || [''])[0];
                 const increase = minmax(tieSlur, 0, 384);
-                const newTieSlur = tieSlur + increase !== 0 ? tieSlur + increase : '';
+                const currentNoteValueIndex = validNoteValues.findIndex(validNoteValue => validNoteValue === tieSlur);
+                const newTieSlur = tieSlur + increase !== 0 ? validNoteValues[currentNoteValueIndex + increase] : '';
                 target.dataset.tieSlur = '&' + newTieSlur + dots;
                 if (target.dataset.tieSlur === '&') {
                     target.ariaLabel = 'スラー';
