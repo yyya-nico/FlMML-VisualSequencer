@@ -2453,12 +2453,12 @@ editor.addEventListener('contextmenu', e => {
     }
 });
 
-let lastY = null, ignoneTouch = false, dragJudgementTimer = null;
+let lastY = null, ignoreTouch = false, dragJudgementTimer = null;
 editor.addEventListener('touchstart', e => {
     const touchY = [...e.touches].at(-1).pageY;
     lastY = touchY;
     dragJudgementTimer = setTimeout(() => {
-        ignoneTouch = true;
+        ignoreTouch = true;
     }, 500);
 });
 const wheelHandler = e => {
@@ -2470,7 +2470,7 @@ const wheelHandler = e => {
     const isButton =  e.target.tagName.toLowerCase() === 'button';
     if (e.type === 'touchmove') {
         const touchY = [...e.touches].at(-1).pageY;
-        if (ignoneTouch) {
+        if (ignoreTouch) {
             e.cancelable && e.preventDefault();
             return;
         } else if (touchY - lastY < -20) {
@@ -2484,8 +2484,8 @@ const wheelHandler = e => {
             return;
         }
         lastY = touchY;
-        ignoneTouch = true;
-        setTimeout(() => ignoneTouch = false, 50);
+        ignoreTouch = true;
+        setTimeout(() => ignoreTouch = false, 50);
 
     }
     const isPositive = e.deltaY < 0;
@@ -2652,7 +2652,7 @@ const wheelHandler = e => {
 editor.addEventListener('wheel', wheelHandler);
 editor.addEventListener('touchmove', wheelHandler);
 editor.addEventListener('touchend', () => {
-    ignoneTouch = false;
+    ignoreTouch = false;
 });
 
 let dragInfo = {};
