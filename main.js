@@ -1049,7 +1049,7 @@ class DialogFormManager {
                     label: '音の定義',
                     type: 'text',
                     name: 'tone-def',
-                    autofocus: ''
+                    autofocus: true
                 }
             ],
             buttons: [
