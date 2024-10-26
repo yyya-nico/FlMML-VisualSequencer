@@ -302,7 +302,9 @@ class BlockManager {
         const startPos = this.#blocksData.findIndex(block => block.elem.classList.contains('play-from-here'));
         const startPosTrackNo = startPos === -1 ? -1 : this.#blocksData[startPos].trackNo;
         this.#blocksData
-            .filter((block, index) => startPos === -1 || block.trackNo === startPosTrackNo && index >= startPos)
+            .filter((block, index) => startPos === -1 || block.tempo || block.noteValue || block.octave || block.velocity || block.noteShift
+                || block.detune || block.repeatStartEnd || block.repeatBreak || block.macroDef || block.macroUse || block.metaData
+                || block.trackNo === startPosTrackNo && index >= startPos)
             .forEach(block => {
                 const {tone, tonePitch} = block.tone;
                 if (block.trackNo !== trackNo) {
@@ -808,7 +810,9 @@ class BlockManager {
         }
         if (startPos !== -1) {
             const startPosTrackNo = allData[startPos].trackNo;
-            rendPerTrack(allData.filter((block, index) => block.trackNo === startPosTrackNo && index >= startPos));
+            rendPerTrack(allData.filter((block, index) => startPos === -1 || block.tempo || block.noteValue || block.octave || block.velocity
+                || block.noteShift || block.detune || block.repeatStartEnd || block.repeatBreak || block.macroDef || block.macroUse || block.metaData
+                || block.trackNo === startPosTrackNo && index >= startPos));
             return;
         }
         const numOfTracks = allData.at(-1).trackNo + 1;
@@ -1766,7 +1770,7 @@ const playMusicNote = (block, options = {}) => {
     };
     const scoreNoteValueMml = findNoteValueElem()?.dataset.noteValue || '';
     const octaveElem = findOctaveElem();
-    const absoluetOctaveIndex = [...blockManager.activeTrack.children].indexOf(octaveElem.parentElement);
+    const absoluetOctaveIndex = [...blockManager.activeTrack.children].indexOf(octaveElem?.parentElement);
     const absoluteOctaveMml = octaveElem?.dataset.octave || '';
     const currentIndex = [...blockManager.activeTrack.children].indexOf(block.parentElement);
     const concatAllOctave = [...blockManager.activeTrack.children]
