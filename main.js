@@ -909,7 +909,7 @@ let stepGuidanceDisplayed = false, stepEnable = false;
 const stepParams = {
     timeStamp: -1,
     tempo: 120,
-    scoreNoteValue : 4
+    scoreNoteValue : '4'
 };
 let stepTimer = null;
 let stepResumeWait = false;
@@ -941,11 +941,11 @@ const stepRecorder = () => {
         console.log('end2');
         return;
     }
-    console.log([...blockManager.activeTrack.children].findIndex(elem => elem.contains(current)), lastTouchedButton.ariaLabel);
+    // console.log([...blockManager.activeTrack.children].findIndex(elem => elem.contains(current)), lastTouchedButton.ariaLabel);
     const setEditingState = () => {
         if ('tonePitch' in current.dataset) {
             current.dataset.tonePitch = current.dataset.tonePitch.replace(/[0-9]*\.*/g, '');
-            playMusicNote(current, {noteValue: 1});
+            playMusicNote(current, {noteValue: '1...'});
             current.classList.add('bounce');
             return;
         }
@@ -966,16 +966,7 @@ const stepRecorder = () => {
             const tempo = Number(current.dataset.tempo.replace('t', ''));
             stepParams.tempo = tempo;
         } else if ('noteValue' in current.dataset) {
-            const noteValueStrCalc = str => {
-                if (!str) {
-                    return stepParams.scoreNoteValue;
-                }
-                const noteValue = Number((str.match(/[0-9]+/) || [stepParams.scoreNoteValue[0]])[0]);
-                // const dots = (str.match(/\.+/) || [''])[0].length;
-                return noteValue;
-            };
-            const scoreNoteValue = noteValueStrCalc(current.dataset.noteValue);
-            stepParams.scoreNoteValue = scoreNoteValue;
+            stepParams.scoreNoteValue = (current.dataset.noteValue.match(/[0-9]+\.*/) || [stepParams.scoreNoteValue])[0];
         }
         toNextBtn();
         stepRecorder();    
@@ -983,7 +974,7 @@ const stepRecorder = () => {
         return;
     }
     const timeoutTask = () => {
-        const maxDelay = 60 / stepParams.tempo * 4 * 1000;
+        const maxDelay = 60 / stepParams.tempo * 4 * 1000 * 1.825;
         stepTimer = setTimeout(stepRecorder, maxDelay);
     };
     timeoutTask();
@@ -1000,21 +991,38 @@ const stepRecorder = () => {
         const elapsed = elapsedMeasure.duration;
         const msecToNoteValueCalc = ms => {
             const validNoteValues = [1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96, 128, 192, 384];
-            const rawNoteValue =  60 / stepParams.tempo * 4 * 1000 / ms;
-            const noteValue = Math.max(1, ...validNoteValues.filter(val => val < rawNoteValue));
-            return noteValue;
+            const rawNoteValue = 60 / stepParams.tempo * 4 / ms * 1000;
+            const {noteValue, dots} = validNoteValues.reduce((params, candidate, index) => {    
+                const rawDots = Math.log2(rawNoteValue / (2 * rawNoteValue - candidate));
+                if (rawDots < 0 || Number.isNaN(rawDots)) {
+                    return params;
+                }
+                const dotsFractional = rawDots - Math.floor(rawDots);
+                const closer = dotsFractional < params.smallerFractional;
+                if (closer) {
+                    return {
+                        noteValue: candidate,
+                        dots: Math.round(rawDots),
+                        smallerFractional: dotsFractional,
+                    };
+                }
+                return params; 
+            }, {
+                noteValue: null,
+                dots: null,
+                smallerFractional: 1
+            });
+            return noteValue + '.'.repeat(dots);
         };
         const noteValue = msecToNoteValueCalc(elapsed);
         const setNoteValue = noteValue => {
             const target = setNoteValueTarget;
             if ('tonePitch' in target.dataset) {
-                // const dots = (target.dataset.tonePitch.match(/\.+/) || [''])[0];
                 const newNoteValue = noteValue !== stepParams.scoreNoteValue ? noteValue : '';
-                target.dataset.tonePitch = target.dataset.tonePitch + newNoteValue/*  + dots */;
+                target.dataset.tonePitch = target.dataset.tonePitch + newNoteValue;
             } else if ('rest' in target.dataset) {
-                // const dots = (target.dataset.rest.match(/\.+/) || [''])[0];
                 const newRest = noteValue !== stepParams.scoreNoteValue ? noteValue : '';
-                target.dataset.rest = 'r' + newRest/*  + dots */;
+                target.dataset.rest = 'r' + newRest;
             }
         };
         setNoteValue(noteValue);
