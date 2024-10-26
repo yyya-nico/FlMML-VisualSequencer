@@ -1765,10 +1765,12 @@ const playMusicNote = (block, options = {}) => {
         return ties;
     };
     const scoreNoteValueMml = findNoteValueElem()?.dataset.noteValue || '';
-    const absoluteOctaveMml = findOctaveElem()?.dataset.octave || '';
+    const octaveElem = findOctaveElem();
+    const absoluetOctaveIndex = [...blockManager.activeTrack.children].indexOf(octaveElem.parentElement);
+    const absoluteOctaveMml = octaveElem?.dataset.octave || '';
     const currentIndex = [...blockManager.activeTrack.children].indexOf(block.parentElement);
     const concatAllOctave = [...blockManager.activeTrack.children]
-                                .slice(0, currentIndex)
+                                .slice(absoluetOctaveIndex, currentIndex)
                                 .filter(li => 'tonePitch' in li.firstElementChild.dataset || 'octave' in li.firstElementChild.dataset && !li.firstElementChild.dataset.octave.startsWith('o'))
                                 .map(li => {
                                     const pitch = li.firstElementChild.dataset.tonePitch || li.firstElementChild.dataset.octave;
