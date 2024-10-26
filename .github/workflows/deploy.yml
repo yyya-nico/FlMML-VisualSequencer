@@ -13,6 +13,7 @@ jobs:
       - name: Sync files
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
+          local-dir: ./dist/
           protocol: ftps
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
