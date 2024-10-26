@@ -1774,14 +1774,17 @@ const playMusicNote = (block, options = {}) => {
                                     const pitch = li.firstElementChild.dataset.tonePitch || li.firstElementChild.dataset.octave;
                                     return (pitch.match(/[><]+/) || [''])[0];
                                 }).join('');
-    const octave = ['>', '<'];
+    const octave = {
+        down: '>',
+        up: '<'
+    };
     const countStr = (target, str) => (target.match(new RegExp(str, 'g')) || []).length;
     const currentRelativeOctave = (() => {
-        const relativeOctaveNum = -countStr(concatAllOctave, octave[0]) + countStr(concatAllOctave, octave[1]);
+        const relativeOctaveNum = -countStr(concatAllOctave, octave.down) + countStr(concatAllOctave, octave.up);
         if (relativeOctaveNum < 0) {
-            return octave[0].repeat(-relativeOctaveNum);
+            return octave.down.repeat(-relativeOctaveNum);
         } else if (relativeOctaveNum > 0) {
-            return octave[1].repeat(relativeOctaveNum);
+            return octave.up.repeat(relativeOctaveNum);
         } else {
             return '';
         }
@@ -2491,15 +2494,18 @@ const wheelHandler = e => {
         let beforeChange = JSON.parse(JSON.stringify(target.dataset));
         if (!ctrlKey && 'tone' in target.dataset) {
             const pitches = ['c','c+','d','d+','e','f','f+','g','g+','a','a+','b'];
-            const octave = ['>', '<'];
+            const octave = {
+                down: '>',
+                up: '<'
+            };
             const currentPitch = target.dataset.tonePitch;
             const currentPitchIndex = pitches.findIndex(pitch => currentPitch.match(/[a-g]\+?/)[0] === pitch);
             const countStr = (target, str) => (target.match(new RegExp(str, 'g')) || []).length;
             const octaveCount = [
-                countStr(currentPitch, octave[0]),
-                countStr(currentPitch, octave[1])
+                countStr(currentPitch, octave.down),
+                countStr(currentPitch, octave.up)
             ];
-            const octaveStr = octave[0].repeat(octaveCount[0]) + octave[1].repeat(octaveCount[1]);
+            const octaveStr = octave.down.repeat(octaveCount[0]) + octave.up.repeat(octaveCount[1]);
             const noteValue = (currentPitch.match(/[0-9]+/) || [''])[0];
             const dots = (target.dataset.tonePitch.match(/\.+/) || [''])[0];
             if (isPositive) { // Up
@@ -2507,7 +2513,7 @@ const wheelHandler = e => {
                     if (octaveCount[0]) {
                         target.dataset.tonePitch = octaveStr.substring(1) + pitches.at(0) + noteValue + dots;
                     } else {
-                        target.dataset.tonePitch = octaveStr + octave[1] + pitches.at(0) + noteValue + dots;
+                        target.dataset.tonePitch = octaveStr + octave.up + pitches.at(0) + noteValue + dots;
                     }
                 } else {
                     target.dataset.tonePitch = octaveStr + pitches[currentPitchIndex + 1] + noteValue + dots;
@@ -2517,7 +2523,7 @@ const wheelHandler = e => {
                     if (octaveCount[1]) {
                         target.dataset.tonePitch = octaveStr.substring(1) + pitches.at(-1) + noteValue + dots;
                     } else {
-                        target.dataset.tonePitch = octaveStr + octave[0] + pitches.at(-1) + noteValue + dots;
+                        target.dataset.tonePitch = octaveStr + octave.down + pitches.at(-1) + noteValue + dots;
                     }
                 } else {
                     target.dataset.tonePitch = octaveStr + pitches[currentPitchIndex - 1] + noteValue + dots;
