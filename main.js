@@ -2501,16 +2501,16 @@ const wheelHandler = e => {
             const currentPitch = target.dataset.tonePitch;
             const currentPitchIndex = pitches.findIndex(pitch => currentPitch.match(/[a-g]\+?/)[0] === pitch);
             const countStr = (target, str) => (target.match(new RegExp(str, 'g')) || []).length;
-            const octaveCount = [
-                countStr(currentPitch, octave.down),
-                countStr(currentPitch, octave.up)
-            ];
-            const octaveStr = octave.down.repeat(octaveCount[0]) + octave.up.repeat(octaveCount[1]);
+            const octaveCount = {
+                down: countStr(currentPitch, octave.down),
+                up: countStr(currentPitch, octave.up)
+            };
+            const octaveStr = octave.down.repeat(octaveCount.down) + octave.up.repeat(octaveCount.up);
             const noteValue = (currentPitch.match(/[0-9]+/) || [''])[0];
             const dots = (target.dataset.tonePitch.match(/\.+/) || [''])[0];
             if (isPositive) { // Up
                 if (currentPitchIndex === pitches.length - 1) {
-                    if (octaveCount[0]) {
+                    if (octaveCount.down) {
                         target.dataset.tonePitch = octaveStr.substring(1) + pitches.at(0) + noteValue + dots;
                     } else {
                         target.dataset.tonePitch = octaveStr + octave.up + pitches.at(0) + noteValue + dots;
@@ -2520,7 +2520,7 @@ const wheelHandler = e => {
                 }
             } else { // Down
                 if (currentPitchIndex === 0) {
-                    if (octaveCount[1]) {
+                    if (octaveCount.up) {
                         target.dataset.tonePitch = octaveStr.substring(1) + pitches.at(-1) + noteValue + dots;
                     } else {
                         target.dataset.tonePitch = octaveStr + octave.down + pitches.at(-1) + noteValue + dots;
