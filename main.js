@@ -230,11 +230,11 @@ class BlockManager {
                 wrap.innerHTML = toneButtonHTML;
                 return wrap.firstElementChild;
             })();
-            const copySourceCandidate = document.querySelector(`[class*="${block.className.replace(/ material-icons| droppable| bounce| pop| done/g, '')}"]`);
+            const copySourceCandidate = document.querySelector(`[class*="${block.className.replace(/ material-icons| droppable| bounce| pop| done| inactive/g, '')}"]`);
             const button = copySourceCandidate?.cloneNode(true) || toneButton;
             block.label && (button.ariaLabel = block.label);
+            button.className = block.className;
             if (block.tone.tonePitch) {
-                button.className = block.className;
                 if (block.label !== '無調整') {
                     button.textContent = block.label;
                 }
@@ -299,139 +299,143 @@ class BlockManager {
         let toneIndex = 0;
         let toneAppended = false;
         let scoreNoteValue = [4, 0], inPoly = false;
-        this.#blocksData.forEach((block) => {
-            const {tone, tonePitch} = block.tone;
-            if (block.trackNo !== trackNo) {
-                if (toneSet.size) {
-                    [...toneSet].forEach((_, i) => {
-                        mml.appendToStr(lineIndex + i, ';');
-                    });
-                    lineIndex += toneSet.size;
-                } else {
-                    mml.appendToStr(lineIndex, ';');
-                    lineIndex++;
-                }
-                trackNo = block.trackNo;
-                toneSet = getToneSet();
-                toneAppended = false;
-            }
-            if (tone !== undefined) {
-                toneIndex = [...toneSet].indexOf(tone);
-                if (!toneAppended) {
-                    [...toneSet].forEach((tone, i) => {
-                        tone && mml.beforeInsertToStr(lineIndex + i, tone + ' ');
-                    });
-                    toneAppended = true;
-                }
-                [...toneSet].forEach((_, i) => {
-                    let mmlText = tonePitch || '';
-                    if (i !== toneIndex) {
-                        mmlText = mmlText.replace(/[a-g]/, inPoly ? '*' : 'r');
-                    }
-                    mml.appendToStr(lineIndex + i, mmlText);
-                });
-            } else if (block.rest || block.tieSlur) {
-                if (toneSet.size) {
-                    [...toneSet].forEach((_, i) => {
-                        mml.appendToStr(lineIndex + i, block.rest || block.tieSlur);
-                    });
-                } else {
-                    mml.appendToStr(lineIndex, block.rest || block.tieSlur);
-                }
-            } else {
-                if (block.noteValue || block.repeatStartEnd || block.repeatBreak || block.polyStartEnd) {
-                    const noteValueStrCalc = str => {
-                        if (!str) {
-                            return scoreNoteValue;
-                        }
-                        const noteValue = Number((str.match(/[0-9]+/) || [scoreNoteValue[0]])[0]);
-                        const dots = (str.match(/\.+/) || [''])[0].length;
-                        return [noteValue, dots];
-                    };
-                    if (block.noteValue) {
-                        scoreNoteValue = noteValueStrCalc(block.noteValue);
-                    } else if (block.polyStartEnd === '[') {
-                        inPoly = true;
-                    } else if (block.polyStartEnd === ']') {
-                        inPoly = false;
-                    }
+        const startPos = this.#blocksData.findIndex(block => block.elem.classList.contains('play-from-here'));
+        const startPosTrackNo = startPos === -1 ? -1 : this.#blocksData[startPos].trackNo;
+        this.#blocksData
+            .filter((block, index) => startPos === -1 || block.trackNo === startPosTrackNo && index >= startPos)
+            .forEach(block => {
+                const {tone, tonePitch} = block.tone;
+                if (block.trackNo !== trackNo) {
                     if (toneSet.size) {
                         [...toneSet].forEach((_, i) => {
-                            mml.appendToStr(lineIndex + i, block.noteValue || block.repeatStartEnd || block.repeatBreak || block.polyStartEnd || '');
-                            if (block.polyStartEnd === ']') {
-                                const targetStr = mml.getMmlLine(lineIndex + i).match(/\[(.+?)\]/);
-                                if (targetStr) {
-                                    const matched = targetStr[1].matchAll(/([a-g*r]\+?)([0-9]*)(\.*)/g);
-                                    if (matched) {
-                                        const noteInfo = [...matched].map(arr => ({
-                                            type: arr[1] === 'r' ? 'rest' :
-                                                    arr[1] === '*' ? 'otherNote'
-                                                                    : 'note',
-                                            num: noteValueStrCalc(arr[0])
-                                        }));
-                                        const numsOf = {
-                                            note: (() => {
-                                                const noteOnlyInfo = noteInfo.filter(note => note.type === 'note');
-                                                return noteOnlyInfo.map(note => note.num);
-                                            })(),
-                                            otherNote: (() => {
-                                                const otherNoteOnlyInfo = noteInfo.filter(note => note.type === 'otherNote');
-                                                return otherNoteOnlyInfo.map(note => note.num);
-                                            })(),
-                                            rest: (() => {
-                                                const restOnlyInfo = noteInfo.filter(note => note.type === 'rest');
-                                                return restOnlyInfo.map(note => note.num);
-                                            })()
-                                        };
-                                        const getMaxNoteValue = arr => arr.reduce((accum, num) => {
-                                            if (accum[0] >= num[0]) {
-                                                if (accum[1] <= num[1]) {
-                                                    return num;
+                            mml.appendToStr(lineIndex + i, ';');
+                        });
+                        lineIndex += toneSet.size;
+                    } else {
+                        mml.appendToStr(lineIndex, ';');
+                        lineIndex++;
+                    }
+                    trackNo = block.trackNo;
+                    toneSet = getToneSet();
+                    toneAppended = false;
+                }
+                if (tone !== undefined) {
+                    toneIndex = [...toneSet].indexOf(tone);
+                    if (!toneAppended) {
+                        [...toneSet].forEach((tone, i) => {
+                            tone && mml.beforeInsertToStr(lineIndex + i, tone + ' ');
+                        });
+                        toneAppended = true;
+                    }
+                    [...toneSet].forEach((_, i) => {
+                        let mmlText = tonePitch || '';
+                        if (i !== toneIndex) {
+                            mmlText = mmlText.replace(/[a-g]/, inPoly ? '*' : 'r');
+                        }
+                        mml.appendToStr(lineIndex + i, mmlText);
+                    });
+                } else if (block.rest || block.tieSlur) {
+                    if (toneSet.size) {
+                        [...toneSet].forEach((_, i) => {
+                            mml.appendToStr(lineIndex + i, block.rest || block.tieSlur);
+                        });
+                    } else {
+                        mml.appendToStr(lineIndex, block.rest || block.tieSlur);
+                    }
+                } else {
+                    if (block.noteValue || block.repeatStartEnd || block.repeatBreak || block.polyStartEnd) {
+                        const noteValueStrCalc = str => {
+                            if (!str) {
+                                return scoreNoteValue;
+                            }
+                            const noteValue = Number((str.match(/[0-9]+/) || [scoreNoteValue[0]])[0]);
+                            const dots = (str.match(/\.+/) || [''])[0].length;
+                            return [noteValue, dots];
+                        };
+                        if (block.noteValue) {
+                            scoreNoteValue = noteValueStrCalc(block.noteValue);
+                        } else if (block.polyStartEnd === '[') {
+                            inPoly = true;
+                        } else if (block.polyStartEnd === ']') {
+                            inPoly = false;
+                        }
+                        if (toneSet.size) {
+                            [...toneSet].forEach((_, i) => {
+                                mml.appendToStr(lineIndex + i, block.noteValue || block.repeatStartEnd || block.repeatBreak || block.polyStartEnd || '');
+                                if (block.polyStartEnd === ']') {
+                                    const targetStr = mml.getMmlLine(lineIndex + i).match(/\[(.+?)\]/);
+                                    if (targetStr) {
+                                        const matched = targetStr[1].matchAll(/([a-g*r]\+?)([0-9]*)(\.*)/g);
+                                        if (matched) {
+                                            const noteInfo = [...matched].map(arr => ({
+                                                type: arr[1] === 'r' ? 'rest' :
+                                                        arr[1] === '*' ? 'otherNote'
+                                                                        : 'note',
+                                                num: noteValueStrCalc(arr[0])
+                                            }));
+                                            const numsOf = {
+                                                note: (() => {
+                                                    const noteOnlyInfo = noteInfo.filter(note => note.type === 'note');
+                                                    return noteOnlyInfo.map(note => note.num);
+                                                })(),
+                                                otherNote: (() => {
+                                                    const otherNoteOnlyInfo = noteInfo.filter(note => note.type === 'otherNote');
+                                                    return otherNoteOnlyInfo.map(note => note.num);
+                                                })(),
+                                                rest: (() => {
+                                                    const restOnlyInfo = noteInfo.filter(note => note.type === 'rest');
+                                                    return restOnlyInfo.map(note => note.num);
+                                                })()
+                                            };
+                                            const getMaxNoteValue = arr => arr.reduce((accum, num) => {
+                                                if (accum[0] >= num[0]) {
+                                                    if (accum[1] <= num[1]) {
+                                                        return num;
+                                                    } else {
+                                                        return accum;
+                                                    }
                                                 } else {
                                                     return accum;
                                                 }
-                                            } else {
-                                                return accum;
-                                            }
-                                        }, [386, 0]);
-                                        // TODO
+                                            }, [386, 0]);
+                                            // TODO
 
-                                        // const maxNoteNoteValue = getMaxNoteValue(numsOf.note);
-                                        // const maxOtherNoteNoteValue = getMaxNoteValue(numsOf.otherNote);
-                                        // const restNoteTime = numsOf.rest.reduce((sum, num) => sum + 4 / num, 0);
-                                        // const getMaxNoteTime = maxNoteValue => (maxNoteValue[0] * 2 ** maxNoteValue[1]) / (2 ** (maxNoteValue[1] + 1) - 1);
-                                        let replaceMmlText = targetStr[0].replace(/\*\+?[0-9]*\.*/g, '');
-                                        // console.log(getMaxNoteTime(maxNoteNoteValue), getMaxNoteTime(maxOtherNoteNoteValue));
-                                        // if (getMaxNoteTime(maxNoteNoteValue) < getMaxNoteTime(maxOtherNoteNoteValue)) {
-                                        //     replaceMmlText = `${replaceMmlText.slice(0, -1)}r${maxOtherNoteNoteValue[0]}${'.'.repeat(maxOtherNoteNoteValue[1])}]`;
-                                        // }
-                                        const mmlText = mml.getMmlLine(lineIndex + i).replace(/\[.+?\]/, replaceMmlText);
-                                        mml.rewrite(lineIndex + i, mmlText);
+                                            // const maxNoteNoteValue = getMaxNoteValue(numsOf.note);
+                                            // const maxOtherNoteNoteValue = getMaxNoteValue(numsOf.otherNote);
+                                            // const restNoteTime = numsOf.rest.reduce((sum, num) => sum + 4 / num, 0);
+                                            // const getMaxNoteTime = maxNoteValue => (maxNoteValue[0] * 2 ** maxNoteValue[1]) / (2 ** (maxNoteValue[1] + 1) - 1);
+                                            let replaceMmlText = targetStr[0].replace(/\*\+?[0-9]*\.*/g, '');
+                                            // console.log(getMaxNoteTime(maxNoteNoteValue), getMaxNoteTime(maxOtherNoteNoteValue));
+                                            // if (getMaxNoteTime(maxNoteNoteValue) < getMaxNoteTime(maxOtherNoteNoteValue)) {
+                                            //     replaceMmlText = `${replaceMmlText.slice(0, -1)}r${maxOtherNoteNoteValue[0]}${'.'.repeat(maxOtherNoteNoteValue[1])}]`;
+                                            // }
+                                            const mmlText = mml.getMmlLine(lineIndex + i).replace(/\[.+?\]/, replaceMmlText);
+                                            mml.rewrite(lineIndex + i, mmlText);
+                                        }
                                     }
                                 }
-                            }
-                        });
-                    } else {
-                        mml.appendToStr(lineIndex, block.noteValue || block.repeatStartEnd || block.repeatBreak || block.polyStartEnd || '');
-                    }
-                } else if (block.metaData) {
-                    if (block.metaData && mml.getMmlLine(lineIndex)) {
+                            });
+                        } else {
+                            mml.appendToStr(lineIndex, block.noteValue || block.repeatStartEnd || block.repeatBreak || block.polyStartEnd || '');
+                        }
+                    } else if (block.metaData) {
+                        if (block.metaData && mml.getMmlLine(lineIndex)) {
+                            lineIndex++;
+                        }
+                        mml.appendToStr(lineIndex, block.metaData.replace('\n', '') || '');
                         lineIndex++;
-                    }
-                    mml.appendToStr(lineIndex, block.metaData.replace('\n', '') || '');
-                    lineIndex++;
-                } else {
-                    const mmlText = tonePitch || block.tempo || block.octave || block.velocity
-                        || block.noteShift || block.detune || block.tieSlur || block.macroDef
-                        || block.macroArgUse || block.macroUse || block.otherAction || '';
-                    mml.appendToStr(lineIndex, mmlText);
-                    if (/;/.test(mmlText)) {
-                        lineIndex += toneSet.size || 1;
-                        toneSet = getToneSet();
-                        toneAppended = false;
+                    } else {
+                        const mmlText = tonePitch || block.tempo || block.octave || block.velocity
+                            || block.noteShift || block.detune || block.tieSlur || block.macroDef
+                            || block.macroArgUse || block.macroUse || block.otherAction || '';
+                        mml.appendToStr(lineIndex, mmlText);
+                        if (/;/.test(mmlText)) {
+                            lineIndex += toneSet.size || 1;
+                            toneSet = getToneSet();
+                            toneAppended = false;
+                        }
                     }
                 }
-            }
         });
         [...toneSet].slice(0, -1).forEach((_, i) => {
             mml.appendToStr(lineIndex + i, ';');
@@ -594,7 +598,7 @@ class BlockManager {
         this.saveBlocksData();
     }
 
-    playRendering() {
+    playRendering(startPos = -1) {
         const allData = this.#blocksData;
         let tempo = 120;
         let rAFIdBase = 0;
@@ -801,6 +805,11 @@ class BlockManager {
             }
             attachMotion();
             return promise;
+        }
+        if (startPos !== -1) {
+            const startPosTrackNo = allData[startPos].trackNo;
+            rendPerTrack(allData.filter((block, index) => block.trackNo === startPosTrackNo && index >= startPos));
+            return;
         }
         const numOfTracks = allData.at(-1).trackNo + 1;
         for (let trackNo = 0; trackNo < numOfTracks; trackNo++) {
@@ -1703,7 +1712,8 @@ const playHtml = createMIsHtml('play_arrow') + '再生';
 const stopHtml = createMIsHtml('stop') + '停止';
 
 const playAnimationStart = () => {
-    blockManager.playRendering();
+    const startPos = [...musicalScore.querySelectorAll('.track button')].findIndex(elem => elem.classList.contains('play-from-here'));
+    blockManager.playRendering(startPos);
 };
 const compileHandler = () => {
     warnOut.innerHTML = flmml.getWarnings().replaceAll('\n','<br>');
@@ -2261,6 +2271,10 @@ editor.addEventListener('click', async e => {
                 newItem.textContent = '[';
             } else if ('macroDef' in newItem.dataset) {
                 newItem.textContent = '$=';
+            } else if ('playFromHere' in newItem.dataset) {
+                musicalScore.querySelectorAll('.track button').forEach(item => {
+                    item.classList.add('inactive');
+                });
             }
             li.appendChild(newItem);
             ul.appendChild(li);
@@ -2416,6 +2430,10 @@ editor.addEventListener('contextmenu', e => {
         } else if ('macroDef' in target.dataset) {
             musicalScore.querySelectorAll(`[data-macro-use="${target.dataset.macroDef.replace('=', '')}"]`).forEach(elem => {
                 elem.parentElement.remove();
+            });
+        } else if ('playFromHere' in target.dataset) {
+            musicalScore.querySelectorAll(`.inactive`).forEach(elem => {
+                elem.classList.remove('inactive');
             });
         }
         removeTarget.remove();
@@ -2803,8 +2821,8 @@ let dropEffect = null;
         e.dataTransfer.dropEffect = e.dataTransfer.dropEffect !== 'none' ? e.dataTransfer.dropEffect : dropEffect;
         const {from, item} = dragInfo;
         const ul = e.target.closest('#tones')?.querySelector('ul') || e.target.closest('.track') || blockManager.activeTrack;
-        const itemIndex = [...ul.children].indexOf(item.parentElement);
-        const targetIndex = [...ul.children].indexOf(e.target.parentElement);
+        const itemIndex = [...target.querySelectorAll('button')].indexOf(item);
+        const targetIndex = [...target.querySelectorAll('button')].indexOf(e.target);
         const targetIsButton =  e.target.tagName.toLowerCase() === 'button';
         let newNode;
         switch (e.dataTransfer.dropEffect) {
@@ -2852,6 +2870,25 @@ let dropEffect = null;
             blockManager.activeTrack = ul;
             blockManager.blocksDataUpdate();
             e.dataTransfer.dropEffect === 'move' && blockManager.calcPoly();
+            if ('playFromHere' in lastTouchedButton.dataset) {
+                target.querySelectorAll('.inactive').forEach(lastTouchedButton => {
+                    lastTouchedButton.classList.remove('inactive');
+                });
+                [...target.querySelectorAll('.track button')]
+                    .filter((item, index) => {
+                        if (item === lastTouchedButton) {
+                            return false;
+                        } else if (!blockManager.activeTrack.contains(item)) {
+                            return true;
+                        } else if (targetIndex < itemIndex) {
+                            return index < targetIndex;
+                        } else {
+                            return index <= targetIndex
+                        }
+                    }).forEach(lastTouchedButton => {
+                        lastTouchedButton.classList.add('inactive');
+                });
+            }
             blockManager.saveBlocksData();
             blockManager.exportMml(mml);
             if ('tonePitch' in lastTouchedButton.dataset) {
