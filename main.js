@@ -448,23 +448,22 @@ class BlockManager {
         const mmlArr = mml.getMmlArr();
         const regex = /((@(l|q|x|p|u|mh|w|n|f|e|'[aeiou]?'|o|i|r|s)?|q|x)[0-9\-, ]+)+|[><]*?[a-g]\+?[0-9]*\.*|t[0-9]+|l[0-9]+\.*|r[0-9]*\.*|o[0-8]|[><]+|@?v[0-9]+|[\)\(][0-9]+|@?ns-?[0-9]+|@d-?[0-9]+|&[0-9]*\.*|\/\*.*?\*\/|\/\*|\*\/|\/:[0-9]*|:\/|\/|\[|\]|\$.*?=|%[a-z0-9_]+|\$[a-z0-9_]+(\{[^\}]*\})?|^#.*|;| +|@pl[0-9]+|[^;]+/ig;
         /* tone.tone|tone.tonePitch|tempo|noteValue|rest|octave|velocity|noteShift|detune|tieSlur|comment|repeatStartEnd|repeatBreak|polyStartEnd|macroDef|macroArgUse|macroUse|metaData|newTrack|space|otherAction */
-        const data = [];
         const macroDefSet = new Set();
         const toneSet = new Set();
         let trackNo = 0;
         let toneCache = ''
         let inMacro = false, noteExist = false;
-        mmlArr.forEach(mmlTextLine => {
-            const matched = mmlTextLine.match(regex);
-            (matched || []).forEach(str => {
+        const generateBlocks = mmlText => {
+            const matched = mmlText.match(regex);
+            return (matched || []).reduce((data, str) => {
                 str = str.trim();
                 if (!str) {
-                    return;
+                    return data;
                 }
-                const makeAndPushObj = str => {
-                    const obj = {};
-                    obj.tone = {};
-                    obj.trackNo = trackNo;
+                const makeAndPushBlock = str => {
+                    const block = {};
+                    block.tone = {};
+                    block.trackNo = trackNo;
                     if (/((@(l|q|x|p|u|mh|w|n|f|e|'[aeiou]?'|o|i|r|s)?|q|x)[0-9\-, ]+)+/i.test(str)) {
                         toneCache = str;
                         toneSet.add(toneCache);
@@ -474,71 +473,71 @@ class BlockManager {
                             toneSet.add(toneCache);
                         }
                         const noteCount = [...toneSet].indexOf(toneCache) + 1;
-                        obj.label = '無調整';
-                        obj.className = `material-icons note note-${noteCount}`;
-                        obj.tone.tone = toneCache;
-                        obj.tone.tonePitch = str;
+                        block.label = '無調整';
+                        block.className = `material-icons note note-${noteCount}`;
+                        block.tone.tone = toneCache;
+                        block.tone.tonePitch = str;
                         inMacro && (noteExist = true);
                     } else if (str.startsWith('t')) {
-                        obj.className = 'material-icons tempo';
-                        obj.tempo = str;
+                        block.className = 'material-icons tempo';
+                        block.tempo = str;
                     } else if (str.startsWith('l')) {
-                        obj.className = 'material-icons note-value';
-                        obj.noteValue = str;
+                        block.className = 'material-icons note-value';
+                        block.noteValue = str;
                     } else if (str.startsWith('r')) {
-                        obj.className = 'material-icons rest';
-                        obj.rest = str;
+                        block.className = 'material-icons rest';
+                        block.rest = str;
                     } else if (/^o[0-8]|[><]+$/i.test(str)) {
-                        obj.className = 'material-icons octave';
-                        obj.octave = str;
+                        block.className = 'material-icons octave';
+                        block.octave = str;
                     } else if (/^@?v[0-9]+|[\)\(][0-9]+$/i.test(str)) {
-                        obj.className = 'material-icons velocity';
-                        obj.velocity = str;
+                        block.className = 'material-icons velocity';
+                        block.velocity = str;
                     } else if (str.startsWith('@ns') || str.startsWith('ns')) {
-                        obj.className = 'material-icons note-shift';
-                        obj.noteShift = str;
+                        block.className = 'material-icons note-shift';
+                        block.noteShift = str;
                     } else if (str.startsWith('@d')) {
-                        obj.className = 'material-icons detune';
-                        obj.detune = str;
+                        block.className = 'material-icons detune';
+                        block.detune = str;
                     } else if (str.startsWith('&')) {
-                        obj.className = 'tie-slur';
-                        obj.tieSlur = str;
+                        block.className = 'tie-slur';
+                        block.tieSlur = str;
                     } else if (str.startsWith('/*')) {
-                        obj.className = 'other-action';
-                        obj.otherAction = str;
+                        block.className = 'other-action';
+                        block.otherAction = str;
                     } else if (str.startsWith('/:')) {
-                        obj.className = 'repeat-start-end';
-                        obj.repeatStartEnd = str;
+                        block.className = 'repeat-start-end';
+                        block.repeatStartEnd = str;
                     } else if (str.startsWith(':/')) {
-                        obj.className = 'material-icons repeat-start-end';
-                        obj.repeatStartEnd = str;
+                        block.className = 'material-icons repeat-start-end';
+                        block.repeatStartEnd = str;
                     } else if (str.startsWith('/')) {
-                        obj.className = 'repeat-break';
-                        obj.repeatBreak = str;
+                        block.className = 'repeat-break';
+                        block.repeatBreak = str;
                     } else if (str.startsWith('[') || str.startsWith(']')) {
-                        obj.className = 'poly-start-end';
-                        obj.polyStartEnd = str;
+                        block.className = 'poly-start-end';
+                        block.polyStartEnd = str;
                     } else if (/^\$.*?=$/.test(str)) {
-                        obj.className = 'macro-def';
-                        obj.macroDef = str.replaceAll(' ', '');
-                        macroDefSet.add(obj.macroDef.slice(0, -1));
+                        block.className = 'macro-def';
+                        block.macroDef = str.replaceAll(' ', '');
+                        macroDefSet.add(block.macroDef.slice(0, -1));
                         inMacro = true;
                     } else if (str.startsWith('%')) {
-                        obj.className = 'macro-arg-use';
-                        obj.macroArgUse = str;
+                        block.className = 'macro-arg-use';
+                        block.macroArgUse = str;
                     } else if (str.startsWith('$')) {
-                        obj.className = 'macro-use';
-                        const findMacroDef = [...macroDefSet].sort((a, b) => b.length - a.length).find(def => str.includes(def));
-                        if (findMacroDef) {
-                            obj.macroUse = findMacroDef;
-                            data.push(obj);
-                            const remaining = str.replace(findMacroDef, '');
+                        block.className = 'macro-use';
+                        const foundMacroDef = [...macroDefSet].sort((a, b) => b.length - a.length).find(def => str.includes(def));
+                        if (foundMacroDef) {
+                            block.macroUse = foundMacroDef;
+                            data.push(block);
+                            const remaining = str.replace(foundMacroDef, '');
                             if (remaining !== '') {
-                                makeAndPushObj(remaining);
+                                data = data.concat(generateBlocks(remaining));
                             }
-                            return
+                            return;
                         } else {
-                            obj.macroUse = str;
+                            block.macroUse = str;
                         }
                     } else if (str.startsWith('#')) {
                         const typeDefs = {
@@ -557,17 +556,17 @@ class BlockManager {
                             '#FMGAIN': '@14 音量利得',
                             '#USING': '和音利用宣言',
                         };
-                        obj.label = (Object.entries(typeDefs).find(def => str.startsWith(def[0])) || [,undefined])[1];
-                        obj.className = 'meta-data';
-                        obj.metaData = str + '\n';
+                        block.label = (Object.entries(typeDefs).find(def => str.startsWith(def[0])) || [,undefined])[1];
+                        block.className = 'meta-data';
+                        block.metaData = str + '\n';
                     } else if (str.startsWith(';')) {
                         trackNo++;
                         if (inMacro && !noteExist) {
                             const tone = [...toneSet].join(' ');
                             if (tone) {
-                                obj.className = 'other-action';
-                                obj.otherAction = tone;
-                                data.push(obj);
+                                block.className = 'other-action';
+                                block.otherAction = tone;
+                                data.push(block);
                                 toneSet.clear();
                             }
                         }
@@ -575,14 +574,15 @@ class BlockManager {
                         noteExist = false;
                         return;
                     } else {
-                        obj.className = 'other-action';
-                        obj.otherAction = str;
+                        block.className = 'other-action';
+                        block.otherAction = str;
                     }
-                    data.push(obj);
+                    data.push(block);
                 };
-                makeAndPushObj(str);
-            });
-        });
+                makeAndPushBlock(str);
+                return data;
+            }, []);
+        };
         this.tonesElem.querySelector('ul').textContent = '';
         this.areaElem.querySelectorAll('.track').forEach((track, notFirst) => {
             if (notFirst) {
@@ -593,6 +593,7 @@ class BlockManager {
             }
         });
         lastTouchedButton = null;
+        const data = mmlArr.map(mmlTextLine => generateBlocks(mmlTextLine)).flat();
         this.#blocksData = data;
         this.parseBlocks();
         this.blocksDataUpdate();
