@@ -811,8 +811,7 @@ class BlockManager {
         }
         if (startPos !== -1) {
             const startPosTrackNo = allData[startPos].trackNo;
-            rendPerTrack(allData.filter((block, index) => startPos === -1 || block.tempo || block.noteValue || block.octave || block.velocity
-                || block.noteShift || block.detune || block.repeatStartEnd || block.repeatBreak || block.macroDef || block.macroUse || block.metaData
+            rendPerTrack(allData.filter((block, index) => block.repeatStartEnd || block.repeatBreak || block.macroDef || block.macroUse
                 || block.trackNo === startPosTrackNo && index >= startPos));
             return;
         }
