@@ -1814,11 +1814,11 @@ const playMusicNote = (block, options = {}) => {
     };
     const scoreNoteValueMml = findNoteValueElem()?.dataset.noteValue || '';
     const octaveElem = findOctaveElem();
-    const absoluetOctaveIndex = [...blockManager.activeTrack.children].indexOf(octaveElem?.parentElement);
+    const startIndex = octaveElem ? [...blockManager.activeTrack.children].indexOf(octaveElem.parentElement) : 0;
     const absoluteOctaveMml = octaveElem?.dataset.octave || '';
     const currentIndex = [...blockManager.activeTrack.children].indexOf(block.parentElement);
     const concatAllOctave = [...blockManager.activeTrack.children]
-        .slice(absoluetOctaveIndex, currentIndex)
+        .slice(startIndex, currentIndex)
         .filter(li => 'tonePitch' in li.firstElementChild.dataset || 'octave' in li.firstElementChild.dataset && !li.firstElementChild.dataset.octave.startsWith('o'))
         .map(li => {
             const pitch = li.firstElementChild.dataset.tonePitch || li.firstElementChild.dataset.octave;
