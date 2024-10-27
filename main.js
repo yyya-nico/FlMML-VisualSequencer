@@ -302,13 +302,13 @@ class BlockManager {
             noteValue: 4,
             dots: 0
         };
-        let inPoly = false;
+        let inPoly = false, inMacro = false;
         const startPos = this.#blocksData.findIndex(block => block.elem.classList.contains('play-from-here'));
         const hasPlayFromHere = startPos !== -1;
         const startPosTrackNo = !hasPlayFromHere ? -1 : this.#blocksData[startPos].trackNo;
         this.#blocksData.forEach((block, index) => {
             const { tone, tonePitch } = block.tone;
-            const withinPlaybackRange = hasPlayFromHere && block.trackNo === startPosTrackNo && index >= startPos;
+            const withinPlaybackRange = !hasPlayFromHere || inMacro || hasPlayFromHere && block.trackNo === startPosTrackNo && index >= startPos;
             if (block.trackNo !== trackNo) {
                 if (toneSet.size) {
                     [...toneSet].forEach((_, i) => {
@@ -322,6 +322,7 @@ class BlockManager {
                 trackNo = block.trackNo;
                 toneSet = getToneSet();
                 toneAppended = false;
+                inMacro = false;
             }
             if (tone !== undefined) {
                 toneIndex = [...toneSet].indexOf(tone);
@@ -336,14 +337,14 @@ class BlockManager {
                     if (i !== toneIndex) {
                         mmlText = mmlText.replace(/[a-g]/, inPoly ? '*' : 'r');
                     }
-                    if (hasPlayFromHere && !withinPlaybackRange) {
+                    if (!withinPlaybackRange) {
                         mmlText = mmlText.replace(/[a-gr*]\+?[0-9]*\.*/i, '');
                     }
                     mml.appendToStr(lineIndex + i, mmlText);
                 });
             } else if (block.rest || block.tieSlur) {
                 let mmlText = block.rest || block.tieSlur;
-                if (hasPlayFromHere && !withinPlaybackRange) {
+                if (!withinPlaybackRange) {
                     mmlText = mmlText.replace(/[r&]\+?[0-9]*\.*/i, '');
                 }
                 if (toneSet.size) {
@@ -438,19 +439,21 @@ class BlockManager {
                     }
                     mml.appendToStr(lineIndex, block.metaData.replace('\n', '') || '');
                     lineIndex++;
+                } else if (block.macroDef) {
+                    inMacro = block.macroDef !== ';';
+                    mml.appendToStr(lineIndex, block.macroDef || '');
                 } else {
                     let mmlText;
-                    if (hasPlayFromHere && !withinPlaybackRange) {
-                        mmlText = tonePitch?.replace(/[a-g]\+?[0-9]*\.*/i, '') || block.tempo || block.octave || block.velocity
-                            || block.noteShift || block.detune || block.tieSlur || block.macroDef
-                            || block.macroArgUse || block.macroUse || block.otherAction || '';
-                        mml.appendToStr(lineIndex, mmlText);
+                    if (!withinPlaybackRange) {
+                        mmlText = tonePitch?.replace(/[a-g]\+?[0-9]*\.*/i, '') || block.tempo
+                            || block.octave || block.velocity || block.noteShift || block.detune
+                            || block.tieSlur || block.otherAction || '';
                     } else {
                         mmlText = tonePitch || block.tempo || block.octave || block.velocity
-                            || block.noteShift || block.detune || block.tieSlur || block.macroDef
-                            || block.macroArgUse || block.macroUse || block.otherAction || '';
-                        mml.appendToStr(lineIndex, mmlText);
+                            || block.noteShift || block.detune || block.tieSlur || block.macroArgUse
+                            || block.macroUse || block.otherAction || '';
                     }
+                    mml.appendToStr(lineIndex, mmlText);
                     if (/;/.test(mmlText)) {
                         lineIndex += toneSet.size || 1;
                         toneSet = getToneSet();
@@ -623,6 +626,9 @@ class BlockManager {
 
     playRendering(startPos = -1) {
         const allData = this.#blocksData;
+        const hasPlayFromHere = startPos !== -1;
+        const startPosItem = allData[startPos];
+        const startPosTrackNo = !hasPlayFromHere ? -1 : startPosItem.trackNo;
         let tempo = 120;
         let rAFIdBase = 0;
         [tones, action, musicalScore].forEach(target => {
@@ -643,7 +649,10 @@ class BlockManager {
         });
         addTrackBtn.disabled = true;
         removeTrackBtn.disabled = true;
-        const rendPerTrack = (data, { scoreNoteValue = 4 } = {}) => {
+        const rendPerTrack = (data, {
+            scoreNoteValue = 4,
+            ignorePlayFromHere = false
+        } = {}) => {
             let skip = false, jump = -1, nest = -1, inMacro = false;
             let scrWaiting = false;
             const repeatStart = [], repeatEnd = [], remainingRepeat = [];
@@ -651,6 +660,7 @@ class BlockManager {
             const trackNo = data[0]?.trackNo;
             const track = tracks[trackNo];
             const rAFId = rAFIdBase++;
+            const startPos = data.findIndex(item => item === startPosItem);
             let resolve = null;
             const promise = new Promise(res => resolve = res);
             let totalDelay = 0;
@@ -701,6 +711,7 @@ class BlockManager {
                     return;
                 }
                 scrollTask(current);
+                const withinPlaybackRange = !hasPlayFromHere || ignorePlayFromHere || hasPlayFromHere && current.trackNo === startPosTrackNo && i >= startPos;
                 if (inMacro) {
                     if (current.macroDef === ';') {
                         inMacro = false;
@@ -713,7 +724,9 @@ class BlockManager {
                         nest++;
                     } else if (current.repeatStartEnd === ':/') {
                         if (nest === jump) {
-                            resetAnimation(current.elem, 'pop');
+                            if (withinPlaybackRange) {
+                                resetAnimation(current.elem, 'pop');
+                            }
                             jump = -1;
                         }
                         nest--;
@@ -721,18 +734,22 @@ class BlockManager {
                     i++;
                     attachMotion();
                 } else if (current.tone.tonePitch) {
-                    const currentNoteValue = noteValueStrCalc(current.tone.tonePitch);
-                    resetAnimation(current.elem, 'bounce');
+                    if (withinPlaybackRange) {
+                        resetAnimation(current.elem, 'bounce');
+                    }
                     i++;
-                    if (!skip) {
-                        delayAttachMotion(currentNoteValue);
-                    } else {
+                    if (skip || !withinPlaybackRange) {
                         attachMotion();
+                    } else {
+                        const currentNoteValue = noteValueStrCalc(current.tone.tonePitch);
+                        delayAttachMotion(currentNoteValue);
                     }
                 } else if (current.rest || current.tieSlur) {
-                    resetAnimation(current.elem, 'pop');
+                    if (withinPlaybackRange) {
+                        resetAnimation(current.elem, 'pop');
+                    }
                     i++;
-                    if (current.tieSlur === '&') {
+                    if (current.tieSlur === '&' || !withinPlaybackRange) {
                         attachMotion();
                     } else {
                         const currentNoteValue = noteValueStrCalc(current.rest || current.tieSlur);
@@ -740,13 +757,15 @@ class BlockManager {
                     }
                 } else if (current.polyStartEnd) {
                     skip = current.polyStartEnd === '[';
-                    resetAnimation(current.elem, 'pop');
-                    if (!skip) {
-                        const previousNoteValue = noteValueStrCalc(data[i++ - 1].tone.tonePitch);
-                        delayAttachMotion(previousNoteValue);
-                    } else {
+                    if (withinPlaybackRange) {
+                        resetAnimation(current.elem, 'pop');
+                    }
+                    if (skip || !withinPlaybackRange) {
                         i++;
                         attachMotion();
+                    } else {
+                        const previousNoteValue = noteValueStrCalc(data[i++ - 1].tone.tonePitch);
+                        delayAttachMotion(previousNoteValue);
                     }
                 } else if (current.macroDef && current.macroDef !== ';') {
                     inMacro = true;
@@ -756,7 +775,9 @@ class BlockManager {
                 } else {
                     current.tempo && (tempo = Number(current.tempo.replace('t', '')) || tempo);
                     current.noteValue && (scoreNoteValue = noteValueStrCalc(current.noteValue));
-                    resetAnimation(current.elem, 'pop');
+                    if (withinPlaybackRange) {
+                        resetAnimation(current.elem, 'pop');
+                    }
                     if (current.repeatStartEnd?.startsWith('/:')) {
                         repeatStart[++nest] = i;
                         if (!repeatEnd[nest]) {
@@ -786,7 +807,9 @@ class BlockManager {
                             }
                             i = repeatEnd[nest];
                             attachMotion();
-                            resetAnimation(current.elem, 'done');
+                            if (withinPlaybackRange) {
+                                resetAnimation(current.elem, 'done');
+                            }
                             return;
                         }
                     } else if (current.repeatStartEnd === ':/') {
@@ -796,48 +819,49 @@ class BlockManager {
                             i = repeatStart[nest];
                             nest--;
                             attachMotion();
-                            resetAnimation(current.elem, 'done');
+                            if (withinPlaybackRange) {
+                                resetAnimation(current.elem, 'done');
+                            }
                             return;
                         }
                         repeatEnd[nest] = null;
                         nest--;
                     } else if (current.macroUse) {
-                        const findMacroEndIndex = start => {
-                            const trackNo = allData[start].trackNo;
-                            let end = start + 1;
-                            while (allData[end].macroDef !== ';' && allData[end].trackNo === trackNo) {
-                                end++;
+                        if (withinPlaybackRange) {
+                            const findMacroEndIndex = start => {
+                                const trackNo = allData[start].trackNo;
+                                let end = start + 1;
+                                while (allData[end].macroDef !== ';' && allData[end].trackNo === trackNo) {
+                                    end++;
+                                };
+                                return end;
                             };
-                            return end;
-                        };
-                        const targetMacro = {};
-                        targetMacro.start = allData.findIndex(block => block.macroDef?.startsWith(current.macroUse));
-                        if (targetMacro.start > -1) {
-                            targetMacro.end = findMacroEndIndex(targetMacro.start);
-                            targetMacro.blocks = allData.slice(targetMacro.start + 1, targetMacro.end);
-                            const start = performance.now();
-                            scoreNoteValue = (await rendPerTrack(targetMacro.blocks, { scoreNoteValue })).scoreNoteValue;
-                            const end = performance.now();
-                            totalDelay += end - start;
+                            const targetMacro = {};
+                            targetMacro.start = allData.findIndex(block => block.macroDef?.startsWith(current.macroUse));
+                            if (targetMacro.start > -1) {
+                                targetMacro.end = findMacroEndIndex(targetMacro.start);
+                                targetMacro.blocks = allData.slice(targetMacro.start + 1, targetMacro.end);
+                                const start = performance.now();
+                                scoreNoteValue = (await rendPerTrack(targetMacro.blocks, { scoreNoteValue, ignorePlayFromHere: true })).scoreNoteValue;
+                                const end = performance.now();
+                                totalDelay += end - start;
+                            }
                         }
                     }
                     i++;
                     attachMotion();
                 }
-                resetAnimation(current.elem, 'done');
+                if (withinPlaybackRange) {
+                    resetAnimation(current.elem, 'done');
+                }
             }
             attachMotion();
             return promise;
         }
-        if (startPos !== -1) {
-            const startPosTrackNo = allData[startPos].trackNo;
-            rendPerTrack(allData.filter((block, index) => block.tempo || block.noteValue || block.repeatStartEnd || block.repeatBreak || block.macroDef || block.macroUse
-                || block.trackNo === startPosTrackNo && index >= startPos));
-            return;
-        }
         const numOfTracks = allData.at(-1).trackNo + 1;
         for (let trackNo = 0; trackNo < numOfTracks; trackNo++) {
-            rendPerTrack(allData.filter(block => block.trackNo === trackNo));
+            const trackData = allData.filter(block => block.trackNo === trackNo);
+            rendPerTrack(trackData);
         }
     }
 
