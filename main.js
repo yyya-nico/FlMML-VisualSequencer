@@ -1097,7 +1097,7 @@ const stepRecorder = () => {
 };
 
 class DialogFormManager {
-    #buildNoteValueOptions = () => (Object.fromEntries(validNoteValues.map(validNoteValue => [validNoteValue, validNoteValue === 1 ? '全音符' : `${validNoteValue}分音符`])))
+    #buildNoteValueOptions = () => ({ '':'デフォルト', ...Object.fromEntries(validNoteValues.map(validNoteValue => [validNoteValue, validNoteValue === 1 ? '全音符' : `${validNoteValue}分音符`])) })
 
     #dialogDefinitions = {
         tone: {
@@ -1518,7 +1518,16 @@ class DialogFormManager {
                                 const select = document.createElement('select');
                                 select.name = inputDef.name;
                                 const selectOptionsDef = value;
+                                if ('' in selectOptionsDef) {
+                                    const option = document.createElement('option');
+                                    option.value = '';
+                                    option.textContent = selectOptionsDef[''];
+                                    select.appendChild(option);
+                                }
                                 Object.entries(selectOptionsDef).forEach(([value, text]) => {
+                                    if (value === '') {
+                                        return;
+                                    }
                                     const option = document.createElement('option');
                                     option.value = value;
                                     option.textContent = text;
