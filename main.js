@@ -352,7 +352,10 @@ class BlockManager {
                             }
                             const noteValue = Number((str.match(/[0-9]+/) || [scoreNoteValue[0]])[0]);
                             const dots = (str.match(/\.+/) || [''])[0].length;
-                            return [noteValue, dots];
+                            return {
+                                noteValue,
+                                dots
+                            };
                         };
                         if (block.noteValue) {
                             scoreNoteValue = noteValueStrCalc(block.noteValue);
