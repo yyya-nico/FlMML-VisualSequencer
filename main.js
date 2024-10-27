@@ -2474,10 +2474,10 @@ const wheelHandler = e => {
         if (ignoreTouch) {
             e.cancelable && e.preventDefault();
             return;
-        } else if (touchY - lastY < -20) {
+        } else if (touchY - lastY < -30) {
             e.deltaY = -1;
             clearTimeout(dragJudgementTimer);
-        } else if (touchY - lastY > 20) {
+        } else if (touchY - lastY > 30) {
             e.deltaY = 1;
             clearTimeout(dragJudgementTimer);
         } else {
@@ -2485,9 +2485,6 @@ const wheelHandler = e => {
             return;
         }
         lastY = touchY;
-        ignoreTouch = true;
-        setTimeout(() => ignoreTouch = false, 50);
-
     }
     const isPositive = e.deltaY < 0;
     let target = isButton ? e.target : lastTouchedButton?.closest('#musical-score') && lastTouchedButton;
@@ -2653,6 +2650,7 @@ const wheelHandler = e => {
 editor.addEventListener('wheel', wheelHandler);
 editor.addEventListener('touchmove', wheelHandler);
 editor.addEventListener('touchend', () => {
+    clearTimeout(dragJudgementTimer);
     ignoreTouch = false;
 });
 
