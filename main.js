@@ -985,12 +985,60 @@ const stepRecorder = () => {
         return;
     }
     let current = lastTouchedButton;
+    const applyNoteValue = () => {
+        const elapsedMeasure = performance.measure('stepElapsed', 'stepPoint');
+        performance.mark('stepPoint');
+        const elapsed = elapsedMeasure.duration;
+        const msecToNoteValueCalc = ms => {
+            const rawNoteValue = 60 / stepParams.tempo * 4 / ms * 1000;
+            const { noteValue, dots } = validNoteValues.reduce((params, candidate, index) => {
+                const rawDots = Math.log2(rawNoteValue / (2 * rawNoteValue - candidate));
+                if (rawDots < 0 || Number.isNaN(rawDots)) {
+                    return params;
+                }
+                const dotsFractional = rawDots - Math.floor(rawDots);
+                const closer = dotsFractional < params.smallerFractional;
+                if (closer) {
+                    return {
+                        noteValue: candidate,
+                        dots: Math.round(rawDots),
+                        smallerFractional: dotsFractional,
+                    };
+                }
+                return params;
+            }, {
+                noteValue: null,
+                dots: null,
+                smallerFractional: 1
+            });
+            return noteValue + '.'.repeat(dots);
+        };
+        const noteValue = msecToNoteValueCalc(elapsed);
+        const setNoteValue = noteValue => {
+            const target = setNoteValueTarget;
+            if ('tonePitch' in target.dataset) {
+                const newNoteValue = noteValue !== stepParams.scoreNoteValue ? noteValue : '';
+                target.dataset.tonePitch = target.dataset.tonePitch + newNoteValue;
+            } else if ('rest' in target.dataset) {
+                const newRest = noteValue !== stepParams.scoreNoteValue ? noteValue : '';
+                target.dataset.rest = 'r' + newRest;
+            }
+        };
+        setNoteValue(noteValue);
+        blockManager.blocksDataUpdate();
+        blockManager.saveBlocksData();
+        blockManager.exportMml(mml);
+    };
     if (!current) {
         if (stepResumeWait) {
             console.log('end1');
             return;
         }
+        flmml.stop();
+        applyNoteValue();
         stepParams.timeStamp = -1;
+        setNoteValueTarget = null;
+        performance.clearMarks('stepPoint');
         setTimeout(() => {
             lastTouchedButton = blockManager.activeTrack.querySelector('button');
             stepReset();
@@ -1043,50 +1091,6 @@ const stepRecorder = () => {
         console.log('end4');
         return;
     }
-    const applyNoteValue = () => {
-        const elapsedMeasure = performance.measure('stepElapsed', 'stepPoint');
-        performance.mark('stepPoint');
-        const elapsed = elapsedMeasure.duration;
-        const msecToNoteValueCalc = ms => {
-            const rawNoteValue = 60 / stepParams.tempo * 4 / ms * 1000;
-            const { noteValue, dots } = validNoteValues.reduce((params, candidate, index) => {
-                const rawDots = Math.log2(rawNoteValue / (2 * rawNoteValue - candidate));
-                if (rawDots < 0 || Number.isNaN(rawDots)) {
-                    return params;
-                }
-                const dotsFractional = rawDots - Math.floor(rawDots);
-                const closer = dotsFractional < params.smallerFractional;
-                if (closer) {
-                    return {
-                        noteValue: candidate,
-                        dots: Math.round(rawDots),
-                        smallerFractional: dotsFractional,
-                    };
-                }
-                return params;
-            }, {
-                noteValue: null,
-                dots: null,
-                smallerFractional: 1
-            });
-            return noteValue + '.'.repeat(dots);
-        };
-        const noteValue = msecToNoteValueCalc(elapsed);
-        const setNoteValue = noteValue => {
-            const target = setNoteValueTarget;
-            if ('tonePitch' in target.dataset) {
-                const newNoteValue = noteValue !== stepParams.scoreNoteValue ? noteValue : '';
-                target.dataset.tonePitch = target.dataset.tonePitch + newNoteValue;
-            } else if ('rest' in target.dataset) {
-                const newRest = noteValue !== stepParams.scoreNoteValue ? noteValue : '';
-                target.dataset.rest = 'r' + newRest;
-            }
-        };
-        setNoteValue(noteValue);
-        blockManager.blocksDataUpdate();
-        blockManager.saveBlocksData();
-        blockManager.exportMml(mml);
-    };
     applyNoteValue();
     setNoteValueTarget = current;
     toNextBtn();
