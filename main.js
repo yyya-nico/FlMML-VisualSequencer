@@ -1050,7 +1050,7 @@ const stepRecorder = () => {
     // console.log([...blockManager.activeTrack.children].findIndex(elem => elem.contains(current)), lastTouchedButton.ariaLabel);
     const setEditingState = () => {
         if ('tonePitch' in current.dataset) {
-            current.dataset.tonePitch = current.dataset.tonePitch.replace(/[0-9]*\.*/g, '');
+            current.dataset.tonePitch = current.dataset.tonePitch.match(/[><]*?[a-g]\+?/i)[0];
             playMusicNote(current, { noteValue: '1...' });
             current.classList.add('bounce');
             return;
