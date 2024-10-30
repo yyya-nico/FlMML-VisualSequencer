@@ -1011,17 +1011,23 @@ const stepRecorder = () => {
                 dots: null,
                 smallerFractional: 1
             });
-            return noteValue + '.'.repeat(dots);
+            if (noteValue + '.'.repeat(dots) === stepParams.scoreNoteValue) {
+                return '';
+            } else if (String(noteValue) === stepParams.scoreNoteValue) {
+                const matched = stepParams.scoreNoteValue.match(/\.*/);
+                const scoreDots = matched ? matched[0].length : 0;
+                return '.'.repeat(dots - scoreDots);
+            } else {
+                return noteValue + '.'.repeat(dots);
+            }
         };
         const noteValue = msecToNoteValueCalc(elapsed);
         const setNoteValue = noteValue => {
             const target = setNoteValueTarget;
             if ('tonePitch' in target.dataset) {
-                const newNoteValue = noteValue !== stepParams.scoreNoteValue ? noteValue : '';
-                target.dataset.tonePitch = target.dataset.tonePitch + newNoteValue;
+                target.dataset.tonePitch = target.dataset.tonePitch + noteValue;
             } else if ('rest' in target.dataset) {
-                const newRest = noteValue !== stepParams.scoreNoteValue ? noteValue : '';
-                target.dataset.rest = 'r' + newRest;
+                target.dataset.rest = 'r' + noteValue;
             }
         };
         setNoteValue(noteValue);
