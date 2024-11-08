@@ -1103,8 +1103,6 @@ const stepRecorder = () => {
 };
 
 class DialogFormManager {
-    #buildNoteValueOptions = () => ({ '':'デフォルト', ...Object.fromEntries(validNoteValues.map(validNoteValue => [validNoteValue, validNoteValue === 1 ? '全音符' : `${validNoteValue}分音符`])) })
-
     #dialogDefinitions = {
         tone: {
             title: '音色設定',
@@ -1134,8 +1132,10 @@ class DialogFormManager {
             inputs: [
                 {
                     label: '音価(音の長さ)',
-                    select: this.#buildNoteValueOptions(),
-                    name: 'tone-pitch'
+                    type: 'number',
+                    name: 'tone-pitch',
+                    min: '0',
+                    max: '384'
                 },
                 {
                     label: '付点の数',
@@ -1175,8 +1175,10 @@ class DialogFormManager {
             inputs: [
                 {
                     label: '音価(音の長さ)',
-                    select: this.#buildNoteValueOptions(),
-                    name: 'note-value'
+                    type: 'number',
+                    name: 'note-value',
+                    min: '0',
+                    max: '384'
                 },
                 {
                     label: '付点の数',
@@ -1198,8 +1200,10 @@ class DialogFormManager {
             inputs: [
                 {
                     label: '休符の長さ',
-                    select: this.#buildNoteValueOptions(),
-                    name: 'rest'
+                    type: 'number',
+                    name: 'rest',
+                    min: '0',
+                    max: '384'
                 },
                 {
                     label: '付点の数',
@@ -1305,8 +1309,10 @@ class DialogFormManager {
             inputs: [
                 {
                     label: '音価(音の長さ)',
-                    select: this.#buildNoteValueOptions(),
-                    name: 'tie-slur'
+                    type: 'number',
+                    name: 'tie-slur',
+                    min: '0',
+                    max: '384'
                 },
                 {
                     label: '付点の数',
@@ -2060,6 +2066,28 @@ document.addEventListener('keydown', e => {
     }
 });
 
+const noteValueChanger = name => {
+    const noteValueInput = dialogForm.elements[name];
+    let beforeValue = noteValueInput.valueAsNumber;
+    let validNoteValueIndex = validNoteValues.findIndex(value => value === beforeValue);
+    noteValueInput.addEventListener('input', () => {
+        const currentValue = noteValueInput.valueAsNumber;
+        // console.log(currentValue, beforeValue);
+        if (currentValue !== beforeValue) {
+            if (currentValue === 0) {
+                validNoteValueIndex = -1;
+                noteValueInput.value = '';
+            } else if (currentValue > beforeValue || Number.isNaN(beforeValue)) {
+                noteValueInput.value = validNoteValues[++validNoteValueIndex];
+            } else if (currentValue < beforeValue) {
+                noteValueInput.value = validNoteValues[--validNoteValueIndex];
+            }
+            beforeValue = noteValueInput.valueAsNumber;
+        }
+        // console.log(validNoteValueIndex);
+    });
+};
+
 const actionPromptSwitcher = async item => {
     const { dataset } = item;
     const promptDefinitions = {
@@ -2068,11 +2096,17 @@ const actionPromptSwitcher = async item => {
         }),
         noteValue: mmlText => ({
             'note-value': (mmlText.match(/[0-9]+/) || [''])[0],
-            'dot': (mmlText.match(/\.+/) || [''])[0].length
+            'dot': (mmlText.match(/\.+/) || [''])[0].length,
+            'run': () => {
+                noteValueChanger('note-value');
+            }
         }),
         rest: mmlText => ({
             'rest': (mmlText.match(/[0-9]+/) || [''])[0],
-            'dot': (mmlText.match(/\.+/) || [''])[0].length
+            'dot': (mmlText.match(/\.+/) || [''])[0].length,
+            'run': () => {
+                noteValueChanger('rest');
+            }
         }),
         octave: mmlText => ({
             'octave': mmlText.startsWith('o') ? mmlText.replace('o', '') : (mmlText.match(/[><]+/) || [''])[0].length
@@ -2088,7 +2122,10 @@ const actionPromptSwitcher = async item => {
         }),
         tieSlur: mmlText => ({
             'tie-slur': (mmlText.match(/[0-9]+/) || [''])[0],
-            'dot': (mmlText.match(/\.+/) || [''])[0].length
+            'dot': (mmlText.match(/\.+/) || [''])[0].length,
+            'run': () => {
+                noteValueChanger('tie-slur');
+            }
         }),
         repeatStartEnd: mmlText => ({
             'repeat': mmlText.replace('/:', '')
@@ -2398,7 +2435,10 @@ editor.addEventListener('click', async e => {
                     if (ctrlKey) {
                         await dialogFormManager.prompt('tonePitch', {
                             'tone-pitch': (e.target.dataset.tonePitch.match(/[0-9]+/) || [''])[0],
-                            'dot': (e.target.dataset.tonePitch.match(/\.+/) || [''])[0].length
+                            'dot': (e.target.dataset.tonePitch.match(/\.+/) || [''])[0].length,
+                            'run': () => {
+                                noteValueChanger('tone-pitch');
+                            }
                         }, e.target);
                         playMusicNote(e.target);
                     }
