@@ -190,6 +190,7 @@ class BlockManager {
                 this.blocksDataUpdate();
                 this.calcPoly();
                 this.exportMml(mml);
+                this.calcPlayFromHere();
             }
         });
     }
@@ -620,7 +621,7 @@ class BlockManager {
             target.classList.add('no-op');
         });
         const wrap = document.querySelector('.wrap');
-        // const headerHeight = Number(getComputedStyle(document.querySelector(':root')).getPropertyValue('--header-height').replace('px',''));
+        // const headerHeight = parseInt(getComputedStyle(document.querySelector(':root')).getPropertyValue('--header-height'));
         // const scrTo = (top) => {
         //     top -= headerHeight;
         //     wrap.scrollTo({top, behavior: 'smooth'});
@@ -882,6 +883,36 @@ class BlockManager {
             });
         }
         this.blocksDataUpdate();
+    }
+
+    calcPlayFromHere() {
+        if (!this.#blocksData.length) {
+            return;
+        }
+        this.#blocksData
+            .filter(block => block.elem.classList.contains('inactive'))
+            .forEach(block => {
+                block.elem.classList.remove('inactive');
+        });
+        const playFromHere = this.#blocksData.find(block => block.elem.classList.contains('play-from-here'));
+        if (!playFromHere) {
+            copyBtn.disabled = saveBtn.disabled = false;
+            return;
+        }
+        const playFromHereIndex = this.#blocksData.indexOf(playFromHere);
+        const toDeactiveBlocks = this.#blocksData
+            .filter((block, index) => {
+                if (block.playFromHere) {
+                    return false;
+                } else if (block.trackNo !== playFromHere.trackNo) {
+                    return true;
+                }
+                return index < playFromHereIndex;
+        });
+        toDeactiveBlocks.forEach(block => {
+            block.elem.classList.add('inactive');
+        });
+        copyBtn.disabled = saveBtn.disabled = true;
     }
 }
 
@@ -1680,6 +1711,7 @@ class DialogFormManager {
                     blockManager.calcPoly();
                     blockManager.saveBlocksData();
                     blockManager.exportMml(mml);
+                    blockManager.calcPlayFromHere();
                     break;
                 case 'set-step':
                     stepGuidanceDisplayed = true;
@@ -1788,9 +1820,7 @@ flmml.addEventListener('complete', completeHandler);
 mml.onChange = (arr, mmlText) => {
     mmlOut.innerHTML = mmlText ? `<pre><code>${htmlspecialchars(mmlText).replaceAll('\n', '<br>')}</code></pre>` : '(なし)';
     const mmlIsExist = Boolean(arr.length);
-    [copyBtn, saveBtn].forEach(elem => {
-        elem.disabled = !mmlIsExist;
-    });
+    copyBtn.disabled = saveBtn.disabled = !mmlIsExist;
 };
 mml.onError = (error, reason) => {
     alert(error + '\n' + reason);
@@ -1876,6 +1906,7 @@ history.onPopstate = obj => {
                         blockManager.calcPoly();
                         blockManager.saveBlocksData();
                         blockManager.exportMml(mml);
+                        blockManager.calcPlayFromHere();
                     }
                     break;
                 case 'move':
@@ -1886,6 +1917,7 @@ history.onPopstate = obj => {
                         blockManager.calcPoly();
                         blockManager.saveBlocksData();
                         blockManager.exportMml(mml);
+                        blockManager.calcPlayFromHere();
                     }
                     break;
                 case 'valueChange':
@@ -1907,6 +1939,7 @@ history.onPopstate = obj => {
                         blockManager.calcPoly();
                         blockManager.saveBlocksData();
                         blockManager.exportMml(mml);
+                        blockManager.calcPlayFromHere();
                     }
                     break;
                 case 'clear':
@@ -1945,6 +1978,7 @@ history.onPopstate = obj => {
                         blockManager.calcPoly();
                         blockManager.saveBlocksData();
                         blockManager.exportMml(mml);
+                        blockManager.calcPlayFromHere();
                     }
                     if ('tonePitch' in lastTouchedButton.dataset) {
                         playMusicNote(lastTouchedButton);
@@ -1963,6 +1997,7 @@ history.onPopstate = obj => {
                         blockManager.calcPoly();
                         blockManager.saveBlocksData();
                         blockManager.exportMml(mml);
+                        blockManager.calcPlayFromHere();
                     }
                     break;
                 case 'valueChange':
@@ -1988,6 +2023,7 @@ history.onPopstate = obj => {
                     blockManager.calcPoly();
                     blockManager.saveBlocksData();
                     blockManager.exportMml(mml);
+                    blockManager.calcPlayFromHere();
                     break;
                 case 'clear':
                     tones.querySelector('ul').textContent = '';
@@ -2378,6 +2414,7 @@ editor.addEventListener('click', async e => {
             blockManager.calcPoly();
             blockManager.saveBlocksData();
             blockManager.exportMml(mml);
+            blockManager.calcPlayFromHere();
             history.pushState({
                 operation: 'copy',
                 toIndex: -1,
@@ -2457,6 +2494,7 @@ editor.addEventListener('click', async e => {
                 blockManager.calcPoly();
                 blockManager.saveBlocksData();
                 blockManager.exportMml(mml);
+                blockManager.calcPlayFromHere();
                 history.pushState({
                     operation: 'copy',
                     toIndex: -1,
@@ -2540,6 +2578,7 @@ editor.addEventListener('contextmenu', e => {
         blockManager.calcPoly();
         blockManager.saveBlocksData();
         blockManager.exportMml(mml);
+        blockManager.calcPlayFromHere();
     }
 });
 
@@ -2970,29 +3009,9 @@ let dropEffect = null;
             blockManager.activeTrack = ul;
             blockManager.blocksDataUpdate();
             e.dataTransfer.dropEffect === 'move' && blockManager.calcPoly();
-            if ('playFromHere' in lastTouchedButton.dataset) {
-                target.querySelectorAll('.inactive').forEach(lastTouchedButton => {
-                    lastTouchedButton.classList.remove('inactive');
-                });
-                [...target.querySelectorAll('.track button')]
-                    .filter((item, index) => {
-                        if (item === lastTouchedButton) {
-                            return false;
-                        } else if (!blockManager.activeTrack.contains(item)) {
-                            return true;
-                        } else if (!targetIsButton) {
-                            return true;
-                        } else if (targetIndex < itemIndex) {
-                            return index < targetIndex;
-                        } else {
-                            return index <= targetIndex
-                        }
-                    }).forEach(lastTouchedButton => {
-                        lastTouchedButton.classList.add('inactive');
-                    });
-            }
             blockManager.saveBlocksData();
             blockManager.exportMml(mml);
+            blockManager.calcPlayFromHere();
             if ('tonePitch' in lastTouchedButton.dataset) {
                 lastTouchedButton.dataset.tonePitch = lastTouchedButton.dataset.tonePitch.replace(/[><]+/, '');
                 playMusicNote(lastTouchedButton);
