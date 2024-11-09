@@ -187,7 +187,7 @@ class BlockManager {
             if (data) {
                 this.#blocksData = data.map(block => {
                     const legacyToneCandidate = block.tone;
-                    if (legacyToneCandidate.tone !== undefined && legacyToneCandidate.tonePitch !== undefined) {
+                    if (legacyToneCandidate?.tone !== undefined && legacyToneCandidate?.tonePitch !== undefined) {
                         block.tone = legacyToneCandidate.tone;
                         block.tonePitch = legacyToneCandidate.tonePitch;
                     }
