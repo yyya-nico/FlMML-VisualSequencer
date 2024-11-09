@@ -2384,6 +2384,7 @@ editor.addEventListener('click', async e => {
                 musicalScore.querySelectorAll('.track button').forEach(item => {
                     item.classList.add('inactive');
                 });
+                copyBtn.disabled = saveBtn.disabled = true;
             }
             li.appendChild(newItem);
             ul.appendChild(li);
@@ -2547,6 +2548,7 @@ editor.addEventListener('contextmenu', e => {
             musicalScore.querySelectorAll(`.inactive`).forEach(elem => {
                 elem.classList.remove('inactive');
             });
+            copyBtn.disabled = saveBtn.disabled = false;
         }
         removeTarget.remove();
         blockManager.blocksDataUpdate();
@@ -2992,6 +2994,8 @@ let dropEffect = null;
                         if (item === lastTouchedButton) {
                             return false;
                         } else if (!blockManager.activeTrack.contains(item)) {
+                            return true;
+                        } else if (!targetIsButton) {
                             return true;
                         } else if (targetIndex < itemIndex) {
                             return index < targetIndex;
