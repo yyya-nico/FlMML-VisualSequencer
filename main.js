@@ -167,10 +167,6 @@ class BlockManager {
             label: elem.ariaLabel,
             className: elem.className,
             trackNo: [...document.getElementsByClassName('track')].findIndex(track => track.contains(elem)),
-            tone: {
-                tone: elem.dataset.tone,
-                tonePitch: elem.dataset.tonePitch,
-            },
             ...elem.dataset,
             elem
         };
@@ -223,17 +219,17 @@ class BlockManager {
             const button = copySourceCandidate?.cloneNode(true) || toneButton;
             block.label && (button.ariaLabel = block.label);
             button.className = block.className;
-            if (block.tone.tonePitch) {
+            if (block.tonePitch) {
                 if (block.label !== '無調整') {
                     button.textContent = block.label;
                 }
-                button.dataset.tone = block.tone.tone;
+                button.dataset.tone = block.tone;
                 if (copySourceCandidate) {
                     copySourceCandidate.replaceWith(button.cloneNode(true));
                 } else {
                     tonesUl.appendChild(button.cloneNode(true));
                 }
-                button.dataset.tonePitch = block.tone.tonePitch;
+                button.dataset.tonePitch = block.tonePitch;
             }
             block.tempo && (button.dataset.tempo = block.tempo);
             block.noteValue && (button.dataset.noteValue = block.noteValue);
@@ -281,9 +277,9 @@ class BlockManager {
     exportMml(mml) {
         mml.setMmlArr([]);
         let lineIndex = 0, trackNo = 0;
-        const toneArr = this.#blocksData.filter(block => block.tone.tone !== undefined);
+        const toneArr = this.#blocksData.filter(block => block.tone !== undefined);
         const getTrackToneArr = () => toneArr.filter(block => block.trackNo === trackNo);
-        const getToneSet = () => new Set(getTrackToneArr().map(block => block.tone.tone));
+        const getToneSet = () => new Set(getTrackToneArr().map(block => block.tone));
         let toneSet = getToneSet();
         let toneIndex = 0;
         let toneAppended = false;
@@ -459,7 +455,7 @@ class BlockManager {
     importMml(mml) {
         const mmlArr = mml.getMmlArr();
         const regex = /((@(l|q|x|p|u|mh|w|n|f|e|'[aeiou]?'|o|i|r|s)?|q|x)[0-9\-, ]+)+|[><]*?[a-g]\+?[0-9]*\.*|t[0-9]+|l[0-9]+\.*|r[0-9]*\.*|o[0-8]|[><]+|@?v[0-9]+|[\)\(][0-9]+|@?ns-?[0-9]+|@d-?[0-9]+|&[0-9]*\.*|\/\*.*?\*\/|\/\*|\*\/|\/:[0-9]*|:\/|\/|\[|\]|\$.*?=|%[a-z0-9_]+|\$[a-z0-9_]+(\{[^\}]*\})?|^#.*|;| +|@pl[0-9]+|[^;]+/ig;
-        /* tone.tone|tone.tonePitch|tempo|noteValue|rest|octave|velocity|noteShift|detune|tieSlur|comment|repeatStartEnd|repeatBreak|polyStartEnd|macroDef|macroArgUse|macroUse|metaData|newTrack|space|otherAction */
+        /* tone|tonePitch|tempo|noteValue|rest|octave|velocity|noteShift|detune|tieSlur|comment|repeatStartEnd|repeatBreak|polyStartEnd|macroDef|macroArgUse|macroUse|metaData|newTrack|space|otherAction */
         const macroDefSet = new Set();
         const toneSet = new Set();
         let trackNo = 0;
@@ -487,8 +483,8 @@ class BlockManager {
                         const noteCount = [...toneSet].indexOf(toneCache) + 1;
                         block.label = '無調整';
                         block.className = `material-icons note note-${noteCount}`;
-                        block.tone.tone = toneCache;
-                        block.tone.tonePitch = str;
+                        block.tone = toneCache;
+                        block.tonePitch = str;
                         inMacro && (noteExist = true);
                     } else if (str.startsWith('t')) {
                         block.className = 'material-icons tempo';
@@ -722,7 +718,7 @@ class BlockManager {
                     }
                     i++;
                     attachMotion();
-                } else if (current.tone.tonePitch) {
+                } else if (current.tonePitch) {
                     if (withinPlaybackRange) {
                         resetAnimation(current.elem, 'bounce');
                     }
@@ -730,7 +726,7 @@ class BlockManager {
                     if (skip || !withinPlaybackRange) {
                         attachMotion();
                     } else {
-                        const currentNoteValue = noteValueStrCalc(current.tone.tonePitch);
+                        const currentNoteValue = noteValueStrCalc(current.tonePitch);
                         delayAttachMotion(currentNoteValue);
                     }
                 } else if (current.rest || current.tieSlur) {
@@ -753,7 +749,7 @@ class BlockManager {
                         i++;
                         attachMotion();
                     } else {
-                        const previousNoteValue = noteValueStrCalc(data[i++ - 1].tone.tonePitch);
+                        const previousNoteValue = noteValueStrCalc(data[i++ - 1].tonePitch);
                         delayAttachMotion(previousNoteValue);
                     }
                 } else if (current.macroDef && current.macroDef !== ';') {
