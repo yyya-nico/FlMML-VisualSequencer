@@ -292,7 +292,7 @@ class BlockManager {
         const hasPlayFromHere = startPos !== -1;
         const startPosTrackNo = !hasPlayFromHere ? -1 : this.#blocksData[startPos].trackNo;
         this.#blocksData.forEach((block, index) => {
-            const { tone, tonePitch } = block.tone;
+            const { tone, tonePitch } = block;
             const withinPlaybackRange = !hasPlayFromHere || inMacro || hasPlayFromHere && block.trackNo === startPosTrackNo && index >= startPos;
             if (block.trackNo !== trackNo) {
                 if (toneSet.size) {
