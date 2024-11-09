@@ -185,7 +185,14 @@ class BlockManager {
     checkSavedBlocksData() {
         localForage.getItem('BlocksData').then(data => {
             if (data) {
-                this.#blocksData = data;
+                this.#blocksData = data.map(block => {
+                    const legacyToneCandidate = block.tone;
+                    if (legacyToneCandidate.tone !== undefined && legacyToneCandidate.tonePitch !== undefined) {
+                        block.tone = legacyToneCandidate.tone;
+                        block.tonePitch = legacyToneCandidate.tonePitch;
+                    }
+                    return block;
+                });
                 this.parseBlocks();
                 this.blocksDataUpdate();
                 this.calcPoly();
