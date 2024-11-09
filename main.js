@@ -159,7 +159,11 @@ class BlockManager {
     }
 
     blocksDataUpdate() {
-        this.#blocksData = [...this.areaElem.querySelectorAll('.track button')].map(elem => ({
+        this.#blocksData = [...this.areaElem.querySelectorAll('.track button')].map(this.extractBlockData);
+    }
+    
+    extractBlockData(elem) {
+        return {
             label: elem.ariaLabel,
             className: elem.className,
             trackNo: [...document.getElementsByClassName('track')].findIndex(track => track.contains(elem)),
@@ -167,24 +171,9 @@ class BlockManager {
                 tone: elem.dataset.tone,
                 tonePitch: elem.dataset.tonePitch,
             },
-            tempo: elem.dataset.tempo,
-            noteValue: elem.dataset.noteValue,
-            rest: elem.dataset.rest,
-            octave: elem.dataset.octave,
-            velocity: elem.dataset.velocity,
-            noteShift: elem.dataset.noteShift,
-            detune: elem.dataset.detune,
-            tieSlur: elem.dataset.tieSlur,
-            repeatStartEnd: elem.dataset.repeatStartEnd,
-            repeatBreak: elem.dataset.repeatBreak,
-            polyStartEnd: elem.dataset.polyStartEnd,
-            macroDef: elem.dataset.macroDef,
-            macroArgUse: elem.dataset.macroArgUse,
-            macroUse: elem.dataset.macroUse,
-            metaData: elem.dataset.metaData,
-            otherAction: elem.dataset.otherAction,
+            ...elem.dataset,
             elem
-        }));
+        };
     }
 
     saveBlocksData() {
