@@ -462,8 +462,8 @@ class BlockManager {
 
     importMml(mml) {
         const mmlArr = mml.getMmlArr();
-        const regex = /((@(l|q|x|p|u|mh|w|n|f|e|'[aeiou]?'|o|i|r|s)?|q|x)[0-9\-, ]+)+|[><]*?[a-g]\+?[0-9]*\.*|t[0-9]+|l[0-9]+\.*|r[0-9]*\.*|o[0-8]|[><]+|@?v[0-9]+|[\)\(][0-9]+|@?ns-?[0-9]+|@d-?[0-9]+|&[0-9]*\.*|\/\*.*?\*\/|\/\*|\*\/|\/:[0-9]*|:\/|\/|\[|\]|\$.*?=|%[a-z0-9_]+|\$[a-z0-9_]+(\{[^\}]*\})?|^#.*|;| +|@pl[0-9]+|[^;]+/ig;
-        /* tone|tonePitch|tempo|noteValue|rest|octave|velocity|noteShift|detune|tieSlur|comment|repeatStartEnd|repeatBreak|polyStartEnd|macroDef|macroArgUse|macroUse|metaData|newTrack|space|otherAction */
+        const regex = /((@(l|q|x|p|u|mh|w|n|f|e|'[aeiou]?'|o|i|r|s)?|q|x)[0-9\-, ]+)+|[><]*?[a-g]\+?[0-9]*\.*|t[0-9]+|l[0-9]+\.*|r[0-9]*\.*|o[0-8]|[><]+|@?v[0-9]+|[\)\(][0-9]+|@?ns-?[0-9]+|@d-?[0-9]+|&[0-9]*\.*|\/\*.*?\*\/|\/\*|\*\/|\/:[0-9]*|:\/|\/|\[|\]|\$.*?=|%[a-z0-9_]+|\$[a-z0-9_.]+(\{[^\}]*\})?|^#.*|;| +|@pl[0-9]+|[^;]+/ig;
+        /* tone|tonePitch|tempo|noteValue|rest|octave|velocity|noteShift|detune|tieSlur|comment|repeatStartEnd|repeatBreak|polyStartEnd|macroDef|macroArgUse|macroUse|metaData|newTrack|space|otherAction */ /* マクロ使用の「.」は便宜上 */
         const macroDefSet = new Set();
         const toneSet = new Set();
         let trackNo = 0;
@@ -610,6 +610,28 @@ class BlockManager {
         });
         lastTouchedButton = null;
         const data = mmlArr.map(mmlTextLine => generateBlocks(mmlTextLine)).flat();
+        this.#blocksData = data;
+        this.parseBlocks();
+        this.blocksDataUpdate();
+        this.calcPoly();
+        this.saveBlocksData();
+    }
+
+    getBlocksData() {
+        return this.#blocksData;
+    }
+
+    setBlocksData(data) {
+        this.tonesElem.querySelector('ul').textContent = '';
+        this.areaElem.querySelectorAll('.track').forEach((track, notFirst) => {
+            if (notFirst) {
+                track.remove();
+            } else {
+                track.textContent = '';
+                this.activeTrack = track;
+            }
+        });
+        lastTouchedButton = null;
         this.#blocksData = data;
         this.parseBlocks();
         this.blocksDataUpdate();
@@ -3169,15 +3191,17 @@ clearBtn.addEventListener('click', () => {
         blockManager.exportMml(mml);
     }
 });
-
-copyBtn.addEventListener('click', () => {
-    const mmlText = mml.getMml();
+copyBtn.addEventListener('click', async e => {
+    const data = e.shiftKey ? JSON.stringify(blockManager.getBlocksData()) : mml.getMml();
     const textCache = copyBtn.innerHTML;
     copyBtn.disabled = true;
-    navigator.clipboard.writeText(mmlText)
+    navigator.clipboard.writeText(data)
         .then(() => {
             copyBtn.disabled = true;
             copyBtn.innerHTML = createMIsHtml('content_copy') + 'コピーしました';
+            if (e.shiftKey) {
+                alert('Shiftキーを押しながらクリックしたため、JSONブロックデータをコピーしました。');
+            }
             setTimeout(() => {
                 copyBtn.innerHTML = textCache;
                 copyBtn.disabled = false;
@@ -3193,9 +3217,24 @@ pasteBtn.addEventListener('click', () => {
         .then(text => {
             pasteBtn.disabled = true;
             if (text) {
-                mml.setMml(text.replace(/\r/g, ''));
-                blockManager.importMml(mml);
+                const isJson = (() => {
+                    try {
+                        JSON.parse(text);
+                        return true;
+                    } catch (e) {
+                        return false;
+                    }
+                })();
+                if (isJson) {
+                    blockManager.setBlocksData(JSON.parse(text));
+                } else {
+                    mml.setMml(text.replace(/\r/g, ''));
+                    blockManager.importMml(mml);
+                }
                 pasteBtn.innerHTML = createMIsHtml('content_paste') + '貼り付けました';
+                if (isJson) {
+                    alert('JSONブロックデータが貼り付けられました。');
+                }
             } else {
                 pasteBtn.innerHTML = createMIsHtml('content_paste') + '内容がありません';
             }
