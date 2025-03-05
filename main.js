@@ -6,7 +6,7 @@ import { FlMML } from 'flmml-on-html5';
 import localForage from 'localforage';
 import { Picker } from 'emoji-picker-element';
 import { polyfill } from 'mobile-drag-drop';
-import { htmlspecialchars, resetAnimation, useVisualViewportToCss, waitScroll } from './utils';
+import { htmlspecialchars, resetAnimation, useVisualViewportToCss, waitScroll, isValidJSON } from './utils';
 
 const version = import.meta.env.VITE_APP_VER;
 
@@ -3217,22 +3217,14 @@ pasteBtn.addEventListener('click', () => {
         .then(text => {
             pasteBtn.disabled = true;
             if (text) {
-                const isJson = (() => {
-                    try {
-                        JSON.parse(text);
-                        return true;
-                    } catch (e) {
-                        return false;
-                    }
-                })();
-                if (isJson) {
+                if (isValidJSON(text)) {
                     blockManager.setBlocksData(JSON.parse(text));
                 } else {
                     mml.setMml(text.replace(/\r/g, ''));
                     blockManager.importMml(mml);
                 }
                 pasteBtn.innerHTML = createMIsHtml('content_paste') + '貼り付けました';
-                if (isJson) {
+                if (isValidJSON(text)) {
                     alert('JSONブロックデータが貼り付けられました。');
                 }
             } else {
@@ -3246,18 +3238,21 @@ pasteBtn.addEventListener('click', () => {
         .catch(e => alert('貼り付けできませんでした\n' + e));
 });
 
-saveBtn.addEventListener('click', () => {
-    const mmlText = mml.getMml();
+saveBtn.addEventListener('click', e => {
     const mmlArr = mml.getMmlArr();
     const fileName = mmlArr.find(mmlTextLine => mmlTextLine.startsWith('#TITLE'))?.split(' ').slice(1).join(' ') ?? '無題';
-    const blob = new Blob([mmlText], { type: 'text/plain' });
+    const data = e.shiftKey ? JSON.stringify(blockManager.getBlocksData()) : mml.getMml();
+    const blob = new Blob([data], { type: e.shiftKey ? 'application/json' : 'text/plain' });
     const link = document.createElement('a');
-    link.download = fileName + '.mml';
+    link.download = fileName + (e.shiftKey ? '.json' : '.mml');
     link.href = URL.createObjectURL(blob);
     link.click();
     URL.revokeObjectURL(link.href);
     if (fileName === '無題') {
         alert('ファイル名を付けるには、先頭にメタデータブロックを追加->タイトルを選択して入力->確定してタイトルを付けてください。');
+    }
+    if (e.shiftKey) {
+        alert('Shiftキーを押しながらクリックしたため、JSONブロックデータを保存しました。');
     }
 });
 
@@ -3265,12 +3260,18 @@ openBtn.addEventListener('click', () => {
     const inputFile = document.createElement('input');
     const fr = new FileReader();
     inputFile.type = 'file';
-    inputFile.accept = '.mml,.flmml,.txt'
+    inputFile.accept = '.mml,.flmml,.txt,.json';
     inputFile.click();
     inputFile.onchange = () => {
         fr.onload = () => {
-            mml.setMml(fr.result);
-            blockManager.importMml(mml);
+            const text = fr.result;
+            if (isValidJSON(text)) {
+                blockManager.setBlocksData(JSON.parse(text));
+                alert('JSONブロックデータが読み込まれました。');
+            } else {
+                mml.setMml(text.replace(/\r/g, ''));
+                blockManager.importMml(mml);
+            }
         };
         fr.readAsText(inputFile.files[0]);
     }

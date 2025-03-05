@@ -52,4 +52,13 @@ const waitScroll = (target = window) => {
   });
 }
 
-export {htmlspecialchars, resetAnimation, useVisualViewportToCss, waitScroll}
+const isValidJSON = (json) => {
+  try {
+    JSON.parse(json);
+    return true;
+  } catch (e) {
+    return false;
+  }
+};
+
+export {htmlspecialchars, resetAnimation, useVisualViewportToCss, waitScroll, isValidJSON};
