@@ -873,7 +873,7 @@ class BlockManager {
             attachMotion();
             return promise;
         }
-        const numOfTracks = allData.at(-1).trackNo + 1;
+        const numOfTracks = allData.at(-1)?.trackNo + 1;
         for (let trackNo = 0; trackNo < numOfTracks; trackNo++) {
             const trackData = allData.filter(block => block.trackNo === trackNo);
             rendPerTrack(trackData);
