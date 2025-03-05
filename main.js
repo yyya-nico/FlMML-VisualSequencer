@@ -641,6 +641,9 @@ class BlockManager {
 
     playRendering(startPos = -1) {
         const allData = this.#blocksData;
+        if (!allData.length) {
+            return;
+        }
         const hasPlayFromHere = startPos !== -1;
         const startPosItem = allData[startPos];
         const startPosTrackNo = !hasPlayFromHere ? -1 : startPosItem.trackNo;
@@ -873,7 +876,7 @@ class BlockManager {
             attachMotion();
             return promise;
         }
-        const numOfTracks = allData.at(-1)?.trackNo + 1;
+        const numOfTracks = allData.at(-1).trackNo + 1;
         for (let trackNo = 0; trackNo < numOfTracks; trackNo++) {
             const trackData = allData.filter(block => block.trackNo === trackNo);
             rendPerTrack(trackData);
