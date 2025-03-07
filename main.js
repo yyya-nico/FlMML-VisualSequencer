@@ -586,6 +586,7 @@ class BlockManager {
                                 toneSet.clear();
                             }
                         }
+                        toneCache = '';
                         inMacro = false;
                         noteExist = false;
                         return;
