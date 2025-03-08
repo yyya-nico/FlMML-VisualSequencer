@@ -480,7 +480,27 @@ class BlockManager {
                     const block = {};
                     block.tone = {};
                     block.trackNo = trackNo;
-                    if (/((@(l|q|x|p|u|mh|w|n|f|e|'[aeiou]?'|o|i|r|s)?|q|x)[0-9\-, ]+)+/i.test(str)) {
+                    if (str.startsWith('#')) {
+                        const typeDefs = {
+                            '#TITLE': 'タイトル',
+                            '#ARTIST': 'アーティスト',
+                            '#COMMENT': 'コメント',
+                            '#CODING': '作成者',
+                            '#PRAGMA': 'PRAGMA',
+                            '#OCTAVE': '相対オクターブ反転',
+                            '#VELOCITY REVERSE': '相対ベロシティ反転',
+                            '#WAV9': '@9 波形データ',
+                            '#WAV10': '@10 波形データ',
+                            '#WAV13': '@13 波形データ',
+                            '#OPM': '@14 OPM音色データ',
+                            '#OPN': '@14 OPN音色データ',
+                            '#FMGAIN': '@14 音量利得',
+                            '#USING': '和音利用宣言',
+                        };
+                        block.label = (Object.entries(typeDefs).find(def => str.startsWith(def[0])) || [, undefined])[1];
+                        block.className = 'meta-data';
+                        block.metaData = str + '\n';
+                    } else if (/((@(l|q|x|p|u|mh|w|n|f|e|'[aeiou]?'|o|i|r|s)?|q|x)[0-9\-, ]+)+/i.test(str)) {
                         toneCache = str;
                         toneSet.add(toneCache);
                         return;
@@ -555,26 +575,6 @@ class BlockManager {
                         } else {
                             block.macroUse = str;
                         }
-                    } else if (str.startsWith('#')) {
-                        const typeDefs = {
-                            '#TITLE': 'タイトル',
-                            '#ARTIST': 'アーティスト',
-                            '#COMMENT': 'コメント',
-                            '#CODING': '作成者',
-                            '#PRAGMA': 'PRAGMA',
-                            '#OCTAVE': '相対オクターブ反転',
-                            '#VELOCITY REVERSE': '相対ベロシティ反転',
-                            '#WAV9': '@9 波形データ',
-                            '#WAV10': '@10 波形データ',
-                            '#WAV13': '@13 波形データ',
-                            '#OPM': '@14 OPM音色データ',
-                            '#OPN': '@14 OPN音色データ',
-                            '#FMGAIN': '@14 音量利得',
-                            '#USING': '和音利用宣言',
-                        };
-                        block.label = (Object.entries(typeDefs).find(def => str.startsWith(def[0])) || [, undefined])[1];
-                        block.className = 'meta-data';
-                        block.metaData = str + '\n';
                     } else if (str.startsWith(';')) {
                         trackNo++;
                         if (inMacro && !noteExist) {
