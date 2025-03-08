@@ -638,6 +638,8 @@ class BlockManager {
         this.blocksDataUpdate();
         this.calcPoly();
         this.saveBlocksData();
+        this.exportMml(mml);
+        this.calcPlayFromHere();
     }
 
     playRendering(startPos = -1) {
