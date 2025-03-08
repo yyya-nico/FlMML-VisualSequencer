@@ -746,6 +746,7 @@ class BlockManager {
                             if (withinPlaybackRange) {
                                 resetAnimation(current.elem, 'pop');
                             }
+                            repeatData[jump] = null;
                             jump = -1;
                         }
                         nest--;
@@ -799,13 +800,24 @@ class BlockManager {
                     }
                     if (current.repeatStartEnd?.startsWith('/:')) {
                         repeatData[++nest] ??= {};
-                        repeatData[nest].start = i;
-                        if (!repeatData[nest].end) {
-                            repeatData[nest].remaining = current.repeatStartEnd.replace('/:', '');
-                            repeatData[nest].remaining = repeatData[nest].remaining === '' ? 2 : Number(repeatData[nest].remaining);
-                            if (!repeatData[nest].remaining) {
-                                jump = nest;
+                        repeatData[nest].start ??= i
+                        const count = current.repeatStartEnd.replace('/:', '');
+                        repeatData[nest].count ??= count === '' ? 2 : Number(count);
+                        if (!repeatData[nest].count) {
+                            jump = nest;
+                        } else {
+                            if (repeatData[nest].end) {
+                                if (repeatData[nest].remaining === 0) {
+                                    jump = nest;
+                                } else {
+                                    data.slice(repeatData[nest].start + 1, repeatData[nest].end - 1).filter(block => block.repeatStartEnd?.startsWith('/:')).forEach(block => {
+                                        block.elem.dataset.repeatStartEnd = block.repeatStartEnd;
+                                    });
+                                }
+                            } else {
+                                repeatData[nest].remaining = repeatData[nest].count;
                             }
+                            current.elem.dataset.repeatStartEnd = `/:${repeatData[nest].remaining}`;
                         }
                     } else if (current.repeatBreak) {
                         if (repeatData[nest].remaining === 1) {
@@ -832,9 +844,9 @@ class BlockManager {
                             return;
                         }
                     } else if (current.repeatStartEnd === ':/') {
-                        repeatData[nest].remaining--;
+                        repeatData[nest].end ??= i;
                         if (repeatData[nest].remaining) {
-                            repeatData[nest].end = i;
+                            repeatData[nest].remaining--;
                             i = repeatData[nest].start;
                             nest--;
                             attachMotion();
@@ -843,7 +855,6 @@ class BlockManager {
                             }
                             return;
                         }
-                        repeatData[nest].end = null;
                         nest--;
                     } else if (current.macroUse) {
                         if (withinPlaybackRange) {
@@ -892,6 +903,9 @@ class BlockManager {
         removeTrackBtn.disabled = false;
         this.#blocksData.forEach(block => {
             block.elem.classList.remove('done');
+        });
+        this.#blocksData.filter(block => block.repeatStartEnd?.startsWith('/:')).forEach(block => {
+            block.elem.dataset.repeatStartEnd = block.repeatStartEnd;
         });
         this.#rAFs.forEach(rAF => {
             cancelAnimationFrame(rAF);
