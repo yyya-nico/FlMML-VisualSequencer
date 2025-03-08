@@ -674,7 +674,7 @@ class BlockManager {
         } = {}) => {
             let skip = false, jump = -1, nest = -1, inMacro = false;
             let scrWaiting = false;
-            const repeatStart = [], repeatEnd = [], remainingRepeat = [];
+            const repeatData = [];
             const start = performance.now();
             const trackNo = data[0]?.trackNo;
             const track = tracks[trackNo];
@@ -798,22 +798,22 @@ class BlockManager {
                         resetAnimation(current.elem, 'pop');
                     }
                     if (current.repeatStartEnd?.startsWith('/:')) {
-                        repeatStart[++nest] = i;
-                        if (!repeatEnd[nest]) {
-                            remainingRepeat[nest] = current.repeatStartEnd.replace('/:', '');
-                            remainingRepeat[nest] = remainingRepeat[nest] === '' ? 2 : Number(remainingRepeat[nest]);
-                            if (!remainingRepeat[nest]) {
+                        repeatData[++nest] = {};
+                        repeatData[nest].start = i;
+                        if (!repeatData[nest].end) {
+                            repeatData[nest].remaining = current.repeatStartEnd.replace('/:', '');
+                            repeatData[nest].remaining = repeatData[nest].remaining === '' ? 2 : Number(repeatData[nest].remaining);
+                            if (!repeatData[nest].remaining) {
                                 jump = nest;
                             }
                         }
                     } else if (current.repeatBreak) {
-                        if (remainingRepeat[nest] === 1) {
-                            if (!repeatEnd[nest]) {
+                        if (repeatData[nest].remaining === 1) {
+                            if (!repeatData[nest].end) {
                                 let tempNest = nest;
-                                repeatEnd[nest] = data.findIndex((block, i) => {
-                                    if (i > repeatStart[nest]) {
-                                        console.log(tempNest);
-                                        if (block.repeatStartEnd.startsWith('/:')) {
+                                repeatData[nest].end = data.findIndex((block, i) => {
+                                    if (i > repeatData[nest].start) {
+                                        if (block.repeatStartEnd?.startsWith('/:')) {
                                             tempNest++;
                                         } else if (block.repeatStartEnd === ':/') {
                                             if (tempNest === nest) {
@@ -824,7 +824,7 @@ class BlockManager {
                                     }
                                 });
                             }
-                            i = repeatEnd[nest];
+                            i = repeatData[nest].end;
                             attachMotion();
                             if (withinPlaybackRange) {
                                 resetAnimation(current.elem, 'done');
@@ -832,10 +832,10 @@ class BlockManager {
                             return;
                         }
                     } else if (current.repeatStartEnd === ':/') {
-                        remainingRepeat[nest]--;
-                        if (remainingRepeat[nest]) {
-                            repeatEnd[nest] = i;
-                            i = repeatStart[nest];
+                        repeatData[nest].remaining--;
+                        if (repeatData[nest].remaining) {
+                            repeatData[nest].end = i;
+                            i = repeatData[nest].start;
                             nest--;
                             attachMotion();
                             if (withinPlaybackRange) {
@@ -843,7 +843,7 @@ class BlockManager {
                             }
                             return;
                         }
-                        repeatEnd[nest] = null;
+                        repeatData[nest].end = null;
                         nest--;
                     } else if (current.macroUse) {
                         if (withinPlaybackRange) {
