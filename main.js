@@ -610,7 +610,7 @@ class BlockManager {
             }
         });
         lastTouchedButton = null;
-        const data = mmlArr.map(mmlTextLine => generateBlocks(mmlTextLine)).flat();
+        const data = mmlArr.map(generateBlocks).flat();
         this.#blocksData = data;
         this.parseBlocks();
         this.blocksDataUpdate();
