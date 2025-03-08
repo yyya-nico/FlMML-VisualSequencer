@@ -801,8 +801,7 @@ class BlockManager {
                         repeatData[++nest] = {};
                         repeatData[nest].start = i;
                         if (!repeatData[nest].end) {
-                            repeatData[nest].remaining = current.repeatStartEnd.replace('/:', '');
-                            repeatData[nest].remaining = repeatData[nest].remaining === '' ? 2 : Number(repeatData[nest].remaining);
+                            repeatData[nest].remaining = Number(current.repeatStartEnd.replace('/:', '')) || 2;
                             if (!repeatData[nest].remaining) {
                                 jump = nest;
                             }
