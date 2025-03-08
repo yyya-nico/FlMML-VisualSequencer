@@ -800,35 +800,33 @@ class BlockManager {
                     current.tempo && (tempo = Number(current.tempo.replace('t', '')) || tempo);
                     current.noteValue && (scoreNoteValue = noteValueStrCalc(current.noteValue));
                     if (current.repeatStartEnd?.startsWith('/:')) {
-                        repeatData[++nest] ??= {};
-                        repeatData[nest].start ??= i
-                        const count = current.repeatStartEnd.replace('/:', '');
-                        repeatData[nest].count ??= count === '' ? 2 : Number(count);
-                        if (!repeatData[nest].count) {
-                            i = findRepeatEndIndex(repeatData[nest].start);
+                        repeatData[++nest] ??= {
+                            start: i
+                        };
+                        let count = current.repeatStartEnd.replace('/:', '');
+                        count = count === '' ? 2 : Number(count);
+                        if (!count) {
+                            i = findRepeatEndIndex(i);
                             attachMotion();
                             if (withinPlaybackRange) {
                                 resetAnimation(current.elem, 'pop');
                                 resetAnimation(current.elem, 'done');
                             }
                             return;
-                        } else {
-                            if (repeatData[nest].end) {
-                                if (repeatData[nest].remaining === 0) {
-                                    current.elem.dataset.repeatStartEnd = `/:${repeatData[nest].remaining}`;
-                                    i = repeatData[nest].end;
-                                    attachMotion();
-                                    return;
-                                } else {
-                                    data.slice(repeatData[nest].start + 1, repeatData[nest].end - 1).filter(block => block.repeatStartEnd?.startsWith('/:')).forEach(block => {
-                                        block.elem.dataset.repeatStartEnd = block.repeatStartEnd;
-                                    });
-                                }
-                            } else {
-                                repeatData[nest].remaining = repeatData[nest].count;
+                        } else if (repeatData[nest].end) {
+                            if (!repeatData[nest].remaining) {
+                                current.elem.dataset.repeatStartEnd = `/:${repeatData[nest].remaining}`;
+                                i = repeatData[nest].end;
+                                attachMotion();
+                                return;
                             }
-                            current.elem.dataset.repeatStartEnd = `/:${repeatData[nest].remaining}`;
+                            data.slice(repeatData[nest].start + 1, repeatData[nest].end - 1).filter(block => block.repeatStartEnd?.startsWith('/:')).forEach(block => {
+                                block.elem.dataset.repeatStartEnd = block.repeatStartEnd;
+                            });
+                        } else {
+                            repeatData[nest].remaining = count;
                         }
+                        current.elem.dataset.repeatStartEnd = `/:${repeatData[nest].remaining}`;
                     } else if (current.repeatBreak) {
                         if (repeatData[nest].remaining === 1) {
                             if (!repeatData[nest].end) {
