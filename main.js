@@ -798,7 +798,7 @@ class BlockManager {
                         resetAnimation(current.elem, 'pop');
                     }
                     if (current.repeatStartEnd?.startsWith('/:')) {
-                        repeatData[++nest] = {};
+                        repeatData[nest] ??= {};
                         repeatData[nest].start = i;
                         if (!repeatData[nest].end) {
                             repeatData[nest].remaining = Number(current.repeatStartEnd.replace('/:', '')) || 2;
@@ -836,6 +836,7 @@ class BlockManager {
                             repeatData[nest].end = i;
                             i = repeatData[nest].start;
                             nest--;
+                            console.log(repeatData[0]);
                             attachMotion();
                             if (withinPlaybackRange) {
                                 resetAnimation(current.elem, 'done');
