@@ -672,7 +672,7 @@ class BlockManager {
             scoreNoteValue = 4,
             ignorePlayFromHere = false
         } = {}) => {
-            let skip = false, jump = -1, nest = -1, inMacro = false;
+            let skip = false, nest = -1, inMacro = false;
             let scrWaiting = false;
             const repeatData = [];
             const start = performance.now();
@@ -730,6 +730,23 @@ class BlockManager {
                     return;
                 }
                 scrollTask(current);
+                const findRepeatEndIndex = start => {
+                    let nest = 0;
+                    return data.findIndex((block, i) => {
+                        if (i > start + 1) {
+                            if (block.repeatStartEnd?.startsWith('/:')) {
+                                nest++;
+                            } else if (block.repeatStartEnd === ':/') {
+                                if (nest === 0) {
+                                    return true;
+                                } else {
+                                    nest--;
+                                }
+                            }
+                        }
+                        return false;
+                    });
+                };
                 const withinPlaybackRange = !hasPlayFromHere || ignorePlayFromHere || hasPlayFromHere && current.trackNo === startPosTrackNo && i >= startPos;
                 if (inMacro) {
                     if (current.macroDef === ';') {
@@ -738,21 +755,6 @@ class BlockManager {
                     i++;
                     attachMotion();
                     return;
-                } else if (jump !== -1) {
-                    if (current.repeatStartEnd?.startsWith('/:')) {
-                        nest++;
-                    } else if (current.repeatStartEnd === ':/') {
-                        if (nest === jump) {
-                            if (withinPlaybackRange) {
-                                resetAnimation(current.elem, 'pop');
-                            }
-                            repeatData[jump] = null;
-                            jump = -1;
-                        }
-                        nest--;
-                    }
-                    i++;
-                    attachMotion();
                 } else if (current.tonePitch) {
                     if (withinPlaybackRange) {
                         resetAnimation(current.elem, 'bounce');
@@ -795,20 +797,26 @@ class BlockManager {
                 } else {
                     current.tempo && (tempo = Number(current.tempo.replace('t', '')) || tempo);
                     current.noteValue && (scoreNoteValue = noteValueStrCalc(current.noteValue));
-                    if (withinPlaybackRange) {
-                        resetAnimation(current.elem, 'pop');
-                    }
                     if (current.repeatStartEnd?.startsWith('/:')) {
                         repeatData[++nest] ??= {};
                         repeatData[nest].start ??= i
                         const count = current.repeatStartEnd.replace('/:', '');
                         repeatData[nest].count ??= count === '' ? 2 : Number(count);
                         if (!repeatData[nest].count) {
-                            jump = nest;
+                            i = findRepeatEndIndex(repeatData[nest].start);
+                            attachMotion();
+                            if (withinPlaybackRange) {
+                                resetAnimation(current.elem, 'pop');
+                                resetAnimation(current.elem, 'done');
+                            }
+                            return;
                         } else {
                             if (repeatData[nest].end) {
                                 if (repeatData[nest].remaining === 0) {
-                                    jump = nest;
+                                    current.elem.dataset.repeatStartEnd = `/:${repeatData[nest].remaining}`;
+                                    i = repeatData[nest].end;
+                                    attachMotion();
+                                    return;
                                 } else {
                                     data.slice(repeatData[nest].start + 1, repeatData[nest].end - 1).filter(block => block.repeatStartEnd?.startsWith('/:')).forEach(block => {
                                         block.elem.dataset.repeatStartEnd = block.repeatStartEnd;
@@ -822,23 +830,12 @@ class BlockManager {
                     } else if (current.repeatBreak) {
                         if (repeatData[nest].remaining === 1) {
                             if (!repeatData[nest].end) {
-                                let tempNest = nest;
-                                repeatData[nest].end = data.findIndex((block, i) => {
-                                    if (i > repeatData[nest].start) {
-                                        if (block.repeatStartEnd?.startsWith('/:')) {
-                                            tempNest++;
-                                        } else if (block.repeatStartEnd === ':/') {
-                                            if (tempNest === nest) {
-                                                return true;
-                                            }
-                                            tempNest--;
-                                        }
-                                    }
-                                });
+                                repeatData[nest].end = findRepeatEndIndex(repeatData[nest].start);
                             }
                             i = repeatData[nest].end;
                             attachMotion();
                             if (withinPlaybackRange) {
+                                resetAnimation(current.elem, 'pop');
                                 resetAnimation(current.elem, 'done');
                             }
                             return;
@@ -851,10 +848,12 @@ class BlockManager {
                             nest--;
                             attachMotion();
                             if (withinPlaybackRange) {
+                                resetAnimation(current.elem, 'pop');
                                 resetAnimation(current.elem, 'done');
                             }
                             return;
                         }
+                        repeatData.pop();
                         nest--;
                     } else if (current.macroUse) {
                         if (withinPlaybackRange) {
@@ -880,6 +879,9 @@ class BlockManager {
                     }
                     i++;
                     attachMotion();
+                    if (withinPlaybackRange) {
+                        resetAnimation(current.elem, 'pop');
+                    }
                 }
                 if (withinPlaybackRange) {
                     resetAnimation(current.elem, 'done');
