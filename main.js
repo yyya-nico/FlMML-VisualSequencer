@@ -2432,28 +2432,6 @@ document.addEventListener('keydown', e => {
     }
 });
 
-const noteValueChanger = name => {
-    const noteValueInput = dialogForm.elements[name];
-    let beforeValue = noteValueInput.valueAsNumber;
-    let validNoteValueIndex = validNoteValues.findIndex(value => value === beforeValue);
-    noteValueInput.addEventListener('input', () => {
-        const currentValue = noteValueInput.valueAsNumber;
-        // console.log(currentValue, beforeValue);
-        if (currentValue !== beforeValue) {
-            if (currentValue === 0) {
-                validNoteValueIndex = -1;
-                noteValueInput.value = '';
-            } else if (currentValue > beforeValue || Number.isNaN(beforeValue)) {
-                noteValueInput.value = validNoteValues[++validNoteValueIndex];
-            } else if (currentValue < beforeValue) {
-                noteValueInput.value = validNoteValues[--validNoteValueIndex];
-            }
-            beforeValue = noteValueInput.valueAsNumber;
-        }
-        // console.log(validNoteValueIndex);
-    });
-};
-
 editor.addEventListener('click', async e => {
     const ctrlKey = e.ctrlKey || ctrlSw.checked;
     const is = id => Boolean(e.target.closest('#' + id));
