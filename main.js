@@ -1577,7 +1577,7 @@ class DialogFormManager {
                 case 'description':
                     (() => {
                         const p = document.createElement('p');
-                        p.innerHTML = def.description.replaceAll('\n', '<br>');
+                        p.innerText = def.description;
                         dialogForm.description.appendChild(p);
                     })();
                     break;
@@ -1855,7 +1855,7 @@ const playAnimationStart = () => {
     blockManager.playRendering(startPos);
 };
 const compileHandler = () => {
-    warnOut.innerHTML = flmml.getWarnings().replaceAll('\n', '<br>');
+    warnOut.innerText = flmml.getWarnings();
 };
 flmml.addEventListener('compilecomplete', compileHandler);
 const completeHandler = () => {
