@@ -618,11 +618,11 @@ class BlockManager {
         this.saveBlocksData();
     }
 
-    getBlocksData() {
+    get blocksData() {
         return this.#blocksData;
     }
 
-    setBlocksData(data) {
+    set blocksData(data) {
         this.tonesElem.querySelector('ul').textContent = '';
         this.areaElem.querySelectorAll('.track').forEach((track, notFirst) => {
             if (notFirst) {
@@ -3212,7 +3212,7 @@ clearBtn.addEventListener('click', () => {
     }
 });
 copyBtn.addEventListener('click', async e => {
-    const data = e.shiftKey ? JSON.stringify(blockManager.getBlocksData()) : mml.getMml();
+    const data = e.shiftKey ? JSON.stringify(blockManager.blocksData) : mml.getMml();
     const textCache = copyBtn.innerHTML;
     copyBtn.disabled = true;
     navigator.clipboard.writeText(data)
@@ -3238,7 +3238,7 @@ pasteBtn.addEventListener('click', () => {
             pasteBtn.disabled = true;
             if (text) {
                 if (isValidJSON(text)) {
-                    blockManager.setBlocksData(JSON.parse(text));
+                    blockManager.blocksData = JSON.parse(text);
                 } else {
                     mml.setMml(text.replace(/\r/g, ''));
                     blockManager.importMml(mml);
@@ -3261,7 +3261,7 @@ pasteBtn.addEventListener('click', () => {
 saveBtn.addEventListener('click', e => {
     const mmlArr = mml.getMmlArr();
     const fileName = mmlArr.find(mmlTextLine => mmlTextLine.startsWith('#TITLE'))?.split(' ').slice(1).join(' ') ?? '無題';
-    const data = e.shiftKey ? JSON.stringify(blockManager.getBlocksData()) : mml.getMml();
+    const data = e.shiftKey ? JSON.stringify(blockManager.blocksData) : mml.getMml();
     const blob = new Blob([data], { type: e.shiftKey ? 'application/json' : 'text/plain' });
     const link = document.createElement('a');
     link.download = fileName + (e.shiftKey ? '.json' : '.mml');
@@ -3286,7 +3286,7 @@ openBtn.addEventListener('click', () => {
         fr.onload = () => {
             const text = fr.result;
             if (isValidJSON(text)) {
-                blockManager.setBlocksData(JSON.parse(text));
+                blockManager.blocksData = JSON.parse(text);
                 alert('JSONブロックデータが読み込まれました。');
             } else {
                 mml.setMml(text.replace(/\r/g, ''));
