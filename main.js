@@ -138,6 +138,7 @@ class Mml {
 
 class BlockManager {
     #blocksData = [];
+    #macroNameSet = new Set();
     #rAFs = [];
     #saveDelayTimer = null;
     #activeTrack = null;
@@ -205,6 +206,7 @@ class BlockManager {
     parseBlocks() {
         const data = this.#blocksData;
         // console.log(data);
+        const macroNameSetIsEmpty = !this.#macroNameSet.size;
         this.activeTrack = this.areaElem.querySelector('.track');
         const tonesUl = this.tonesElem.querySelector('ul');
         let trackNo = 0;
@@ -269,6 +271,9 @@ class BlockManager {
             if (block.macroDef) {
                 button.dataset.macroDef = block.macroDef;
                 button.textContent = block.macroDef === ';' ? ';' : '$=';
+                if (macroNameSetIsEmpty) {
+                    this.#macroNameSet.add((block.macroDef.match(/\$([^\{\=]*)[\{\=]/) || [, ''])[1]);
+                }
             }
             block.macroArgUse && (button.dataset.macroArgUse = block.macroArgUse);
             block.macroUse && (button.dataset.macroUse = block.macroUse);
@@ -464,7 +469,7 @@ class BlockManager {
         const mmlArr = mml.getMmlArr();
         const regex = /((@(l|q|x|p|u|mh|w|n|f|e|'[aeiou]?'|o|i|r|s)?|q|x)[0-9\-, ]+)+|[><]*?[a-g]\+?[0-9]*\.*|t[0-9]+|l[0-9]+\.*|r[0-9]*\.*|o[0-8]|[><]+|@?v[0-9]+|[\)\(][0-9]+|@?ns-?[0-9]+|@d-?[0-9]+|&[0-9]*\.*|\/\*.*?\*\/|\/\*|\*\/|\/:[0-9]*|:\/|\/|\[|\]|\$.*?=|%[a-z0-9_]+|\$[a-z0-9_.]+(\{[^\}]*\})?|^#.*|;| +|@pl[0-9]+|[^;]+/ig;
         /* tone|tonePitch|tempo|noteValue|rest|octave|velocity|noteShift|detune|tieSlur|comment|repeatStartEnd|repeatBreak|polyStartEnd|macroDef|macroArgUse|macroUse|metaData|newTrack|space|otherAction */ /* マクロ使用の「.」は便宜上 */
-        const macroDefSet = new Set();
+        this.#macroNameSet.clear();
         const toneSet = new Set();
         let trackNo = 0;
         let toneCache = ''
@@ -556,18 +561,20 @@ class BlockManager {
                     } else if (/^\$.*?=$/.test(str)) {
                         block.className = 'macro-def';
                         block.macroDef = str.replaceAll(' ', '');
-                        macroDefSet.add(block.macroDef.slice(0, -1));
+                        this.#macroNameSet.add((block.macroDef.match(/\$([^\{\=]*)[\{\=]/) || [, ''])[1]);
                         inMacro = true;
                     } else if (str.startsWith('%')) {
                         block.className = 'macro-arg-use';
                         block.macroArgUse = str;
                     } else if (str.startsWith('$')) {
                         block.className = 'macro-use';
-                        const foundMacroDef = [...macroDefSet].sort((a, b) => b.length - a.length).find(def => str.includes(def));
-                        if (foundMacroDef) {
-                            block.macroUse = foundMacroDef;
+                        const macroName = (str.match(/\$([^\{\=]*)[\{\=]/) || [, ''])[1];
+                        const foundMacroName = [...this.#macroNameSet].sort((a, b) => b.length - a.length).find(def => macroName.includes(def));
+                        if (foundMacroName) {
+                            const macroArg = (str.match(/\{[^\}]*\}/) || [''])[0];
+                            block.macroUse = `$${foundMacroName}${macroArg}`;
                             data.push(block);
-                            const remaining = str.replace(foundMacroDef, '');
+                            const remaining = str.replace(foundMacroName, '');
                             if (remaining !== '') {
                                 data = data.concat(generateBlocks(remaining));
                             }
@@ -633,6 +640,7 @@ class BlockManager {
             }
         });
         lastTouchedButton = null;
+        this.#macroNameSet.clear();
         this.#blocksData = data;
         this.parseBlocks();
         this.blocksDataUpdate();
