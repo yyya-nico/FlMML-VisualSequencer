@@ -1183,13 +1183,15 @@ class DialogFormManager {
                 {
                     label: '名前',
                     type: 'text',
-                    name: 'tone-name'
+                    name: 'tone-name',
+                    value: (mmlText, item) => item.ariaLabel
                 },
                 {
                     label: '音の定義',
                     type: 'text',
                     name: 'tone-def',
-                    autofocus: true
+                    autofocus: true,
+                    value: (mmlText) => mmlText
                 }
             ],
             buttons: [
@@ -1199,6 +1201,15 @@ class DialogFormManager {
                     textContent: '確定'
                 }
             ],
+            run: (mmlText, inputElems) => {
+                const {'tone-name': toneNameInput} = inputElems;
+                toneNameInput.insertAdjacentElement('afterend', picker);
+                const pickerElem = document.querySelector('emoji-picker');
+                toneNameInput.addEventListener('focus', () => {
+                    pickerElem.classList.add('expaned');
+                }, { once: true });
+                pickerElem.addEventListener('emoji-click', e => toneNameInput.value = e.detail.unicode);
+            },
             on: {
                 'set-tone': (target, inputs) => {
                     const {'tone-name': toneName, 'tone-def': toneDef} = inputs;
@@ -1222,13 +1233,15 @@ class DialogFormManager {
                     type: 'number',
                     name: 'tone-pitch',
                     min: '0',
-                    max: '384'
+                    max: '384',
+                    value: (mmlText) => (mmlText.match(/[0-9]+/) || [''])[0]
                 },
                 {
                     label: '付点の数',
                     type: 'number',
                     name: 'dot',
-                    min: '0'
+                    min: '0',
+                    value: (mmlText) => (mmlText.match(/\.+/) || [''])[0].length
                 }
             ],
             buttons: [
@@ -1238,6 +1251,10 @@ class DialogFormManager {
                     textContent: '確定'
                 }
             ],
+            run: (mmlText, inputElems) => {
+                const {'tone-pitch': tonePitchInput} = inputElems;
+                this.#noteValueChanger(tonePitchInput);
+            },
             on: {
                 'set-tone-pitch': (target, inputs) => {
                     const {'tone-pitch': tonePitch, dot} = inputs;
@@ -1252,7 +1269,8 @@ class DialogFormManager {
                     label: 'テンポ指定(BPM)',
                     type: 'number',
                     name: 'tempo',
-                    min: '0'
+                    min: '0',
+                    value: (mmlText) => mmlText.replace('t', '')
                 }
             ],
             buttons: [
@@ -1277,13 +1295,15 @@ class DialogFormManager {
                     type: 'number',
                     name: 'note-value',
                     min: '0',
-                    max: '384'
+                    max: '384',
+                    value: (mmlText) => (mmlText.match(/[0-9]+/) || [''])[0]
                 },
                 {
                     label: '付点の数',
                     type: 'number',
                     name: 'dot',
-                    min: '0'
+                    min: '0',
+                    value: (mmlText) => (mmlText.match(/\.+/) || [''])[0].length
                 }
             ],
             buttons: [
@@ -1293,6 +1313,10 @@ class DialogFormManager {
                     textContent: '確定'
                 }
             ],
+            run: (mmlText, inputElems) => {
+                const {'note-value': noteValueInput} = inputElems;
+                this.#noteValueChanger(noteValueInput);
+            },
             on: {
                 'set-note-value': (target, inputs) => {
                     const {'note-value': noteValue, dot} = inputs;
@@ -1308,13 +1332,15 @@ class DialogFormManager {
                     type: 'number',
                     name: 'rest',
                     min: '0',
-                    max: '384'
+                    max: '384',
+                    value: (mmlText) => (mmlText.match(/[0-9]+/) || [''])[0]
                 },
                 {
                     label: '付点の数',
                     type: 'number',
                     name: 'dot',
-                    min: '0'
+                    min: '0',
+                    value: (mmlText) => (mmlText.match(/\.+/) || [''])[0].length
                 }
             ],
             buttons: [
@@ -1324,6 +1350,10 @@ class DialogFormManager {
                     textContent: '確定'
                 }
             ],
+            run: (mmlText, inputElems) => {
+                const {rest: restInput} = inputElems;
+                this.#noteValueChanger(restInput);
+            },
             on: {
                 'set-rest': (target, inputs) => {
                     const {rest, dot} = inputs;
@@ -1339,7 +1369,8 @@ class DialogFormManager {
                     type: 'number',
                     name: 'octave',
                     min: '-8',
-                    max: '8'
+                    max: '8',
+                    value: (mmlText) => mmlText.startsWith('o') ? mmlText.replace('o', '') : (mmlText.match(/[><]+/) || [''])[0].length
                 }
             ],
             buttons: [
@@ -1372,7 +1403,8 @@ class DialogFormManager {
                     type: 'number',
                     name: 'velocity',
                     min: '-127',
-                    max: '127'
+                    max: '127',
+                    value: (mmlText) => mmlText.startsWith('@v') ? mmlText.replace('@v', '') : Number((mmlText.match(/[0-9]+/) || [''])[0]) * (mmlText.startsWith('(') ? 1 : -1)
                 }
             ],
             buttons: [
@@ -1403,7 +1435,8 @@ class DialogFormManager {
                 {
                     label: 'シフト量',
                     type: 'number',
-                    name: 'note-shift'
+                    name: 'note-shift',
+                    value: (mmlText) => (mmlText.match(/[0-9]+/) || [''])[0]
                 }
             ],
             buttons: [
@@ -1434,7 +1467,8 @@ class DialogFormManager {
                 {
                     label: 'デチューン量',
                     type: 'number',
-                    name: 'detune'
+                    name: 'detune',
+                    value: (mmlText) => mmlText.replace('@d', '')
                 }
             ],
             buttons: [
@@ -1459,13 +1493,15 @@ class DialogFormManager {
                     type: 'number',
                     name: 'tie-slur',
                     min: '0',
-                    max: '384'
+                    max: '384',
+                    value: (mmlText) => (mmlText.match(/[0-9]+/) || [''])[0]
                 },
                 {
                     label: '付点の数',
                     type: 'number',
                     name: 'dot',
-                    min: '0'
+                    min: '0',
+                    value: (mmlText) => (mmlText.match(/\.+/) || [''])[0].length
                 }
             ],
             buttons: [
@@ -1475,6 +1511,10 @@ class DialogFormManager {
                     textContent: '確定'
                 }
             ],
+            run: (mmlText, inputElems) => {
+                const {'tie-slur': tieSlurInput} = inputElems;
+                this.#noteValueChanger(tieSlurInput);
+            },
             on: {
                 'set-tie-slur': (target, inputs) => {
                     const {'tie-slur': tieSlur, dot} = inputs;
@@ -1494,7 +1534,8 @@ class DialogFormManager {
                     label: 'ループ回数',
                     type: 'number',
                     name: 'repeat',
-                    min: '0'
+                    min: '0',
+                    value: (mmlText) => mmlText.replace('/:', '')
                 }
             ],
             buttons: [
@@ -1517,12 +1558,14 @@ class DialogFormManager {
                 {
                     label: '名前',
                     type: 'text',
-                    name: 'macro-def-name'
+                    name: 'macro-def-name',
+                    value: (mmlText) => (mmlText.match(/\$([^\{\=]*)[\{\=]/) || [, ''])[1]
                 },
                 {
                     label: '引数 カンマ区切り',
                     type: 'text',
-                    name: 'macro-def-arg'
+                    name: 'macro-def-arg',
+                    value: (mmlText) => (mmlText.match(/\{([^\}]*)\}/) || [, ''])[1]
                 }
             ],
             buttons: [
@@ -1549,7 +1592,8 @@ class DialogFormManager {
                 {
                     label: '引数名',
                     type: 'text',
-                    name: 'macro-arg-use'
+                    name: 'macro-arg-use',
+                    value: (mmlText) => mmlText.replace('%', '')
                 }
             ],
             buttons: [
@@ -1572,12 +1616,14 @@ class DialogFormManager {
                 {
                     label: '名前',
                     type: 'text',
-                    name: 'macro-use-name'
+                    name: 'macro-use-name',
+                    value: (mmlText) => (mmlText.match(/\$([^\{]*)\{?/) || [, ''])[1]
                 },
                 {
                     label: '引数 カンマ区切り',
                     type: 'text',
-                    name: 'macro-use-arg'
+                    name: 'macro-use-arg',
+                    value: (mmlText) => (mmlText.match(/\{([^\}]*)\}/) || [, ''])[1]
                 }
             ],
             buttons: [
@@ -1615,17 +1661,17 @@ class DialogFormManager {
                         '#FMGAIN {n}\n': '@14 音量利得',
                         '#USING POLY {n} force\n': '和音利用宣言',
                     },
-                    name: 'select-meta-data'
+                    name: 'select-meta-data',
                 },
                 {
                     label: ' ',
                     type: 'number',
-                    name: 'number'
+                    name: 'number',
                 },
                 {
                     label: ' ',
                     type: 'text',
-                    name: 'text'
+                    name: 'text',
                 },
             ],
             buttons: [
@@ -1635,6 +1681,110 @@ class DialogFormManager {
                     textContent: '確定'
                 }
             ],
+            run: (mmlText, inputElems) => {
+                const {'select-meta-data': metaDataSelect, number: numberInput, text: textInput} = inputElems;
+                const metaDataSplit = mmlText.split(' ');
+                const typeDefs = [
+                    '#TITLE',
+                    '#ARTIST',
+                    '#COMMENT',
+                    '#CODING',
+                    '#PRAGMA',
+                    '#OCTAVE',
+                    '#VELOCITY',
+                    '#WAV9',
+                    '#WAV10',
+                    '#WAV13',
+                    '#OPM',
+                    '#OPN',
+                    '#FMGAIN',
+                    '#USING',
+                ];
+                let selectIndex = typeDefs.findIndex(def => metaDataSplit[0].startsWith(def));
+                selectIndex === -1 && (selectIndex = 0);
+                metaDataSelect.selectedIndex = selectIndex;
+                const getLabelTextNode = elem => elem.previousSibling;
+                const getOption = () => metaDataSelect.selectedOptions[0];
+                const setForm = (numberMode, textMode) => { // [labelText, inputValue, isDisplayNone]
+                    getLabelTextNode(numberInput).nodeValue = numberMode[0];
+                    numberInput.value = numberMode[1];
+                    numberInput.parentElement.style.display = numberMode[2] ? 'none' : '';
+                    getLabelTextNode(textInput).nodeValue = textMode[0];
+                    textInput.value = textMode[1];
+                    textInput.parentElement.style.display = textMode[2] ? 'none' : '';
+                };
+                const selectHandler = index => {
+                    const isMetaDataType = index === selectIndex;
+                    const type = typeDefs[index];
+                    switch (type) {
+                        case '#TITLE':
+                        case '#ARTIST':
+                        case '#COMMENT':
+                        case '#CODING':
+                        case '#PRAGMA':
+                            const text = isMetaDataType ? metaDataSplit.slice(1).join(' ') ?? '' : '';
+                            setForm(
+                                ['無効', '', true],
+                                [getOption().label, text, false]
+                            );
+                            break;
+
+                        case '#OCTAVE':
+                        case '#VELOCITY':
+                            setForm(
+                                ['無効', '', true],
+                                ['無効', '', true]
+                            );
+                            break;
+
+                        case '#WAV9':
+                        case '#WAV10':
+                        case '#WAV13':
+                            const isWav9 = type === '#WAV9';
+                            const waveParams = isMetaDataType ? metaDataSplit.slice(1).join(' ')?.split(',') ?? [] : [];
+                            setForm(
+                                ['波形番号', waveParams[0] ?? 0, false],
+                                isWav9 ? ['初期変位,ループフラグ,データ', `${waveParams[1] ?? 0},${waveParams[2] ?? 0},${waveParams[3] ?? ''}`, false]
+                                    : ['データ', waveParams[1] ?? '', false]
+                            );
+                            numberInput.min = 0;
+                            numberInput.max = isWav9 ? 15 : 31;
+                            break;
+
+                        case '#OPM':
+                        case '#OPN':
+                            setForm(
+                                ['音色番号', isMetaDataType ? metaDataSplit[0]?.split('@')[1] ?? 0 : 0, false],
+                                ['データ', isMetaDataType ? metaDataSplit.slice(1).join(' ')?.slice(1, -1) ?? '' : '', false]
+                            );
+                            numberInput.min = 0;
+                            numberInput.max = 127;
+
+                            break;
+                        case '#FMGAIN':
+                            setForm(
+                                ['音量利得', isMetaDataType ? metaDataSplit[1].replace('\n', '') ?? 91 : 91, false],
+                                ['無効', '', true]
+                            );
+                            numberInput.min = -127;
+                            numberInput.max = 127;
+
+                            break;
+                        case '#USING':
+                            setForm(
+                                ['和音重ね数', isMetaDataType ? metaDataSplit[2].replace('\n', '') ?? 2 : 2, false],
+                                ['無効', '', true]
+                            );
+                            numberInput.min = 1;
+                            numberInput.max = '';
+                            break;
+                    }
+                };
+                selectHandler(selectIndex);
+                metaDataSelect.addEventListener('change', e => {
+                    selectHandler(e.target.selectedIndex);
+                });
+            },
             on: {
                 'set-meta-data': (target, inputs) => {
                     const {'select-meta-data': select, number, text} = inputs;
@@ -1649,7 +1799,8 @@ class DialogFormManager {
                 {
                     label: '任意のMML',
                     type: 'text',
-                    name: 'other-action'
+                    name: 'other-action',
+                    value: (mmlText) => mmlText
                 }
             ],
             buttons: [
@@ -1756,12 +1907,34 @@ class DialogFormManager {
         }
     };
 
+    #noteValueChanger = (noteValueInput) => {
+        let beforeValue = noteValueInput.valueAsNumber;
+        let validNoteValueIndex = validNoteValues.findIndex(value => value === beforeValue);
+        noteValueInput.addEventListener('input', () => {
+            const currentValue = noteValueInput.valueAsNumber;
+            // console.log(currentValue, beforeValue);
+            if (currentValue !== beforeValue) {
+                if (currentValue === 0) {
+                    validNoteValueIndex = -1;
+                    noteValueInput.value = '';
+                } else if (currentValue > beforeValue || Number.isNaN(beforeValue)) {
+                    noteValueInput.value = validNoteValues[++validNoteValueIndex];
+                } else if (currentValue < beforeValue) {
+                    noteValueInput.value = validNoteValues[--validNoteValueIndex];
+                }
+                beforeValue = noteValueInput.valueAsNumber;
+            }
+            // console.log(validNoteValueIndex);
+        });
+    };
+
     #createElems = (type) => {
         const def = this.#dialogDefinitions[type];
         this.#createTitle(def.title);
         this.#createDescription(def.description);
         this.#createInputs(def.inputs);
         this.#createButtons(def.buttons);
+        this.#runFunction(def.run);
         this.#setEventListeners(def.on);
     };
 
@@ -1799,6 +1972,8 @@ class DialogFormManager {
                         select.appendChild(option);
                     });
                     input.replaceWith(select);
+                } else if (key === 'value' && typeof value === 'function') {
+                    input.value = value(this.mmlText, this.item);
                 } else {
                     input[key] = value;
                 }
@@ -1818,24 +1993,34 @@ class DialogFormManager {
         });
     };
 
+    #runFunction = (run) => {
+        if (run) {
+            run(this.mmlText, this.#collectInputElems());
+        }
+    };
+
     #setEventListeners = (on) => {
         dialogForm.addEventListener('submit', e => {
-            const submitTarget = this.submitTarget;
+            const item = this.item;
             const submitterVal = e.submitter.value;
             const inputs = this.#collectInputs();
-            const beforeChange = JSON.parse(JSON.stringify(submitTarget.dataset));
-            on[submitterVal](submitTarget, inputs);
-            const afterChange = JSON.parse(JSON.stringify(submitTarget.dataset));
+            const beforeChange = JSON.parse(JSON.stringify(item.dataset));
+            on[submitterVal](item, inputs);
+            const afterChange = JSON.parse(JSON.stringify(item.dataset));
             if (JSON.stringify(beforeChange) !== JSON.stringify(afterChange)) {
                 history.pushState({
                     operation: 'valueChange',
-                    target: submitTarget,
+                    target: item,
                     beforeChange,
                     afterChange
                 });
             }
             this.resolve();
         }, {once: true});
+    };
+
+    #collectInputElems = () => {
+        return Object.fromEntries([...dialogForm.elements].map(elem => [elem.name, elem]));
     };
 
     #collectInputs = () => {
@@ -1854,30 +2039,49 @@ class DialogFormManager {
         return inputs;
     };
 
-    #set = (type, initVals) => {
-        this.#createElems(type);
-        const setValue = (name, value) => {
-            dialogForm.elements[name].value = value;
-        };
-        for (const [name, value] of Object.entries(initVals)) {
-            if (name === 'run') {
-                value();
-            } else {
-                setValue(name, value);
-            }
-        }
-        this.type = type;
-    }
-
     constructor(dialogForm) {
+        this.item = null;
         this.type = null;
-        this.submitTarget = null;
+        this.mmlText = null;
         this.resolve = null;
     }
 
-    async prompt(type, initVals, submitTarget) {
-        this.#set(type, initVals);
-        this.submitTarget = submitTarget;
+    async prompt(item, type) {
+        this.item = item;
+        this.type = type || Object.keys(this.#dialogDefinitions).find(key => key in item.dataset);
+        this.mmlText = item.dataset[this.type];
+        switch (this.type) {
+            case 'repeatStartEnd':
+                if (this.mmlText === ':/') {
+                    const findRepeatStartElem = () => {
+                        let findTemp = item.parentElement;
+                        while (findTemp && !(findTemp.firstElementChild.dataset.repeatStartEnd?.startsWith('/:'))) {
+                            findTemp = findTemp.previousElementSibling;
+                        };
+                        return findTemp?.firstElementChild || null;
+                    };
+                    const repeatStart = findRepeatStartElem();
+                    if (!repeatStart) {
+                        const ul = blockManager.activeTrack;
+                        const li = document.createElement('li');
+                        const baseItem = action.querySelector('.repeat-start-end');
+                        const newItem = baseItem.cloneNode(true);
+                        li.appendChild(newItem);
+                        ul.insertBefore(li, item.parentElement);
+                        item = newItem;
+                    } else {
+                        item = repeatStart;
+                    }
+                    this.mmlText = item.dataset.repeatStartEnd;
+                }
+                break;
+            case 'macroDef':
+                if (this.mmlText === ';') {
+                    return;
+                }
+                break;
+        }
+        this.#createElems(this.type);
         dialog.showModal();
         return new Promise(resolve => this.resolve = resolve);
     }
@@ -2250,213 +2454,6 @@ const noteValueChanger = name => {
     });
 };
 
-const actionPromptSwitcher = async item => {
-    const { dataset } = item;
-    const promptDefinitions = {
-        tempo: mmlText => ({
-            'tempo': mmlText.replace('t', '')
-        }),
-        noteValue: mmlText => ({
-            'note-value': (mmlText.match(/[0-9]+/) || [''])[0],
-            'dot': (mmlText.match(/\.+/) || [''])[0].length,
-            'run': () => {
-                noteValueChanger('note-value');
-            }
-        }),
-        rest: mmlText => ({
-            'rest': (mmlText.match(/[0-9]+/) || [''])[0],
-            'dot': (mmlText.match(/\.+/) || [''])[0].length,
-            'run': () => {
-                noteValueChanger('rest');
-            }
-        }),
-        octave: mmlText => ({
-            'octave': mmlText.startsWith('o') ? mmlText.replace('o', '') : (mmlText.match(/[><]+/) || [''])[0].length
-        }),
-        velocity: mmlText => ({
-            'velocity': mmlText.startsWith('@v') ? mmlText.replace('@v', '') : Number((mmlText.match(/[0-9]+/) || [''])[0]) * (mmlText.startsWith('(') ? 1 : -1)
-        }),
-        noteShift: mmlText => ({
-            'note-shift': (mmlText.match(/[0-9]+/) || [''])[0]
-        }),
-        detune: mmlText => ({
-            'detune': mmlText.replace('@d', '')
-        }),
-        tieSlur: mmlText => ({
-            'tie-slur': (mmlText.match(/[0-9]+/) || [''])[0],
-            'dot': (mmlText.match(/\.+/) || [''])[0].length,
-            'run': () => {
-                noteValueChanger('tie-slur');
-            }
-        }),
-        repeatStartEnd: mmlText => ({
-            'repeat': mmlText.replace('/:', '')
-        }),
-        macroDef: mmlText => ({
-            'macro-def-name': (mmlText.match(/\$([^\{\=]*)[\{\=]/) || [, ''])[1],
-            'macro-def-arg': (mmlText.match(/\{([^\}]*)\}/) || [, ''])[1],
-        }),
-        macroArgUse: mmlText => ({
-            'macro-arg-use': mmlText.replace('%', '')
-        }),
-        macroUse: mmlText => ({
-            'macro-use-name': (mmlText.match(/\$([^\{]*)\{?/) || [, ''])[1],
-            'macro-use-arg': (mmlText.match(/\{([^\}]*)\}/) || [, ''])[1],
-        }),
-        metaData: mmlText => ({
-            'run': () => {
-                const metaDataRaw = mmlText;
-                const metaDataSplit = metaDataRaw.split(' ');
-                const typeDefs = [
-                    '#TITLE',
-                    '#ARTIST',
-                    '#COMMENT',
-                    '#CODING',
-                    '#PRAGMA',
-                    '#OCTAVE',
-                    '#VELOCITY',
-                    '#WAV9',
-                    '#WAV10',
-                    '#WAV13',
-                    '#OPM',
-                    '#OPN',
-                    '#FMGAIN',
-                    '#USING',
-                ];
-                let selectIndex = typeDefs.findIndex(def => metaDataSplit[0].startsWith(def));
-                selectIndex === -1 && (selectIndex = 0);
-                dialogForm.elements['select-meta-data'].selectedIndex = selectIndex;
-                const getLabelTextNode = name => dialogForm.elements[name].previousSibling;
-                const getOption = () => dialogForm.elements['select-meta-data'].selectedOptions[0];
-                const setForm = (numberMode, textMode) => { // [labelText, inputValue, isDisplayNone]
-                    getLabelTextNode('number').nodeValue = numberMode[0];
-                    dialogForm.elements['number'].value = numberMode[1];
-                    dialogForm.elements['number'].parentElement.style.display = numberMode[2] ? 'none' : '';
-                    getLabelTextNode('text').nodeValue = textMode[0];
-                    dialogForm.elements['text'].value = textMode[1];
-                    dialogForm.elements['text'].parentElement.style.display = textMode[2] ? 'none' : '';
-                };
-                const selectHandler = index => {
-                    const isMetaDataType = index === selectIndex;
-                    const type = typeDefs[index];
-                    switch (type) {
-                        case '#TITLE':
-                        case '#ARTIST':
-                        case '#COMMENT':
-                        case '#CODING':
-                        case '#PRAGMA':
-                            const text = isMetaDataType ? metaDataSplit.slice(1).join(' ') ?? '' : '';
-                            setForm(
-                                ['無効', '', true],
-                                [getOption().label, text, false]
-                            );
-                            break;
-
-                        case '#OCTAVE':
-                        case '#VELOCITY':
-                            setForm(
-                                ['無効', '', true],
-                                ['無効', '', true]
-                            );
-                            break;
-
-                        case '#WAV9':
-                        case '#WAV10':
-                        case '#WAV13':
-                            const isWav9 = type === '#WAV9';
-                            const waveParams = isMetaDataType ? metaDataSplit.slice(1).join(' ')?.split(',') ?? [] : [];
-                            setForm(
-                                ['波形番号', waveParams[0] ?? 0, false],
-                                isWav9 ? ['初期変位,ループフラグ,データ', `${waveParams[1] ?? 0},${waveParams[2] ?? 0},${waveParams[3] ?? ''}`, false]
-                                    : ['データ', waveParams[1] ?? '', false]
-                            );
-                            dialogForm.elements['number'].min = 0;
-                            dialogForm.elements['number'].max = isWav9 ? 15 : 31;
-                            break;
-
-                        case '#OPM':
-                        case '#OPN':
-                            setForm(
-                                ['音色番号', isMetaDataType ? metaDataSplit[0]?.split('@')[1] ?? 0 : 0, false],
-                                ['データ', isMetaDataType ? metaDataSplit.slice(1).join(' ')?.slice(1, -1) ?? '' : '', false]
-                            );
-                            dialogForm.elements['number'].min = 0;
-                            dialogForm.elements['number'].max = 127;
-
-                            break;
-                        case '#FMGAIN':
-                            setForm(
-                                ['音量利得', isMetaDataType ? metaDataSplit[1].replace('\n', '') ?? 91 : 91, false],
-                                ['無効', '', true]
-                            );
-                            dialogForm.elements['number'].min = -127;
-                            dialogForm.elements['number'].max = 127;
-
-                            break;
-                        case '#USING':
-                            setForm(
-                                ['和音重ね数', isMetaDataType ? metaDataSplit[2].replace('\n', '') ?? 2 : 2, false],
-                                ['無効', '', true]
-                            );
-                            dialogForm.elements['number'].min = 1;
-                            dialogForm.elements['number'].max = '';
-                            break;
-                    }
-                };
-                selectHandler(selectIndex);
-                dialogForm.elements['select-meta-data'].addEventListener('change', e => {
-                    selectHandler(e.target.selectedIndex);
-                });
-            }
-        }),
-        otherAction: mmlText => ({
-            'other-action': mmlText
-        }),
-        remove: () => ({}),
-        step: () => ({}),
-    };
-    for (const type of Object.keys(dataset)) {
-        const initValsGenerator = promptDefinitions[type];
-
-        if (initValsGenerator) {
-            let mmlText = dataset[type];
-            switch (type) {
-                case 'repeatStartEnd':
-                    if (mmlText === ':/') {
-                        const findRepeatStartElem = () => {
-                            let findTemp = item.parentElement;
-                            while (findTemp && !(findTemp.firstElementChild.dataset.repeatStartEnd?.startsWith('/:'))) {
-                                findTemp = findTemp.previousElementSibling;
-                            };
-                            return findTemp?.firstElementChild || null;
-                        };
-                        const repeatStart = findRepeatStartElem();
-                        if (!repeatStart) {
-                            const ul = blockManager.activeTrack;
-                            const li = document.createElement('li');
-                            const baseItem = action.querySelector('.repeat-start-end');
-                            const newItem = baseItem.cloneNode(true);
-                            li.appendChild(newItem);
-                            ul.insertBefore(li, item.parentElement);
-                            item = newItem;
-                        } else {
-                            item = repeatStart;
-                        }
-                        mmlText = item.dataset.repeatStartEnd;
-                    }
-                    break;
-                case 'macroDef':
-                    if (mmlText === ';') {
-                        return;
-                    }
-                    break;
-            }
-            const initVals = initValsGenerator(mmlText);
-            await dialogFormManager.prompt(type, initVals, item);
-            break;
-        }
-    }
-};
 editor.addEventListener('click', async e => {
     const ctrlKey = e.ctrlKey || ctrlSw.checked;
     const is = id => Boolean(e.target.closest('#' + id));
@@ -2466,19 +2463,7 @@ editor.addEventListener('click', async e => {
     } else if (is('tones')) {
         if (isButton) {
             lastTouchedButton = e.target;
-            await dialogFormManager.prompt('tone', {
-                'tone-name': e.target.ariaLabel,
-                'tone-def': e.target.dataset.tone,
-                'run': () => {
-                    const toneName = dialogForm.elements['tone-name'];
-                    toneName.insertAdjacentElement('afterend', picker);
-                    const pickerElem = document.querySelector('emoji-picker');
-                    toneName.addEventListener('focus', () => {
-                        pickerElem.classList.add('expaned');
-                    }, { once: true });
-                    pickerElem.addEventListener('emoji-click', e => toneName.value = e.detail.unicode);
-                }
-            }, e.target);
+            await dialogFormManager.prompt(e.target, 'tone');
             flmml.play(e.target.dataset.tone + e.target.dataset.tonePitch);
             blockManager.blocksDataUpdate();
             blockManager.saveBlocksData();
@@ -2503,12 +2488,12 @@ editor.addEventListener('click', async e => {
     } else if (is('action')) {
         if (isButton) {
             if ('otherAction' in e.target.dataset) {
-                await actionPromptSwitcher(e.target);
+                await dialogFormManager.prompt(e.target);
             } else if ('step' in e.target.dataset) {
                 if (stepGuidanceDisplayed && !e.shiftKey) {
                     stepEnable = !stepEnable;
                 } else {
-                    await actionPromptSwitcher(e.target);
+                    await dialogFormManager.prompt(e.target);
                 }
                 if (stepEnable) {
                     e.target.classList.add('enable');
@@ -2528,7 +2513,7 @@ editor.addEventListener('click', async e => {
             const newItem = e.target.cloneNode(true);
             if (['metaData', 'macroDef', 'macroArgUse', 'macroUse']
                 .some(type => type in newItem.dataset)) {
-                await actionPromptSwitcher(newItem);
+                await dialogFormManager.prompt(newItem);
             }
             if ('tieSlur' in newItem.dataset) {
                 newItem.ariaLabel = 'スラー';
@@ -2597,17 +2582,11 @@ editor.addEventListener('click', async e => {
                     playMusicNote(e.target);
                     resetAnimation(e.target, 'bounce');
                     if (ctrlKey) {
-                        await dialogFormManager.prompt('tonePitch', {
-                            'tone-pitch': (e.target.dataset.tonePitch.match(/[0-9]+/) || [''])[0],
-                            'dot': (e.target.dataset.tonePitch.match(/\.+/) || [''])[0].length,
-                            'run': () => {
-                                noteValueChanger('tone-pitch');
-                            }
-                        }, e.target);
+                        await dialogFormManager.prompt(e.target, 'tonePitch');
                         playMusicNote(e.target);
                     }
                 } else {
-                    await actionPromptSwitcher(e.target);
+                    await dialogFormManager.prompt(e.target);
                 }
                 blockManager.blocksDataUpdate();
                 blockManager.saveBlocksData();
@@ -3117,7 +3096,7 @@ let dropEffect = null;
                         newItem.ariaLabel = 'スラー';
                     } else if (['metaData', 'macroDef', 'macroArgUse', 'macroUse', 'otherAction']
                         .some(type => type in newItem.dataset)) {
-                        await actionPromptSwitcher(newItem);
+                        await dialogFormManager.prompt(newItem);
                     }
                 }
                 if ('repeatStartEnd' in newItem.dataset) {
