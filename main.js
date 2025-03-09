@@ -1613,6 +1613,32 @@ class DialogFormManager {
                     textContent: '確定'
                 }
             ],
+            run: (mmlText, inputElems) => {
+                const {'macro-arg-use': macroArgUse} = inputElems;
+                const findMacroDefElem = () => {
+                    let findTemp = this.item.parentElement;
+                    while (findTemp && !(findTemp.firstElementChild.dataset.macroDef)) {
+                        findTemp = findTemp.previousElementSibling;
+                    };
+                    return findTemp?.firstElementChild || null;
+                };
+                const macroDefElem = findMacroDefElem();
+                if (!macroDefElem || macroDefElem.dataset.macroDef === ';') {
+                    return;
+                }
+                const macroDef = macroDefElem.dataset.macroDef;
+                const macroDefArg = (macroDef.match(/\{([^\}]*)\}/) || [, ''])[1];
+                const args = macroDefArg.split(',');
+                const macroArgUseDataList = document.createElement('datalist');
+                macroArgUseDataList.id = 'macro-arg-use-list';
+                args.forEach(arg => {
+                    const option = document.createElement('option');
+                    option.value = arg;
+                    macroArgUseDataList.appendChild(option);
+                });
+                macroArgUse.after(macroArgUseDataList);
+                macroArgUse.setAttribute('list', 'macro-arg-use-list');
+            },
             on: {
                 'set-macro-arg-use': (target, inputs) => {
                     const {'macro-arg-use': macroArgUse} = inputs;
@@ -2514,7 +2540,7 @@ editor.addEventListener('click', async e => {
             const ul = blockManager.activeTrack;
             const li = document.createElement('li');
             const newItem = e.target.cloneNode(true);
-            if (['metaData', 'macroDef', 'macroArgUse', 'macroUse']
+            if (['metaData', 'macroDef', 'macroUse'] // TODO:macroArgUse対応
                 .some(type => type in newItem.dataset)) {
                 await dialogFormManager.prompt(newItem);
             }
@@ -3099,7 +3125,7 @@ let dropEffect = null;
                 } else if (from === action) {
                     if ('tieSlur' in newItem.dataset) {
                         newItem.ariaLabel = 'スラー';
-                    } else if (['metaData', 'macroDef', 'macroArgUse', 'macroUse', 'otherAction']
+                    } else if (['metaData', 'macroDef', 'macroUse', 'otherAction'] // TODO:macroArgUse対応
                         .some(type => type in newItem.dataset)) {
                         await dialogFormManager.prompt(newItem);
                     }
