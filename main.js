@@ -1190,7 +1190,21 @@ class DialogFormManager {
                     value: 'set-tone',
                     textContent: '確定'
                 }
-            ]
+            ],
+            on: {
+                'set-tone': (target, inputs) => {
+                    const {'tone-name': toneName, 'tone-def': toneDef} = inputs;
+                    const buttonClassName = target.className;
+                    document.querySelectorAll(`[class*="${buttonClassName}"]`).forEach(elem => {
+                        elem.ariaLabel = toneName;
+                        if (!elem.classList.contains('material-icons') || toneName !== '無調整') {
+                            elem.classList.remove('material-icons');
+                            elem.textContent = toneName;
+                        }
+                        elem.dataset.tone = toneDef;
+                    });
+                }
+            }
         },
         tonePitch: {
             title: '音価設定',
@@ -1215,7 +1229,13 @@ class DialogFormManager {
                     value: 'set-tone-pitch',
                     textContent: '確定'
                 }
-            ]
+            ],
+            on: {
+                'set-tone-pitch': (target, inputs) => {
+                    const {'tone-pitch': tonePitch, dot} = inputs;
+                    target.dataset.tonePitch = `${target.dataset.tonePitch.match(/[><]*?[a-g]\+?/)[0]}${tonePitch}${'.'.repeat(dot)}`;
+                }
+            }
         },
         tempo: {
             title: 'テンポ設定',
@@ -1233,7 +1253,13 @@ class DialogFormManager {
                     value: 'set-tempo',
                     textContent: '確定'
                 }
-            ]
+            ],
+            on: {
+                'set-tempo': (target, inputs) => {
+                    const {tempo} = inputs;
+                    target.dataset.tempo = `t${tempo}`;
+                }
+            }
         },
         noteValue: {
             title: '音価設定',
@@ -1258,7 +1284,13 @@ class DialogFormManager {
                     value: 'set-note-value',
                     textContent: '確定'
                 }
-            ]
+            ],
+            on: {
+                'set-note-value': (target, inputs) => {
+                    const {'note-value': noteValue, dot} = inputs;
+                    target.dataset.noteValue = `l${noteValue}${'.'.repeat(dot)}`;
+                }
+            }
         },
         rest: {
             title: '休符設定',
@@ -1283,7 +1315,13 @@ class DialogFormManager {
                     value: 'set-rest',
                     textContent: '確定'
                 }
-            ]
+            ],
+            on: {
+                'set-rest': (target, inputs) => {
+                    const {rest, dot} = inputs;
+                    target.dataset.rest = `r${rest}${'.'.repeat(dot)}`;
+                }
+            }
         },
         octave: {
             title: 'オクターブ設定',
@@ -1306,7 +1344,17 @@ class DialogFormManager {
                     value: 'set-octave-relative',
                     textContent: '相対指定'
                 }
-            ]
+            ],
+            on: {
+                'set-octave': (target, inputs) => {
+                    const {octave} = inputs;
+                    target.dataset.octave = `o${octave}`;
+                },
+                'set-octave-relative': (target, inputs) => {
+                    const {octave} = inputs;
+                    target.dataset.octave = (octave > 0 ? '<' : '>').repeat(Math.abs(octave));
+                }
+            }
         },
         velocity: {
             title: '音量設定',
@@ -1329,7 +1377,17 @@ class DialogFormManager {
                     value: 'set-velocity-relative',
                     textContent: '相対指定'
                 }
-            ]
+            ],
+            on: {
+                'set-velocity': (target, inputs) => {
+                    const {velocity} = inputs;
+                    target.dataset.velocity = `@v${velocity}`;
+                },
+                'set-velocity-relative': (target, inputs) => {
+                    const {velocity} = inputs;
+                    target.dataset.velocity = (velocity > 0 ? '(' : ')').repeat(Math.abs(velocity));
+                }
+            }
         },
         noteShift: {
             title: 'ノートシフト設定',
@@ -1350,7 +1408,17 @@ class DialogFormManager {
                     value: 'set-note-shift-relative',
                     textContent: '相対指定'
                 }
-            ]
+            ],
+            on: {
+                'set-note-shift': (target, inputs) => {
+                    const {'note-shift': noteShift} = inputs;
+                    target.dataset.noteShift = `ns${noteShift}`;
+                },
+                'set-note-shift-relative': (target, inputs) => {
+                    const {noteShift} = inputs;
+                    target.dataset.noteShift = `@ns${noteShift}`;
+                }
+            }
         },
         detune: {
             title: 'デチューン設定',
@@ -1367,7 +1435,13 @@ class DialogFormManager {
                     value: 'set-detune',
                     textContent: '確定'
                 }
-            ]
+            ],
+            on: {
+                'set-detune': (target, inputs) => {
+                    const {detune} = inputs;
+                    target.dataset.detune = `@d${detune}`;
+                }
+            }
         },
         tieSlur: {
             title: 'タイ設定',
@@ -1392,7 +1466,18 @@ class DialogFormManager {
                     value: 'set-tie-slur',
                     textContent: '確定'
                 }
-            ]
+            ],
+            on: {
+                'set-tie-slur': (target, inputs) => {
+                    const {'tie-slur': tieSlur, dot} = inputs;
+                    target.dataset.tieSlur = `&${tieSlur}${'.'.repeat(dot)}`;
+                    if (target.dataset.tieSlur === '&') {
+                        target.ariaLabel = 'スラー';
+                    } else {
+                        target.ariaLabel = 'タイ';
+                    }
+                }
+            }
         },
         repeatStartEnd: {
             title: 'ループ設定',
@@ -1410,7 +1495,13 @@ class DialogFormManager {
                     value: 'set-repeat',
                     textContent: '確定'
                 }
-            ]
+            ],
+            on: {
+                'set-repeat': (target, inputs) => {
+                    const {repeat} = inputs;
+                    target.dataset.repeatStartEnd = `/:${repeat}`;
+                }
+            }
         },
         macroDef: {
             title: 'マクロ定義設定',
@@ -1432,7 +1523,17 @@ class DialogFormManager {
                     value: 'set-macro-def',
                     textContent: '確定'
                 }
-            ]
+            ],
+            on: {
+                'set-macro-def': (target, inputs) => {
+                    const {'macro-def-name': macroDefName, 'macro-def-arg': macroDefArg} = inputs;
+                    const beforeMacroDefName = (target.dataset.macroDef.match(/\$([^\{\=]*)[\{\=]/) || [, ''])[1];
+                    target.dataset.macroDef = `$${macroDefName}${macroDefArg ? `{${macroDefArg}}` : ''}=`;
+                    musicalScore.querySelectorAll(`[data-macro-use^="$${beforeMacroDefName}"]`).forEach(elem => {
+                        elem.dataset.macroUse = elem.dataset.macroUse.replace(beforeMacroDefName, macroDefName);
+                    });
+                }
+            }
         },
         macroArgUse: {
             title: 'マクロ引数使用設定',
@@ -1449,7 +1550,13 @@ class DialogFormManager {
                     value: 'set-macro-arg-use',
                     textContent: '確定'
                 }
-            ]
+            ],
+            on: {
+                'set-macro-arg-use': (target, inputs) => {
+                    const {'macro-arg-use': macroArgUse} = inputs;
+                    target.dataset.macroArgUse = `%${macroArgUse}`;
+                }
+            }
         },
         macroUse: {
             title: 'マクロ使用設定',
@@ -1463,7 +1570,7 @@ class DialogFormManager {
                     label: '引数 カンマ区切り',
                     type: 'text',
                     name: 'macro-use-arg'
-                },
+                }
             ],
             buttons: [
                 {
@@ -1471,7 +1578,13 @@ class DialogFormManager {
                     value: 'set-macro-use',
                     textContent: '確定'
                 }
-            ]
+            ],
+            on: {
+                'set-macro-use': (target, inputs) => {
+                    const {'macro-use-name': macroUseName, 'macro-use-arg': macroUseArg} = inputs;
+                    target.dataset.macroUse = `$${macroUseName}${macroUseArg ? `{${macroUseArg}}` : ''}`;
+                }
+            }
         },
         metaData: {
             title: 'メタデータ設定',
@@ -1499,7 +1612,7 @@ class DialogFormManager {
                 {
                     label: ' ',
                     type: 'number',
-                    name: 'number',
+                    name: 'number'
                 },
                 {
                     label: ' ',
@@ -1513,7 +1626,14 @@ class DialogFormManager {
                     value: 'set-meta-data',
                     textContent: '確定'
                 }
-            ]
+            ],
+            on: {
+                'set-meta-data': (target, inputs) => {
+                    const {'select-meta-data': select, number, text} = inputs;
+                    target.ariaLabel = select.label;
+                    target.dataset.metaData = `${select.value.replace('{n}', number).replace('{desc}', text)}`;
+                }
+            }
         },
         otherAction: {
             title: 'その他の作用設定',
@@ -1530,7 +1650,14 @@ class DialogFormManager {
                     value: 'set-other-action',
                     textContent: '確定'
                 }
-            ]
+            ],
+            on: {
+                'set-other-action': (target, inputs) => {
+                    const {'other-action': otherAction} = inputs;
+                    target.dataset.otherAction = otherAction;
+                    target.textContent = otherAction.length > 4 ? '…' : otherAction;
+                }
+            }
         },
         remove: {
             title: '一部の消去メニュー',
@@ -1542,8 +1669,52 @@ class DialogFormManager {
                 {
                     value: 'remove-right',
                     textContent: 'このブロックから右をすべて消去'
+                }
+            ],
+            on: {
+                'remove-left': (target) => {
+                    const removeFrom = target.parentElement;
+                    const activeTrackUl = blockManager.activeTrack;
+                    const ulChildren = activeTrackUl.children;
+                    lastTouchedButton = null;
+                    while ([...ulChildren].includes(removeFrom)) {
+                        const removeTarget = activeTrackUl.firstElementChild;
+                        history.pushState({
+                            operation: 'remove',
+                            removedElem: removeTarget,
+                            removedIndex: 0,
+                            parent: activeTrackUl
+                        });
+                        removeTarget.remove();
+                    }
+                    blockManager.blocksDataUpdate();
+                    blockManager.calcPoly();
+                    blockManager.saveBlocksData();
+                    blockManager.exportMml(mml);
+                    blockManager.calcPlayFromHere();
                 },
-            ]
+                'remove-right': (target) => {
+                    const removeFrom = target.parentElement;
+                    const activeTrackUl = blockManager.activeTrack;
+                    const ulChildren = activeTrackUl.children;
+                    lastTouchedButton = null;
+                    while ([...ulChildren].includes(removeFrom)) {
+                        const removeTarget = activeTrackUl.lastElementChild;
+                        history.pushState({
+                            operation: 'remove',
+                            removedElem: removeTarget,
+                            removedIndex: ulChildren.length - 1,
+                            parent: activeTrackUl
+                        });
+                        removeTarget.remove();
+                    }
+                    blockManager.blocksDataUpdate();
+                    blockManager.calcPoly();
+                    blockManager.saveBlocksData();
+                    blockManager.exportMml(mml);
+                    blockManager.calcPlayFromHere();
+                }
+            }
         },
         step: {
             title: 'ステップ音価記録',
@@ -1563,226 +1734,137 @@ class DialogFormManager {
                 {
                     value: 'cancel-step',
                     textContent: 'やめる'
+                }
+            ],
+            on: {
+                'set-step': () => {
+                    stepGuidanceDisplayed = true;
+                    stepEnable = true;
                 },
-            ]
+                'cancel-step': () => {
+                    stepEnable = false;
+                }
+            }
         }
-    }
+    };
+
     #createElems = (type) => {
         const def = this.#dialogDefinitions[type];
-        Object.keys(def).forEach(key => {
-            switch (key) {
-                case 'title':
-                    dialogForm._title.textContent = def.title;
-                    break;
-                case 'description':
-                    (() => {
-                        const p = document.createElement('p');
-                        p.innerText = def.description;
-                        dialogForm.description.appendChild(p);
-                    })();
-                    break;
-                case 'inputs':
-                    def.inputs.forEach(inputDef => {
-                        const input = document.createElement('input');
-                        let appendElem = input;
-                        Object.entries(inputDef).forEach(([key, value]) => {
-                            if (key === 'label') {
-                                const label = document.createElement('label');
-                                label.textContent = value;
-                                label.appendChild(input);
-                                appendElem = label;
-                            } else if (key === 'select') {
-                                const select = document.createElement('select');
-                                select.name = inputDef.name;
-                                const selectOptionsDef = value;
-                                if ('' in selectOptionsDef) {
-                                    const option = document.createElement('option');
-                                    option.value = '';
-                                    option.textContent = selectOptionsDef[''];
-                                    select.appendChild(option);
-                                }
-                                Object.entries(selectOptionsDef).forEach(([value, text]) => {
-                                    if (value === '') {
-                                        return;
-                                    }
-                                    const option = document.createElement('option');
-                                    option.value = value;
-                                    option.textContent = text;
-                                    select.appendChild(option);
-                                });
-                                input.replaceWith(select);
-                            } else {
-                                input[key] = value;
-                            }
-                        });
-                        dialogForm.inputs.appendChild(appendElem);
+        this.#createTitle(def.title);
+        this.#createDescription(def.description);
+        this.#createInputs(def.inputs);
+        this.#createButtons(def.buttons);
+        this.#setEventListeners(def.on);
+    };
+
+    #createTitle = (title) => {
+        dialogForm._title.textContent = title || '';
+    };
+
+    #createDescription = (description) => {
+        dialogForm.description.textContent = '';
+        if (description) {
+            const p = document.createElement('p');
+            p.innerText = description;
+            dialogForm.description.appendChild(p);
+        }
+    };
+
+    #createInputs = (inputs) => {
+        dialogForm.inputs.textContent = '';
+        inputs?.forEach(inputDef => {
+            const input = document.createElement('input');
+            let appendElem = input;
+            Object.entries(inputDef).forEach(([key, value]) => {
+                if (key === 'label') {
+                    const label = document.createElement('label');
+                    label.textContent = value;
+                    label.appendChild(input);
+                    appendElem = label;
+                } else if (key === 'select') {
+                    const select = document.createElement('select');
+                    select.name = inputDef.name;
+                    Object.entries(value).forEach(([val, text]) => {
+                        const option = document.createElement('option');
+                        option.value = val;
+                        option.textContent = text;
+                        select.appendChild(option);
                     });
-                    break;
-                case 'buttons':
-                    def.buttons.forEach(buttonDef => {
-                        const button = document.createElement('button');
-                        Object.entries(buttonDef).forEach(([key, value]) => {
-                            button[key] = value;
-                        });
-                        dialogForm.buttons.appendChild(button);
-                    });
-                    break;
-            }
+                    input.replaceWith(select);
+                } else {
+                    input[key] = value;
+                }
+            });
+            dialogForm.inputs.appendChild(appendElem);
         });
-    }
+    };
+
+    #createButtons = (buttons) => {
+        dialogForm.buttons.textContent = '';
+        buttons?.forEach(buttonDef => {
+            const button = document.createElement('button');
+            Object.entries(buttonDef).forEach(([key, value]) => {
+                button[key] = value;
+            });
+            dialogForm.buttons.appendChild(button);
+        });
+    };
+
+    #setEventListeners = (on) => {
+        dialogForm.addEventListener('submit', e => {
+            const submitTarget = this.submitTarget;
+            const submitterVal = e.submitter.value;
+            const inputs = this.#collectInputs();
+            const beforeChange = JSON.parse(JSON.stringify(submitTarget.dataset));
+            on[submitterVal](submitTarget, inputs);
+            const afterChange = JSON.parse(JSON.stringify(submitTarget.dataset));
+            if (JSON.stringify(beforeChange) !== JSON.stringify(afterChange)) {
+                history.pushState({
+                    operation: 'valueChange',
+                    target: submitTarget,
+                    beforeChange,
+                    afterChange
+                });
+            }
+            this.resolve();
+        }, {once: true});
+    };
+
+    #collectInputs = () => {
+        const inputs = Object.fromEntries(
+            [...dialogForm.elements].map(elem =>{
+                if (elem instanceof HTMLSelectElement) {
+                    return [elem.name, {
+                        label: elem.selectedOptions[0].label,
+                        value: elem.value,
+                    }];
+                } else {
+                    return [elem.name, elem.value];
+                }
+            })
+        );
+        return inputs;
+    };
 
     #set = (type, initVals) => {
-        dialogForm._title.textContent = '';
-        dialogForm.description.textContent = '';
-        dialogForm.inputs.textContent = '';
-        dialogForm.buttons.textContent = '';
         this.#createElems(type);
+        const setValue = (name, value) => {
+            dialogForm.elements[name].value = value;
+        };
         for (const [name, value] of Object.entries(initVals)) {
             if (name === 'run') {
                 value();
             } else {
-                dialogForm.elements[name].value = value;
+                setValue(name, value);
             }
         }
         this.type = type;
     }
 
-    #submitHandler = e => {
-        const submitTarget = this.submitTarget;
-        const submitterVal = e.submitter.value;
-        const beforeChange = JSON.parse(JSON.stringify(submitTarget.dataset));
-        switch (submitterVal) {
-            case 'set-tone':
-                const buttonClassName = submitTarget.className;
-                document.querySelectorAll(`[class*="${buttonClassName}"]`).forEach(elem => {
-                    elem.ariaLabel = dialogForm.elements['tone-name'].value;
-                    if (!elem.classList.contains('material-icons') || dialogForm.elements['tone-name'].value !== '無調整') {
-                        elem.classList.remove('material-icons');
-                        elem.textContent = dialogForm.elements['tone-name'].value;
-                    }
-                    elem.dataset.tone = dialogForm.elements['tone-def'].value;
-                });
-                break;
-            case 'set-tone-pitch':
-                submitTarget.dataset.tonePitch = submitTarget.dataset.tonePitch.match(/[><]*?[a-g]\+?/)[0] + dialogForm.elements['tone-pitch'].value + '.'.repeat(dialogForm.elements['dot'].value);
-                break;
-            case 'set-tempo':
-                submitTarget.dataset.tempo = 't' + dialogForm.elements['tempo'].value;
-                break;
-            case 'set-note-value':
-                submitTarget.dataset.noteValue = 'l' + dialogForm.elements['note-value'].value + '.'.repeat(dialogForm.elements['dot'].value);
-                break;
-            case 'set-rest':
-                submitTarget.dataset.rest = 'r' + dialogForm.elements['rest'].value + '.'.repeat(dialogForm.elements['dot'].value);
-                break;
-            case 'set-octave':
-                submitTarget.dataset.octave = 'o' + dialogForm.elements['octave'].value;
-                break;
-            case 'set-octave-relative':
-                submitTarget.dataset.octave = dialogForm.elements['octave'].value > 0 ? '<'.repeat(dialogForm.elements['octave'].value) : '>'.repeat(-dialogForm.elements['octave'].value);
-                break;
-            case 'set-velocity':
-                submitTarget.dataset.velocity = '@v' + dialogForm.elements['velocity'].value;
-                break;
-            case 'set-velocity-relative':
-                submitTarget.dataset.velocity = (dialogForm.elements['velocity'].value >= 0 ? '(' : ')') + Math.abs(dialogForm.elements['velocity'].value);
-                break;
-            case 'set-note-shift':
-                submitTarget.dataset.noteShift = 'ns' + dialogForm.elements['note-shift'].value;
-                break;
-            case 'set-note-shift-relative':
-                submitTarget.dataset.noteShift = '@ns' + dialogForm.elements['note-shift'].value;
-                break;
-            case 'set-detune':
-                submitTarget.dataset.detune = '@d' + dialogForm.elements['detune'].value;
-                break;
-            case 'set-tie-slur':
-                submitTarget.dataset.tieSlur = '&' + dialogForm.elements['tie-slur'].value + '.'.repeat(dialogForm.elements['dot'].value);
-                if (submitTarget.dataset.tieSlur === '&') {
-                    submitTarget.ariaLabel = 'スラー';
-                } else {
-                    submitTarget.ariaLabel = 'タイ';
-                }
-                break;
-            case 'set-repeat':
-                submitTarget.dataset.repeatStartEnd = '/:' + dialogForm.elements['repeat'].value;
-                break;
-            case 'set-macro-def':
-                const beforeMacroDef = submitTarget.dataset.macroDef;
-                submitTarget.dataset.macroDef = '$' + dialogForm.elements['macro-def-name'].value
-                    + (dialogForm.elements['macro-def-arg'].value !== '' ? `{${dialogForm.elements['macro-def-arg'].value}}` : '')
-                    + '=';
-                musicalScore.querySelectorAll(`[data-macro-use="${beforeMacroDef.replace('=', '')}"]`).forEach(elem => {
-                    elem.dataset.macroUse = submitTarget.dataset.macroDef.replace('=', '');
-                });
-                break;
-            case 'set-macro-arg-use':
-                submitTarget.dataset.macroArgUse = '%' + dialogForm.elements['macro-arg-use'].value;
-                break;
-            case 'set-macro-use':
-                submitTarget.dataset.macroUse = '$' + dialogForm.elements['macro-use-name'].value
-                    + (dialogForm.elements['macro-use-arg'].value !== '' ? `{${dialogForm.elements['macro-use-arg'].value}}` : '');
-                break;
-            case 'set-meta-data':
-                submitTarget.ariaLabel = dialogForm.elements['select-meta-data'].selectedOptions[0].label;
-                submitTarget.dataset.metaData = dialogForm.elements['select-meta-data'].value
-                    .replace('{n}', dialogForm.elements['number'].value)
-                    .replace('{desc}', dialogForm.elements['text'].value);
-                break;
-            case 'set-other-action':
-                submitTarget.dataset.otherAction = dialogForm.elements['other-action'].value;
-                submitTarget.textContent = submitTarget.dataset.otherAction.length > 4 ? '…' : submitTarget.dataset.otherAction;
-                break;
-            case 'remove-left':
-            case 'remove-right':
-                const removeFrom = submitTarget.parentElement;
-                const activeTrackUl = blockManager.activeTrack;
-                const ulChildren = activeTrackUl.children;
-                const removeFromIndex = [...ulChildren].indexOf(removeFrom);
-                lastTouchedButton = null;
-                while ([...ulChildren].includes(removeFrom)) {
-                    const isLeft = submitterVal === 'remove-left';
-                    const removeTarget = isLeft ? activeTrackUl.firstElementChild
-                        : activeTrackUl.lastElementChild;
-                    history.pushState({
-                        operation: 'remove',
-                        removedElem: removeTarget,
-                        removedIndex: isLeft ? 0 : ulChildren.length - 1,
-                        parent: activeTrackUl
-                    });
-                    removeTarget.remove();
-                }
-                blockManager.blocksDataUpdate();
-                blockManager.calcPoly();
-                blockManager.saveBlocksData();
-                blockManager.exportMml(mml);
-                blockManager.calcPlayFromHere();
-                break;
-            case 'set-step':
-                stepGuidanceDisplayed = true;
-                stepEnable = true;
-                break;
-            case 'cancel-step':
-                stepEnable = false;
-                break;
-        }
-        const afterChange = JSON.parse(JSON.stringify(submitTarget.dataset));
-        if (JSON.stringify(beforeChange) !== JSON.stringify(afterChange)) {
-            history.pushState({
-                operation: 'valueChange',
-                target: submitTarget,
-                beforeChange,
-                afterChange
-            });
-        }
-        this.resolve();
-    };
-
     constructor(dialogForm) {
         this.type = null;
         this.submitTarget = null;
         this.resolve = null;
-        dialogForm.addEventListener('submit', this.#submitHandler);
     }
 
     async prompt(type, initVals, submitTarget) {
