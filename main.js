@@ -1577,7 +1577,7 @@ class DialogFormManager {
                 case 'description':
                     (() => {
                         const p = document.createElement('p');
-                        p.innerHTML = def.description.replaceAll('\n', '<br>');
+                        p.innerText = def.description;
                         dialogForm.description.appendChild(p);
                     })();
                     break;
@@ -1647,140 +1647,142 @@ class DialogFormManager {
         this.type = type;
     }
 
+    #submitHandler = e => {
+        const submitTarget = this.submitTarget;
+        const submitterVal = e.submitter.value;
+        const beforeChange = JSON.parse(JSON.stringify(submitTarget.dataset));
+        switch (submitterVal) {
+            case 'set-tone':
+                const buttonClassName = submitTarget.className;
+                document.querySelectorAll(`[class*="${buttonClassName}"]`).forEach(elem => {
+                    elem.ariaLabel = dialogForm.elements['tone-name'].value;
+                    if (!elem.classList.contains('material-icons') || dialogForm.elements['tone-name'].value !== '無調整') {
+                        elem.classList.remove('material-icons');
+                        elem.textContent = dialogForm.elements['tone-name'].value;
+                    }
+                    elem.dataset.tone = dialogForm.elements['tone-def'].value;
+                });
+                break;
+            case 'set-tone-pitch':
+                submitTarget.dataset.tonePitch = submitTarget.dataset.tonePitch.match(/[><]*?[a-g]\+?/)[0] + dialogForm.elements['tone-pitch'].value + '.'.repeat(dialogForm.elements['dot'].value);
+                break;
+            case 'set-tempo':
+                submitTarget.dataset.tempo = 't' + dialogForm.elements['tempo'].value;
+                break;
+            case 'set-note-value':
+                submitTarget.dataset.noteValue = 'l' + dialogForm.elements['note-value'].value + '.'.repeat(dialogForm.elements['dot'].value);
+                break;
+            case 'set-rest':
+                submitTarget.dataset.rest = 'r' + dialogForm.elements['rest'].value + '.'.repeat(dialogForm.elements['dot'].value);
+                break;
+            case 'set-octave':
+                submitTarget.dataset.octave = 'o' + dialogForm.elements['octave'].value;
+                break;
+            case 'set-octave-relative':
+                submitTarget.dataset.octave = dialogForm.elements['octave'].value > 0 ? '<'.repeat(dialogForm.elements['octave'].value) : '>'.repeat(-dialogForm.elements['octave'].value);
+                break;
+            case 'set-velocity':
+                submitTarget.dataset.velocity = '@v' + dialogForm.elements['velocity'].value;
+                break;
+            case 'set-velocity-relative':
+                submitTarget.dataset.velocity = (dialogForm.elements['velocity'].value >= 0 ? '(' : ')') + Math.abs(dialogForm.elements['velocity'].value);
+                break;
+            case 'set-note-shift':
+                submitTarget.dataset.noteShift = 'ns' + dialogForm.elements['note-shift'].value;
+                break;
+            case 'set-note-shift-relative':
+                submitTarget.dataset.noteShift = '@ns' + dialogForm.elements['note-shift'].value;
+                break;
+            case 'set-detune':
+                submitTarget.dataset.detune = '@d' + dialogForm.elements['detune'].value;
+                break;
+            case 'set-tie-slur':
+                submitTarget.dataset.tieSlur = '&' + dialogForm.elements['tie-slur'].value + '.'.repeat(dialogForm.elements['dot'].value);
+                if (submitTarget.dataset.tieSlur === '&') {
+                    submitTarget.ariaLabel = 'スラー';
+                } else {
+                    submitTarget.ariaLabel = 'タイ';
+                }
+                break;
+            case 'set-repeat':
+                submitTarget.dataset.repeatStartEnd = '/:' + dialogForm.elements['repeat'].value;
+                break;
+            case 'set-macro-def':
+                const beforeMacroDef = submitTarget.dataset.macroDef;
+                submitTarget.dataset.macroDef = '$' + dialogForm.elements['macro-def-name'].value
+                    + (dialogForm.elements['macro-def-arg'].value !== '' ? `{${dialogForm.elements['macro-def-arg'].value}}` : '')
+                    + '=';
+                musicalScore.querySelectorAll(`[data-macro-use="${beforeMacroDef.replace('=', '')}"]`).forEach(elem => {
+                    elem.dataset.macroUse = submitTarget.dataset.macroDef.replace('=', '');
+                });
+                break;
+            case 'set-macro-arg-use':
+                submitTarget.dataset.macroArgUse = '%' + dialogForm.elements['macro-arg-use'].value;
+                break;
+            case 'set-macro-use':
+                submitTarget.dataset.macroUse = '$' + dialogForm.elements['macro-use-name'].value
+                    + (dialogForm.elements['macro-use-arg'].value !== '' ? `{${dialogForm.elements['macro-use-arg'].value}}` : '');
+                break;
+            case 'set-meta-data':
+                submitTarget.ariaLabel = dialogForm.elements['select-meta-data'].selectedOptions[0].label;
+                submitTarget.dataset.metaData = dialogForm.elements['select-meta-data'].value
+                    .replace('{n}', dialogForm.elements['number'].value)
+                    .replace('{desc}', dialogForm.elements['text'].value);
+                break;
+            case 'set-other-action':
+                submitTarget.dataset.otherAction = dialogForm.elements['other-action'].value;
+                submitTarget.textContent = submitTarget.dataset.otherAction.length > 4 ? '…' : submitTarget.dataset.otherAction;
+                break;
+            case 'remove-left':
+            case 'remove-right':
+                const removeFrom = submitTarget.parentElement;
+                const activeTrackUl = blockManager.activeTrack;
+                const ulChildren = activeTrackUl.children;
+                const removeFromIndex = [...ulChildren].indexOf(removeFrom);
+                lastTouchedButton = null;
+                while ([...ulChildren].includes(removeFrom)) {
+                    const isLeft = submitterVal === 'remove-left';
+                    const removeTarget = isLeft ? activeTrackUl.firstElementChild
+                        : activeTrackUl.lastElementChild;
+                    history.pushState({
+                        operation: 'remove',
+                        removedElem: removeTarget,
+                        removedIndex: isLeft ? 0 : ulChildren.length - 1,
+                        parent: activeTrackUl
+                    });
+                    removeTarget.remove();
+                }
+                blockManager.blocksDataUpdate();
+                blockManager.calcPoly();
+                blockManager.saveBlocksData();
+                blockManager.exportMml(mml);
+                blockManager.calcPlayFromHere();
+                break;
+            case 'set-step':
+                stepGuidanceDisplayed = true;
+                stepEnable = true;
+                break;
+            case 'cancel-step':
+                stepEnable = false;
+                break;
+        }
+        const afterChange = JSON.parse(JSON.stringify(submitTarget.dataset));
+        if (JSON.stringify(beforeChange) !== JSON.stringify(afterChange)) {
+            history.pushState({
+                operation: 'valueChange',
+                target: submitTarget,
+                beforeChange,
+                afterChange
+            });
+        }
+        this.resolve();
+    };
+
     constructor(dialogForm) {
         this.type = null;
         this.submitTarget = null;
         this.resolve = null;
-        dialogForm.addEventListener('submit', e => {
-            const submitTarget = this.submitTarget;
-            const submitterVal = e.submitter.value;
-            const beforeChange = JSON.parse(JSON.stringify(submitTarget.dataset));
-            switch (submitterVal) {
-                case 'set-tone':
-                    const buttonClassName = submitTarget.className;
-                    document.querySelectorAll(`[class*="${buttonClassName}"]`).forEach(elem => {
-                        elem.ariaLabel = dialogForm.elements['tone-name'].value;
-                        if (!elem.classList.contains('material-icons') || dialogForm.elements['tone-name'].value !== '無調整') {
-                            elem.classList.remove('material-icons');
-                            elem.textContent = dialogForm.elements['tone-name'].value;
-                        }
-                        elem.dataset.tone = dialogForm.elements['tone-def'].value;
-                    });
-                    break;
-                case 'set-tone-pitch':
-                    submitTarget.dataset.tonePitch = submitTarget.dataset.tonePitch.match(/[><]*?[a-g]\+?/)[0] + dialogForm.elements['tone-pitch'].value + '.'.repeat(dialogForm.elements['dot'].value);
-                    break;
-                case 'set-tempo':
-                    submitTarget.dataset.tempo = 't' + dialogForm.elements['tempo'].value;
-                    break;
-                case 'set-note-value':
-                    submitTarget.dataset.noteValue = 'l' + dialogForm.elements['note-value'].value + '.'.repeat(dialogForm.elements['dot'].value);
-                    break;
-                case 'set-rest':
-                    submitTarget.dataset.rest = 'r' + dialogForm.elements['rest'].value + '.'.repeat(dialogForm.elements['dot'].value);
-                    break;
-                case 'set-octave':
-                    submitTarget.dataset.octave = 'o' + dialogForm.elements['octave'].value;
-                    break;
-                case 'set-octave-relative':
-                    submitTarget.dataset.octave = dialogForm.elements['octave'].value > 0 ? '<'.repeat(dialogForm.elements['octave'].value) : '>'.repeat(-dialogForm.elements['octave'].value);
-                    break;
-                case 'set-velocity':
-                    submitTarget.dataset.velocity = '@v' + dialogForm.elements['velocity'].value;
-                    break;
-                case 'set-velocity-relative':
-                    submitTarget.dataset.velocity = (dialogForm.elements['velocity'].value >= 0 ? '(' : ')') + Math.abs(dialogForm.elements['velocity'].value);
-                    break;
-                case 'set-note-shift':
-                    submitTarget.dataset.noteShift = 'ns' + dialogForm.elements['note-shift'].value;
-                    break;
-                case 'set-note-shift-relative':
-                    submitTarget.dataset.noteShift = '@ns' + dialogForm.elements['note-shift'].value;
-                    break;
-                case 'set-detune':
-                    submitTarget.dataset.detune = '@d' + dialogForm.elements['detune'].value;
-                    break;
-                case 'set-tie-slur':
-                    submitTarget.dataset.tieSlur = '&' + dialogForm.elements['tie-slur'].value + '.'.repeat(dialogForm.elements['dot'].value);
-                    if (submitTarget.dataset.tieSlur === '&') {
-                        submitTarget.ariaLabel = 'スラー';
-                    } else {
-                        submitTarget.ariaLabel = 'タイ';
-                    }
-                    break;
-                case 'set-repeat':
-                    submitTarget.dataset.repeatStartEnd = '/:' + dialogForm.elements['repeat'].value;
-                    break;
-                case 'set-macro-def':
-                    const beforeMacroDef = submitTarget.dataset.macroDef;
-                    submitTarget.dataset.macroDef = '$' + dialogForm.elements['macro-def-name'].value
-                        + (dialogForm.elements['macro-def-arg'].value !== '' ? `{${dialogForm.elements['macro-def-arg'].value}}` : '')
-                        + '=';
-                    musicalScore.querySelectorAll(`[data-macro-use="${beforeMacroDef.replace('=', '')}"]`).forEach(elem => {
-                        elem.dataset.macroUse = submitTarget.dataset.macroDef.replace('=', '');
-                    });
-                    break;
-                case 'set-macro-arg-use':
-                    submitTarget.dataset.macroArgUse = '%' + dialogForm.elements['macro-arg-use'].value;
-                    break;
-                case 'set-macro-use':
-                    submitTarget.dataset.macroUse = '$' + dialogForm.elements['macro-use-name'].value
-                        + (dialogForm.elements['macro-use-arg'].value !== '' ? `{${dialogForm.elements['macro-use-arg'].value}}` : '');
-                    break;
-                case 'set-meta-data':
-                    submitTarget.ariaLabel = dialogForm.elements['select-meta-data'].selectedOptions[0].label;
-                    submitTarget.dataset.metaData = dialogForm.elements['select-meta-data'].value
-                        .replace('{n}', dialogForm.elements['number'].value)
-                        .replace('{desc}', dialogForm.elements['text'].value);
-                    break;
-                case 'set-other-action':
-                    submitTarget.dataset.otherAction = dialogForm.elements['other-action'].value;
-                    submitTarget.textContent = submitTarget.dataset.otherAction.length > 4 ? '…' : submitTarget.dataset.otherAction;
-                    break;
-                case 'remove-left':
-                case 'remove-right':
-                    const removeFrom = submitTarget.parentElement;
-                    const activeTrackUl = blockManager.activeTrack;
-                    const ulChildren = activeTrackUl.children;
-                    const removeFromIndex = [...ulChildren].indexOf(removeFrom);
-                    lastTouchedButton = null;
-                    while ([...ulChildren].includes(removeFrom)) {
-                        const isLeft = submitterVal === 'remove-left';
-                        const removeTarget = isLeft ? activeTrackUl.firstElementChild
-                            : activeTrackUl.lastElementChild;
-                        history.pushState({
-                            operation: 'remove',
-                            removedElem: removeTarget,
-                            removedIndex: isLeft ? 0 : ulChildren.length - 1,
-                            parent: activeTrackUl
-                        });
-                        removeTarget.remove();
-                    }
-                    blockManager.blocksDataUpdate();
-                    blockManager.calcPoly();
-                    blockManager.saveBlocksData();
-                    blockManager.exportMml(mml);
-                    blockManager.calcPlayFromHere();
-                    break;
-                case 'set-step':
-                    stepGuidanceDisplayed = true;
-                    stepEnable = true;
-                    break;
-                case 'cancel-step':
-                    stepEnable = false;
-                    break;
-            }
-            const afterChange = JSON.parse(JSON.stringify(submitTarget.dataset));
-            if (JSON.stringify(beforeChange) !== JSON.stringify(afterChange)) {
-                history.pushState({
-                    operation: 'valueChange',
-                    target: submitTarget,
-                    beforeChange,
-                    afterChange
-                });
-            }
-            this.resolve();
-        });
+        dialogForm.addEventListener('submit', this.#submitHandler);
     }
 
     async prompt(type, initVals, submitTarget) {
@@ -1855,7 +1857,7 @@ const playAnimationStart = () => {
     blockManager.playRendering(startPos);
 };
 const compileHandler = () => {
-    warnOut.innerHTML = flmml.getWarnings().replaceAll('\n', '<br>');
+    warnOut.innerText = flmml.getWarnings();
 };
 flmml.addEventListener('compilecomplete', compileHandler);
 const completeHandler = () => {
