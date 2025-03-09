@@ -138,7 +138,7 @@ class Mml {
 
 class BlockManager {
     #blocksData = [];
-    #macroNameSet = new Set();
+    #macroDefSet = new Set();
     #rAFs = [];
     #saveDelayTimer = null;
     #activeTrack = null;
@@ -147,6 +147,10 @@ class BlockManager {
         this.tonesElem = tones;
         this.areaElem = areaElem;
         this.#activeTrack = this.areaElem.querySelector('.track.active');
+    }
+
+    get macroDefSet() {
+        return this.#macroDefSet;
     }
 
     set activeTrack(track) {
@@ -206,7 +210,7 @@ class BlockManager {
     parseBlocks() {
         const data = this.#blocksData;
         // console.log(data);
-        const macroNameSetIsEmpty = !this.#macroNameSet.size;
+        const macroDefSetIsEmpty = !this.#macroDefSet.size;
         this.activeTrack = this.areaElem.querySelector('.track');
         const tonesUl = this.tonesElem.querySelector('ul');
         let trackNo = 0;
@@ -270,9 +274,13 @@ class BlockManager {
             block.polyStartEnd && (button.dataset.polyStartEnd = block.polyStartEnd);
             if (block.macroDef) {
                 button.dataset.macroDef = block.macroDef;
-                button.textContent = block.macroDef === ';' ? ';' : '$=';
-                if (macroNameSetIsEmpty) {
-                    this.#macroNameSet.add((block.macroDef.match(/\$([^\{\=]*)[\{\=]/) || [, ''])[1]);
+                if (block.macroDef === ';') {
+                    button.textContent = ';';
+                } else {
+                    button.textContent = '$=';
+                    if (macroDefSetIsEmpty) {
+                        this.#macroDefSet.add(block.macroDef.replace('=', ''));
+                    }
                 }
             }
             block.macroArgUse && (button.dataset.macroArgUse = block.macroArgUse);
@@ -469,7 +477,7 @@ class BlockManager {
         const mmlArr = mml.getMmlArr();
         const regex = /((@(l|q|x|p|u|mh|w|n|f|e|'[aeiou]?'|o|i|r|s)?|q|x)[0-9\-, ]+)+|[><]*?[a-g]\+?[0-9]*\.*|t[0-9]+|l[0-9]+\.*|r[0-9]*\.*|o[0-8]|[><]+|@?v[0-9]+|[\)\(][0-9]+|@?ns-?[0-9]+|@d-?[0-9]+|&[0-9]*\.*|\/\*.*?\*\/|\/\*|\*\/|\/:[0-9]*|:\/|\/|\[|\]|\$.*?=|%[a-z0-9_]+|\$[a-z0-9_.]+(\{[^\}]*\})?|^#.*|;| +|@pl[0-9]+|[^;]+/ig;
         /* tone|tonePitch|tempo|noteValue|rest|octave|velocity|noteShift|detune|tieSlur|comment|repeatStartEnd|repeatBreak|polyStartEnd|macroDef|macroArgUse|macroUse|metaData|newTrack|space|otherAction */ /* マクロ使用の「.」は便宜上 */
-        this.#macroNameSet.clear();
+        this.#macroDefSet.clear();
         const toneSet = new Set();
         let trackNo = 0;
         let toneCache = ''
@@ -561,20 +569,20 @@ class BlockManager {
                     } else if (/^\$.*?=$/.test(str)) {
                         block.className = 'macro-def';
                         block.macroDef = str.replaceAll(' ', '');
-                        this.#macroNameSet.add((block.macroDef.match(/\$([^\{\=]*)[\{\=]/) || [, ''])[1]);
+                        this.#macroDefSet.add(block.macroDef.replace('=', ''));
                         inMacro = true;
                     } else if (str.startsWith('%')) {
                         block.className = 'macro-arg-use';
                         block.macroArgUse = str;
                     } else if (str.startsWith('$')) {
                         block.className = 'macro-use';
-                        const macroName = (str.match(/\$([^\{\=]*)[\{\=]/) || [, ''])[1];
-                        const foundMacroName = [...this.#macroNameSet].sort((a, b) => b.length - a.length).find(def => macroName.includes(def));
-                        if (foundMacroName) {
+                        const macroDef = str.replace(/\{.*/, '');
+                        const foundMacroDef = [...this.#macroDefSet].sort((a, b) => b.length - a.length).find(def => def.includes(macroDef));
+                        if (foundMacroDef) {
                             const macroArg = (str.match(/\{[^\}]*\}/) || [''])[0];
-                            block.macroUse = `$${foundMacroName}${macroArg}`;
+                            block.macroUse = `${foundMacroDef}${macroArg}`;
                             data.push(block);
-                            const remaining = str.replace(foundMacroName, '');
+                            const remaining = str.replace(foundMacroDef, '');
                             if (remaining !== '') {
                                 data = data.concat(generateBlocks(remaining));
                             }
@@ -640,7 +648,7 @@ class BlockManager {
             }
         });
         lastTouchedButton = null;
-        this.#macroNameSet.clear();
+        this.#macroDefSet.clear();
         this.#blocksData = data;
         this.parseBlocks();
         this.blocksDataUpdate();
@@ -1559,7 +1567,7 @@ class DialogFormManager {
                     label: '名前',
                     type: 'text',
                     name: 'macro-def-name',
-                    value: (mmlText) => (mmlText.match(/\$([^\{\=]*)[\{\=]/) || [, ''])[1]
+                    value: (mmlText) => (mmlText.match(/\$([^\{\=]*)/) || [, ''])[1]
                 },
                 {
                     label: '引数 カンマ区切り',
@@ -1578,11 +1586,13 @@ class DialogFormManager {
             on: {
                 'set-macro-def': (target, inputs) => {
                     const {'macro-def-name': macroDefName, 'macro-def-arg': macroDefArg} = inputs;
-                    const beforeMacroDefName = (target.dataset.macroDef.match(/\$([^\{\=]*)[\{\=]/) || [, ''])[1];
+                    blockManager.macroDefSet.delete(target.dataset.macroDef.replace('=', ''));
+                    const beforeMacroDef = (target.dataset.macroDef.match(/\$[^\{\=]*/) || [''])[0];
                     target.dataset.macroDef = `$${macroDefName}${macroDefArg ? `{${macroDefArg}}` : ''}=`;
-                    musicalScore.querySelectorAll(`[data-macro-use^="$${beforeMacroDefName}"]`).forEach(elem => {
-                        elem.dataset.macroUse = elem.dataset.macroUse.replace(beforeMacroDefName, macroDefName);
+                    musicalScore.querySelectorAll(`[data-macro-use^="${beforeMacroDef}"]`).forEach(elem => {
+                        elem.dataset.macroUse = elem.dataset.macroUse.replace(beforeMacroDef, `$${macroDefName}`);
                     });
+                    blockManager.macroDefSet.add(`$${macroDefName}${macroDefArg ? `{${macroDefArg}}` : ''}`);
                 }
             }
         },
@@ -1617,6 +1627,7 @@ class DialogFormManager {
                     label: '名前',
                     type: 'text',
                     name: 'macro-use-name',
+                    // list: 'macro-use-name-list',
                     value: (mmlText) => (mmlText.match(/\$([^\{]*)\{?/) || [, ''])[1]
                 },
                 {
@@ -1633,6 +1644,19 @@ class DialogFormManager {
                     textContent: '確定'
                 }
             ],
+            run: (mmlText, inputElems) => {
+                const {'macro-use-name': macroUseName} = inputElems;
+                const macroUseNameDataList = document.createElement('datalist');
+                macroUseNameDataList.id = 'macro-use-name-list';
+                blockManager.macroDefSet.forEach(macroDef => {
+                    const option = document.createElement('option');
+                    option.label = (macroDef.match(/\{[^\}]*\}/) || [''])[0];
+                    option.value = (macroDef.match(/\$([^\{]*)\{?/) || [, ''])[1];
+                    macroUseNameDataList.appendChild(option);
+                });
+                macroUseName.after(macroUseNameDataList);
+                macroUseName.setAttribute('list', 'macro-use-name-list');
+            },
             on: {
                 'set-macro-use': (target, inputs) => {
                     const {'macro-use-name': macroUseName, 'macro-use-arg': macroUseArg} = inputs;
@@ -2005,6 +2029,7 @@ class DialogFormManager {
             const submitterVal = e.submitter.value;
             const inputs = this.#collectInputs();
             const beforeChange = JSON.parse(JSON.stringify(item.dataset));
+            console.log(submitterVal);
             on[submitterVal](item, inputs);
             const afterChange = JSON.parse(JSON.stringify(item.dataset));
             if (JSON.stringify(beforeChange) !== JSON.stringify(afterChange)) {
@@ -2662,9 +2687,11 @@ editor.addEventListener('contextmenu', e => {
                 elem.parentElement.remove();
             });
         } else if ('macroDef' in target.dataset) {
-            musicalScore.querySelectorAll(`[data-macro-use="${target.dataset.macroDef.replace('=', '')}"]`).forEach(elem => {
+            const macroDef = (target.dataset.macroDef.match(/\$[^\{\=]*/) || [''])[0];
+            musicalScore.querySelectorAll(`[data-macro-use^="${macroDef}"]`).forEach(elem => {
                 elem.parentElement.remove();
             });
+            blockManager.macroDefSet.delete(target.dataset.macroDef.replace('=', ''));
         } else if ('playFromHere' in target.dataset) {
             musicalScore.querySelectorAll(`.inactive`).forEach(elem => {
                 elem.classList.remove('inactive');
