@@ -3130,9 +3130,6 @@ let dropEffect = null;
                 } else if ('macroDef' in newItem.dataset) {
                     newItem.dataset.macroDef === ';' && (newItem.dataset.macroDef = '$=');
                     newItem.textContent = '$=';
-                    if (from === musicalScore) {
-                        newItem.dataset.macroDef = newItem.dataset.macroDef.replace('=', '_copy=');
-                    }
                 }
                 li.appendChild(newItem);
                 newNode = li;
