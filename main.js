@@ -1663,7 +1663,7 @@ class DialogFormManager {
                 const {'macro-use-name': macroUseName} = inputElems;
                 const macroUseNameDataList = document.createElement('datalist');
                 macroUseNameDataList.id = 'macro-use-name-list';
-                const macroDefs = blockManager.blocksData.filter(block => block.macroDef && block.macroDef !== ';').map(block => block.macroDef);
+                const macroDefs = blockManager.blocksData.filter(block => block.macroDef && block.macroDef !== ';').map(block => block.macroDef.replace('=', ''));
                 macroDefs.forEach(macroDef => {
                     const option = document.createElement('option');
                     option.label = (macroDef.match(/\{[^\}]*\}/) || [''])[0];
