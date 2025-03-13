@@ -149,10 +149,6 @@ class BlockManager {
         this.#activeTrack = this.areaElem.querySelector('.track.active');
     }
 
-    get macroDefSet() {
-        return this.#macroDefSet;
-    }
-
     set activeTrack(track) {
         this.#activeTrack.classList.remove('active');
         this.#activeTrack = track;
@@ -210,7 +206,6 @@ class BlockManager {
     parseBlocks() {
         const data = this.#blocksData;
         // console.log(data);
-        const macroDefSetIsEmpty = !this.#macroDefSet.size;
         this.activeTrack = this.areaElem.querySelector('.track');
         const tonesUl = this.tonesElem.querySelector('ul');
         let trackNo = 0;
@@ -278,9 +273,6 @@ class BlockManager {
                     button.textContent = ';';
                 } else {
                     button.textContent = '$=';
-                    if (macroDefSetIsEmpty) {
-                        this.#macroDefSet.add(block.macroDef.replace('=', ''));
-                    }
                 }
             }
             block.macroArgUse && (button.dataset.macroArgUse = block.macroArgUse);
@@ -648,7 +640,6 @@ class BlockManager {
             }
         });
         lastTouchedButton = null;
-        this.#macroDefSet.clear();
         this.#blocksData = data;
         this.parseBlocks();
         this.blocksDataUpdate();
@@ -1586,13 +1577,11 @@ class DialogFormManager {
             on: {
                 'set-macro-def': (target, inputs) => {
                     const {'macro-def-name': macroDefName, 'macro-def-arg': macroDefArg} = inputs;
-                    blockManager.macroDefSet.delete(target.dataset.macroDef.replace('=', ''));
-                    const beforeMacroDef = (target.dataset.macroDef.match(/\$[^\{\=]*/) || [''])[0];
                     target.dataset.macroDef = `$${macroDefName}${macroDefArg ? `{${macroDefArg}}` : ''}=`;
-                    musicalScore.querySelectorAll(`[data-macro-use^="${beforeMacroDef}"]`).forEach(elem => {
-                        elem.dataset.macroUse = elem.dataset.macroUse.replace(beforeMacroDef, `$${macroDefName}`);
+                    const beforeMacroName = (target.dataset.macroDef.match(/\$[^\{\=]*/) || [''])[0];
+                    musicalScore.querySelectorAll(`[data-macro-use^="${beforeMacroName}"]`).forEach(elem => {
+                        elem.dataset.macroUse = elem.dataset.macroUse.replace(beforeMacroName, `$${macroDefName}`);
                     });
-                    blockManager.macroDefSet.add(`$${macroDefName}${macroDefArg ? `{${macroDefArg}}` : ''}`);
                 }
             }
         },
@@ -1674,7 +1663,8 @@ class DialogFormManager {
                 const {'macro-use-name': macroUseName} = inputElems;
                 const macroUseNameDataList = document.createElement('datalist');
                 macroUseNameDataList.id = 'macro-use-name-list';
-                blockManager.macroDefSet.forEach(macroDef => {
+                const macroDefs = blockManager.blocksData.filter(block => block.macroDef && block.macroDef !== ';').map(block => block.macroDef);
+                macroDefs.forEach(macroDef => {
                     const option = document.createElement('option');
                     option.label = (macroDef.match(/\{[^\}]*\}/) || [''])[0];
                     option.value = (macroDef.match(/\$([^\{]*)\{?/) || [, ''])[1];
@@ -2717,7 +2707,6 @@ editor.addEventListener('contextmenu', e => {
             musicalScore.querySelectorAll(`[data-macro-use^="${macroDef}"]`).forEach(elem => {
                 elem.parentElement.remove();
             });
-            blockManager.macroDefSet.delete(target.dataset.macroDef.replace('=', ''));
         } else if ('playFromHere' in target.dataset) {
             musicalScore.querySelectorAll(`.inactive`).forEach(elem => {
                 elem.classList.remove('inactive');
@@ -3143,7 +3132,6 @@ let dropEffect = null;
                     newItem.textContent = '$=';
                     if (from === musicalScore) {
                         newItem.dataset.macroDef = newItem.dataset.macroDef.replace('=', '_copy=');
-                        blockManager.macroDefSet.add(newItem.dataset.macroDef.replace('=', ''));
                     }
                 }
                 li.appendChild(newItem);
