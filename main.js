@@ -569,7 +569,7 @@ class BlockManager {
                     } else if (str.startsWith('$')) {
                         block.className = 'macro-use';
                         const macroDef = str.replace(/\{.*/, '');
-                        const foundMacroDef = [...this.#macroDefSet].sort((a, b) => b.length - a.length).find(def => def.includes(macroDef));
+                        const foundMacroDef = [...this.#macroDefSet].sort((a, b) => b.length - a.length).find(def => macroDef.includes(def));
                         if (foundMacroDef) {
                             const macroArg = (str.match(/\{[^\}]*\}/) || [''])[0];
                             block.macroUse = `${foundMacroDef}${macroArg}`;
