@@ -2755,7 +2755,7 @@ const wheelHandler = e => {
         lastY = touchY;
     }
     const isPositive = e.deltaY < 0;
-    let target = isButton ? e.target : lastTouchedButton?.closest('#musical-score') && lastTouchedButton;
+    let target = isButton && e.target !== addTrackBtn && e.target !== removeTrackBtn ? e.target : lastTouchedButton?.closest('#musical-score') && lastTouchedButton;
     if (!target) {
         return;
     } else if (is('musical-score')) {
