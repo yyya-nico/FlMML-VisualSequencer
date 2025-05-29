@@ -1,7 +1,7 @@
 {
   "name": "flmml-visualsequencer",
   "private": true,
-  "version": "0.6.4-beta",
+  "version": "0.6.5-beta",
   "type": "module",
   "scripts": {
     "dev": "vite",
