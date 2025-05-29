@@ -6,7 +6,7 @@ import { FlMML } from 'flmml-on-html5';
 import localForage from 'localforage';
 import { Picker } from 'emoji-picker-element';
 import { polyfill } from 'mobile-drag-drop';
-import { htmlspecialchars, resetAnimation, useVisualViewportToCss, waitScroll, isValidJSON } from './utils';
+import { htmlspecialchars, nl2br, resetAnimation, useVisualViewportToCss, waitScroll, isValidJSON } from './utils';
 
 const version = import.meta.env.VITE_APP_VER;
 
@@ -2204,7 +2204,7 @@ const completeHandler = () => {
 flmml.addEventListener('complete', completeHandler);
 
 mml.onChange = (arr, mmlText) => {
-    mmlOut.innerHTML = mmlText ? `<pre><code>${htmlspecialchars(mmlText).replaceAll('\n', '<br>')}</code></pre>` : '(なし)';
+    mmlOut.innerHTML = mmlText ? `<pre><code>${nl2br(htmlspecialchars(mmlText))}</code></pre>` : '(なし)';
     const mmlIsExist = Boolean(arr.length);
     copyBtn.disabled = saveBtn.disabled = !mmlIsExist;
 };

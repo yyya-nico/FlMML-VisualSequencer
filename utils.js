@@ -17,6 +17,10 @@ const htmlspecialchars = unsafeText => {
     );
 };
 
+const nl2br = (text) => {
+    return text.replace(/\n/g, "<br>");
+};
+
 const resetAnimation = (elem, token) => {
     elem.classList.remove(token);
     window.requestAnimationFrame(() => {
@@ -61,4 +65,4 @@ const isValidJSON = (json) => {
   }
 };
 
-export {htmlspecialchars, resetAnimation, useVisualViewportToCss, waitScroll, isValidJSON};
+export {htmlspecialchars, nl2br, resetAnimation, useVisualViewportToCss, waitScroll, isValidJSON};
