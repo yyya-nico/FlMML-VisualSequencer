@@ -1173,6 +1173,90 @@ const stepRecorder = () => {
     setNoteValueTarget = current;
     toNextBtn();
 };
+let mtcSyncEnable = false;
+
+class MTCSync {
+    #FPS = 30;
+    #SYNC_INTERVAL = 1000 / (this.#FPS * 4);
+
+    constructor() {
+        this.outputs = null;
+        this.output = null;
+        this.startMSec = 0;
+        this.startTime = 0;
+        this.timer = null;
+        this.initialized = false;
+    }
+
+    getQuarterFrameMessages(hours, minutes, seconds, frames) {
+        // SMPTE type of 30fps NDF: 0x03
+        const type = 0x03;
+        return [
+            [0xF1, 0x00 | (frames & 0x0F)], // QF0
+            [0xF1, 0x10 | ((frames >> 4) & 0x01)], // QF1
+            [0xF1, 0x20 | (seconds & 0x0F)], // QF2
+            [0xF1, 0x30 | ((seconds >> 4) & 0x03)], // QF3
+            [0xF1, 0x40 | (minutes & 0x0F)], // QF4
+            [0xF1, 0x50 | (minutes >> 4) & 0x03], // QF5
+            [0xF1, 0x60 | (hours & 0x0F)], // QF6
+            [0xF1, 0x70 | (type << 1) | ((hours >> 4) & 0x01)], // QF7
+        ];
+    }
+
+    framesToTimecode(totalFrames) {
+        const frames = totalFrames % this.#FPS;
+        const totalSeconds = Math.floor(totalFrames / this.#FPS);
+        const seconds = totalSeconds % 60;
+        const totalMinutes = Math.floor(totalSeconds / 60);
+        const minutes = totalMinutes % 60;
+        const hours = Math.floor(totalMinutes / 60) % 24;
+        return { hours, minutes, seconds, frames };
+    }
+
+    sendQuarterFrame() {
+        if (!this.output) return;
+        const now = performance.now();
+        const elapsed = (now - this.startTime) / 1000;
+        const totalFrames = Math.floor(this.startMSec / 1000 * this.#FPS + elapsed * this.#FPS);
+        const { hours, minutes, seconds, frames } = this.framesToTimecode(totalFrames);
+        // メッセージを順に送信
+        const qfMsgs = this.getQuarterFrameMessages(hours, minutes, seconds, frames);
+        qfMsgs.forEach((msg, index) => {
+            this.output?.send(msg, now + index * this.#SYNC_INTERVAL);
+        });
+        this.timer = window.setTimeout(() => this.sendQuarterFrame(), this.#SYNC_INTERVAL * 8);
+    }
+
+    async init() {
+        if (!this.initialized) {
+            this.initialized = true;
+            return navigator.requestMIDIAccess().then(midiAccess => this.outputs = Array.from(midiAccess.outputs.values()));
+        }
+    }
+
+    configure(config) {
+        this.output = config.output;
+        this.startMSec = config.startMSec || 0;
+    }
+
+    start() {
+        if (!this.output) {
+            console.warn('MTC Sync output not available.');
+            return;
+        }
+        this.startTime = performance.now();
+        this.sendQuarterFrame();
+    }
+
+    stop() {
+        if (this.timer) {
+            clearTimeout(this.timer);
+            this.timer = null;
+        }
+    }
+}
+
+const mtcSync = new MTCSync();
 
 class DialogFormManager {
     #dialogDefinitions = {
@@ -1944,7 +2028,66 @@ class DialogFormManager {
                     stepEnable = false;
                 }
             }
-        }
+        },
+        mtcSync: {
+            title: 'MTC同期設定',
+            description: 
+                `MTC同期は、MIDIタイムコードを利用して、他のMIDIデバイスと再生を同期するための設定です。
+MIDIデバイスとの連携を行う場合に設定してください。MTC Senderとして動作します。`,
+            inputs: [
+                {
+                    label: '送信先MIDIデバイス',
+                    select: {},
+                    name: 'select-mtc-sync',
+                },
+                {
+                    label: '再生開始オフセットミリ秒',
+                    type: 'number',
+                    name: 'start-msec',
+                    value: () => mtcSync.startMSec || 0,
+                    min: '0',
+                },
+            ],
+            buttons: [
+                {
+                    className: 'primaly',
+                    value: 'set-sync-mtc',
+                    textContent: '開始'
+                },
+                {
+                    value: 'cancel-sync-mtc',
+                    textContent: 'やめる'
+                }
+            ],
+            run: async (_, inputElems) => {
+                const {'select-mtc-sync': mtcSyncSelect} = inputElems;
+                const outputs = mtcSync.initialized ? mtcSync.outputs : await mtcSync.init();
+                for (const output of outputs) {
+                    const option = document.createElement('option');
+                    option.value = output.id;
+                    option.textContent = output.name;
+                    mtcSyncSelect.appendChild(option);
+                }
+                let selectIndex = outputs.indexOf(mtcSync.output);
+                selectIndex === -1 && (selectIndex = 0);
+                mtcSyncSelect.selectedIndex = selectIndex;
+            },
+            on: {
+                'set-sync-mtc': (target, inputs) => {
+                    const {'select-mtc-sync': mtcSyncSelect, 'start-msec': startMSecInput} = inputs;
+                    const output = mtcSync.outputs.find(output => output.id === mtcSyncSelect.value);
+                    const startMSec = startMSecInput;
+                    mtcSync.configure({
+                        output,
+                        startMSec,
+                    });
+                    mtcSyncEnable = true;
+                },
+                'cancel-sync-mtc': () => {
+                    mtcSyncEnable = false;
+                }
+            }
+        },
     };
 
     #noteValueChanger = (noteValueInput) => {
@@ -2190,6 +2333,7 @@ const stopHtml = createMIsHtml('stop') + '停止';
 const playAnimationStart = () => {
     const startPos = [...musicalScore.querySelectorAll('.track button')].findIndex(elem => elem.classList.contains('play-from-here'));
     blockManager.playRendering(startPos);
+    mtcSyncEnable && mtcSync.start();
 };
 const compileHandler = () => {
     warnOut.innerText = flmml.getWarnings();
@@ -2524,6 +2668,20 @@ editor.addEventListener('click', async e => {
                     stepReset();
                     flmml.stop();
                     clearTimeout(stepTimer);
+                }
+                return;
+            } else if ('mtcSync' in e.target.dataset) {
+                if (mtcSyncEnable) {
+                    mtcSyncEnable = false;
+                } else {
+                    await dialogFormManager.prompt(e.target, 'mtcSync');
+                }
+                if (mtcSyncEnable) {
+                    e.target.classList.add('enable');
+                    e.target.ariaLabel = 'MTC同期(有効)';
+                } else {
+                    e.target.classList.remove('enable');
+                    e.target.ariaLabel = 'MTC同期(無効)';
                 }
                 return;
             }
@@ -3264,6 +3422,7 @@ playBtn.addEventListener('click', () => {
     } else {
         flmml.stop();
         blockManager.stopRendering();
+        mtcSyncEnable && mtcSync.stop();
         flmml.removeEventListener('compilecomplete', playAnimationStart);
         clearBtn.disabled = false;
     }
