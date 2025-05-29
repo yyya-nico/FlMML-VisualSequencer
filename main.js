@@ -2032,8 +2032,8 @@ class DialogFormManager {
         mtcSync: {
             title: 'MTC同期設定',
             description: 
-                `MTC同期は、MIDIタイムコードを利用して、他のMIDIデバイスと再生を同期するための設定です。
-MIDIデバイスとの連携を行う場合に設定してください。MTC Senderとして動作します。`,
+                `他のMIDIシーケンサー等と再生を同期できます。
+MTC Senderとして動作します。`,
             inputs: [
                 {
                     label: '送信先MIDIデバイス',
