@@ -2212,7 +2212,7 @@ MTC Senderとして動作します。`,
             [...dialogForm.elements].map(elem =>{
                 if (elem instanceof HTMLSelectElement) {
                     return [elem.name, {
-                        label: elem.selectedOptions[0].label,
+                        label: elem.selectedOptions[0]?.label,
                         value: elem.value,
                     }];
                 } else {
