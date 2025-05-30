@@ -2137,7 +2137,8 @@ MTC Senderとして動作します。`,
     #createInputs = (inputs) => {
         dialogForm.inputs.textContent = '';
         inputs?.forEach(inputDef => {
-            const input = document.createElement('input');
+            const inputIsSelect = 'select' in inputDef;
+            const input = document.createElement(inputIsSelect ? 'select' : 'input');
             let appendElem = input;
             Object.entries(inputDef).forEach(([key, value]) => {
                 if (key === 'label') {
@@ -2146,15 +2147,12 @@ MTC Senderとして動作します。`,
                     label.appendChild(input);
                     appendElem = label;
                 } else if (key === 'select') {
-                    const select = document.createElement('select');
-                    select.name = inputDef.name;
                     Object.entries(value).forEach(([val, text]) => {
                         const option = document.createElement('option');
                         option.value = val;
                         option.textContent = text;
-                        select.appendChild(option);
+                        input.appendChild(option);
                     });
-                    input.replaceWith(select);
                 } else if (key === 'value' && typeof value === 'function') {
                     input.value = value(this.mmlText, this.item);
                 } else {
