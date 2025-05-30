@@ -2037,8 +2037,11 @@ MTC Senderとして動作します。`,
             inputs: [
                 {
                     label: '送信先MIDIデバイス',
-                    select: {},
+                    select: {
+                        '': '---デバイスがありません---'
+                    },
                     name: 'select-mtc-sync',
+                    disabled: true,
                 },
                 {
                     label: '再生開始オフセットミリ秒',
@@ -2046,13 +2049,15 @@ MTC Senderとして動作します。`,
                     name: 'start-msec',
                     value: () => mtcSync.startMSec || 0,
                     min: '0',
+                    disabled: true,
                 },
             ],
             buttons: [
                 {
                     className: 'primaly',
                     value: 'set-sync-mtc',
-                    textContent: '開始'
+                    textContent: '開始',
+                    disabled: true
                 },
                 {
                     value: 'cancel-sync-mtc',
@@ -2060,8 +2065,16 @@ MTC Senderとして動作します。`,
                 }
             ],
             run: async (_, inputElems) => {
-                const {'select-mtc-sync': mtcSyncSelect} = inputElems;
-                const outputs = mtcSync.initialized ? mtcSync.outputs : await mtcSync.init();
+                const {'select-mtc-sync': mtcSyncSelect, 'start-msec': startMSecInput} = inputElems;
+                const setSyncMtcButton = dialogForm.buttons.querySelector('button[value="set-sync-mtc"]');
+                const outputs = mtcSync.outputs ? mtcSync.outputs : await mtcSync.init();
+                if (outputs.length === 0) {
+                    return;
+                }
+                mtcSyncSelect.textContent = '';
+                mtcSyncSelect.disabled = false;
+                startMSecInput.disabled = false;
+                setSyncMtcButton.disabled = false;
                 for (const output of outputs) {
                     const option = document.createElement('option');
                     option.value = output.id;
