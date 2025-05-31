@@ -2353,6 +2353,7 @@ flmml.addEventListener('compilecomplete', compileHandler);
 const completeHandler = () => {
     playBtn.innerHTML = playHtml;
     blockManager.stopRendering();
+    mtcSyncEnable && mtcSync.stop();
     flmml.removeEventListener('compilecomplete', playAnimationStart);
     clearBtn.disabled = false;
 };
