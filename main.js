@@ -2679,6 +2679,7 @@ editor.addEventListener('click', async e => {
                 return;
             } else if ('mtcSync' in e.target.dataset) {
                 if (mtcSyncEnable) {
+                    mtcSync.stop();
                     mtcSyncEnable = false;
                 } else {
                     await dialogFormManager.prompt(e.target, 'mtcSync');
