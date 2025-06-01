@@ -354,7 +354,7 @@ class BlockManager {
                 }
             } else {
                 if (block.noteValue || block.repeatStartEnd || block.repeatBreak || block.polyStartEnd) {
-                    const noteValueStrCalc = str => {
+                    const parseNoteValue = str => {
                         if (!str) {
                             return scoreNoteValue;
                         }
@@ -366,7 +366,7 @@ class BlockManager {
                         };
                     };
                     if (block.noteValue) {
-                        scoreNoteValue = noteValueStrCalc(block.noteValue);
+                        scoreNoteValue = parseNoteValue(block.noteValue);
                     } else if (block.polyStartEnd === '[') {
                         inPoly = true;
                     } else if (block.polyStartEnd === ']') {
@@ -384,7 +384,7 @@ class BlockManager {
                                             type: arr[1] === 'r' ? 'rest' :
                                                 arr[1] === '*' ? 'otherNote'
                                                     : 'note',
-                                            num: noteValueStrCalc(arr[0])
+                                            num: parseNoteValue(arr[0])
                                         }));
                                         const numsOf = {
                                             note: (() => {
@@ -649,6 +649,19 @@ class BlockManager {
         this.calcPlayFromHere();
     }
 
+    #noteValueStrToNum({
+        str,
+        scoreNoteValue = 4
+    } = {}) {
+        if (!str) {
+            return scoreNoteValue;
+        }
+        const matched = /(?:[a-g]\+?|[lr&])([0-9]*)(\.*)/.exec(str);
+        const noteValue = matched && matched[1] ? Number(matched[1]) : scoreNoteValue;
+        const dots = matched ? matched[2].length : 0;
+        return (noteValue * 2 ** dots) / (2 ** (dots + 1) - 1);
+    }
+
     playRendering(startPos = -1) {
         const allData = this.#blocksData;
         if (!allData.length) {
@@ -693,14 +706,11 @@ class BlockManager {
             const promise = new Promise(res => resolve = res);
             let totalDelay = 0;
             let i = 0;
-            const noteValueStrCalc = str => {
-                if (!str) {
-                    return scoreNoteValue;
-                }
-                const matched = /(?:[a-g]\+?|[lr&])([0-9]*)(\.*)/.exec(str);
-                const noteValue = matched && matched[1] ? Number(matched[1]) : scoreNoteValue;
-                const dots = matched ? matched[2].length : 0;
-                return (noteValue * 2 ** dots) / (2 ** (dots + 1) - 1);
+            const noteValueStrToNum = str => {
+                return this.#noteValueStrToNum({
+                    str,
+                    scoreNoteValue
+                });
             };
             const scrollTask = current => {
                 const scrTo = (top) => {
@@ -772,7 +782,7 @@ class BlockManager {
                     if (skip || !withinPlaybackRange) {
                         attachMotion();
                     } else {
-                        const currentNoteValue = noteValueStrCalc(current.tonePitch);
+                        const currentNoteValue = noteValueStrToNum(current.tonePitch);
                         delayAttachMotion(currentNoteValue);
                     }
                 } else if (current.rest || current.tieSlur) {
@@ -783,7 +793,7 @@ class BlockManager {
                     if (current.tieSlur === '&' || !withinPlaybackRange) {
                         attachMotion();
                     } else {
-                        const currentNoteValue = noteValueStrCalc(current.rest || current.tieSlur);
+                        const currentNoteValue = noteValueStrToNum(current.rest || current.tieSlur);
                         delayAttachMotion(currentNoteValue);
                     }
                 } else if (current.polyStartEnd) {
@@ -795,7 +805,7 @@ class BlockManager {
                         i++;
                         attachMotion();
                     } else {
-                        const previousNoteValue = noteValueStrCalc(data[i++ - 1].tonePitch);
+                        const previousNoteValue = noteValueStrToNum(data[i++ - 1].tonePitch);
                         delayAttachMotion(previousNoteValue);
                     }
                 } else if (current.macroDef && current.macroDef !== ';') {
@@ -805,7 +815,7 @@ class BlockManager {
                     return;
                 } else {
                     current.tempo && (tempo = Number(current.tempo.replace('t', '')) || tempo);
-                    current.noteValue && (scoreNoteValue = noteValueStrCalc(current.noteValue));
+                    current.noteValue && (scoreNoteValue = noteValueStrToNum(current.noteValue));
                     if (current.repeatStartEnd?.startsWith('/:')) {
                         repeatData[++nest] ??= {
                             start: i
@@ -963,6 +973,99 @@ class BlockManager {
         toDeactiveBlocks.forEach(block => {
             block.elem.classList.add('inactive');
         });
+        const skippedPlayFromHereTrackBlocks = this.#blocksData
+            .filter((block, index) => block.trackNo === playFromHere.trackNo && index < playFromHereIndex);
+        if (skippedPlayFromHereTrackBlocks.length) {
+            let tempo = Number(this.#blocksData.find(block => block.tempo)?.tempo.replace('t', '')) || 120;
+            let scoreNoteValue = 4;
+            let skip = false, inMacro = false;
+            const noteValueStrToNum = str => {
+                return this.#noteValueStrToNum({
+                    str,
+                    scoreNoteValue
+                });
+            };
+            const calcMs = (blocks, ignoreRepeatBreak) => blocks.reduce((sum, block, index) => {
+                const findRepeatEndIndex = start => {
+                    let nest = 0;
+                    return blocks.findIndex((block, i) => {
+                        if (i > start + 1) {
+                            if (block.repeatStartEnd?.startsWith('/:')) {
+                                nest++;
+                            } else if (block.repeatStartEnd === ':/') {
+                                if (nest === 0) {
+                                    return true;
+                                } else {
+                                    nest--;
+                                }
+                            }
+                        }
+                        return false;
+                    });
+                };
+                if (inMacro) {
+                    if (block.macroDef === ';') {
+                        inMacro = false;
+                    }
+                } else if (block.tonePitch || block.rest || block.tieSlur) {
+                    if (skip || block.tieSlur === '&') {
+                        return sum;
+                    }
+                    const noteValue = noteValueStrToNum(block.tonePitch || block.rest || block.tieSlur);
+                    return sum + (60 / tempo * 4 / noteValue * 1000);
+                } else if (block.polyStartEnd) {
+                    skip = block.polyStartEnd === '[';
+                    if (skip) {
+                        return sum;
+                    }
+                    const previousNoteValue = noteValueStrToNum(blocks[index - 1].tonePitch);
+                    return sum + (60 / tempo * 4 / previousNoteValue * 1000);
+                } else if (block.macroDef && block.macroDef !== ';') {
+                    inMacro = true;
+                } else if (block.tempo) {
+                    tempo = Number(block.tempo.replace('t', '')) || tempo;
+                } else if (block.noteValue) {
+                    scoreNoteValue = noteValueStrToNum(block.noteValue);
+                } else if (block.repeatStartEnd?.startsWith('/:')) {
+                    let count = block.repeatStartEnd.replace('/:', '');
+                    count = count === '' ? 2 : Number(count);
+                    let endIndex = findRepeatEndIndex(index);
+                    if (endIndex === -1) {
+                        endIndex = blocks.length + 1;
+                    }
+                    if (!count) {
+                        return sum - calcMs(blocks.slice(index + 1, endIndex - 1));
+                    } else {
+                        return sum + calcMs(blocks.slice(index + 1, endIndex - 1), true) * (count - 1);
+                    }
+                } else if (block.repeatBreak && !ignoreRepeatBreak) {
+                    let endIndex = findRepeatEndIndex(index);
+                    if (endIndex === -1) {
+                        endIndex = blocks.length + 1;
+                    }
+                    return sum - calcMs(blocks.slice(index + 1, endIndex - 1));
+                } else if (block.macroUse) {
+                    const targetMacro = {};
+                    targetMacro.start = this.#blocksData.findIndex(b => b.macroDef?.startsWith(block.macroUse));
+                    if (targetMacro.start > -1) {
+                        const findMacroEndIndex = start => {
+                            let end = start + 1;
+                            while (this.#blocksData[end].macroDef !== ';' && this.#blocksData[end].trackNo === block.trackNo) {
+                                end++;
+                            };
+                            return end;
+                        };
+                        targetMacro.end = findMacroEndIndex(targetMacro.start);
+                        targetMacro.blocks = this.#blocksData.slice(targetMacro.start + 1, targetMacro.end);
+                        return sum + calcMs(targetMacro.blocks);
+                    }
+                }
+                return sum;
+            }, 0);
+            const skipMs = calcMs(skippedPlayFromHereTrackBlocks);
+            console.log(`Skipped playback time: ${skipMs} ms`);
+            mtcSync.additionalStartMSec = skipMs;
+        }
         copyBtn.disabled = saveBtn.disabled = true;
     }
 }
@@ -1178,6 +1281,7 @@ class MTCSync {
         this.outputs = null;
         this.output = null;
         this.startMSec = 0;
+        this.additionalStartMSec = 0;
         this.startTime = 0;
         this.timer = null;
         this.initialized = false;
@@ -1212,7 +1316,7 @@ class MTCSync {
         if (!this.output) return;
         const now = performance.now();
         const elapsed = (now - this.startTime) / 1000;
-        const totalFrames = Math.floor(this.startMSec / 1000 * this.#FPS + elapsed * this.#FPS);
+        const totalFrames = Math.floor((this.startMSec + this.additionalStartMSec) / 1000 * this.#FPS + elapsed * this.#FPS);
         const { hours, minutes, seconds, frames } = this.framesToTimecode(totalFrames);
         // メッセージを順に送信
         const qfMsgs = this.getQuarterFrameMessages(hours, minutes, seconds, frames);
@@ -1230,8 +1334,7 @@ class MTCSync {
     }
 
     configure(config) {
-        this.output = config.output;
-        this.startMSec = config.startMSec || 0;
+        Object.assign(this, config);
     }
 
     start() {
