@@ -957,14 +957,9 @@ class BlockManager {
         }
         const playFromHereIndex = this.#blocksData.indexOf(playFromHere);
         const toDeactiveBlocks = this.#blocksData
-            .filter((block, index) => {
-                if (block.playFromHere) {
-                    return false;
-                } else if (block.trackNo !== playFromHere.trackNo) {
-                    return true;
-                }
-                return index < playFromHereIndex;
-        });
+            .filter((block, index) =>
+                block.trackNo !== playFromHere.trackNo || index < playFromHereIndex
+            );
         toDeactiveBlocks.forEach(block => {
             block.elem.classList.add('inactive');
         });
