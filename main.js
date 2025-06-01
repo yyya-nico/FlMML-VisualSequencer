@@ -962,6 +962,9 @@ class BlockManager {
         });
         const playFromHere = this.#blocksData.find(block => block.elem.classList.contains('play-from-here'));
         if (!playFromHere) {
+            if (mtcSyncEnable) {
+                mtcSync.additionalStartMSec = 0;
+            }
             copyBtn.disabled = saveBtn.disabled = false;
             return;
         }
@@ -973,98 +976,104 @@ class BlockManager {
         toDeactiveBlocks.forEach(block => {
             block.elem.classList.add('inactive');
         });
-        const skippedPlayFromHereTrackBlocks = this.#blocksData
-            .filter((block, index) => block.trackNo === playFromHere.trackNo && index < playFromHereIndex);
-        if (skippedPlayFromHereTrackBlocks.length) {
-            let tempo = Number(this.#blocksData.find(block => block.tempo)?.tempo.replace('t', '')) || 120;
-            let scoreNoteValue = 4;
-            let skip = false, inMacro = false;
-            const noteValueStrToNum = str => {
-                return this.#noteValueStrToNum({
-                    str,
-                    scoreNoteValue
-                });
-            };
-            const calcMs = (blocks, ignoreRepeatBreak) => blocks.reduce((sum, block, index) => {
-                const findRepeatEndIndex = start => {
-                    let nest = 0;
-                    return blocks.findIndex((block, i) => {
-                        if (i > start + 1) {
-                            if (block.repeatStartEnd?.startsWith('/:')) {
-                                nest++;
-                            } else if (block.repeatStartEnd === ':/') {
-                                if (nest === 0) {
-                                    return true;
-                                } else {
-                                    nest--;
+        if (mtcSyncEnable) {
+            const skippedPlayFromHereTrackBlocks = this.#blocksData
+                .filter((block, index) => block.trackNo === playFromHere.trackNo && index < playFromHereIndex);
+            mtcSync.additionalStartMSec = ((blocks) => {
+                if (blocks.length) {
+                    let tempo = Number(this.#blocksData.find(block => block.tempo)?.tempo.replace('t', '')) || 120;
+                    let scoreNoteValue = 4;
+                    let skip = false, inMacro = false;
+                    const noteValueStrToNum = str => {
+                        return this.#noteValueStrToNum({
+                            str,
+                            scoreNoteValue
+                        });
+                    };
+                    const calcMs = (blocks, ignoreRepeatBreak) => blocks.reduce((sum, block, index) => {
+                        const findRepeatEndIndex = start => {
+                            let nest = 0;
+                            return blocks.findIndex((block, i) => {
+                                if (i > start + 1) {
+                                    if (block.repeatStartEnd?.startsWith('/:')) {
+                                        nest++;
+                                    } else if (block.repeatStartEnd === ':/') {
+                                        if (nest === 0) {
+                                            return true;
+                                        } else {
+                                            nest--;
+                                        }
+                                    }
                                 }
+                                return false;
+                            });
+                        };
+                        if (inMacro) {
+                            if (block.macroDef === ';') {
+                                inMacro = false;
+                            }
+                        } else if (block.tonePitch || block.rest || block.tieSlur) {
+                            if (skip || block.tieSlur === '&') {
+                                return sum;
+                            }
+                            const noteValue = noteValueStrToNum(block.tonePitch || block.rest || block.tieSlur);
+                            return sum + (60 / tempo * 4 / noteValue * 1000);
+                        } else if (block.polyStartEnd) {
+                            skip = block.polyStartEnd === '[';
+                            if (skip) {
+                                return sum;
+                            }
+                            const previousNoteValue = noteValueStrToNum(blocks[index - 1].tonePitch);
+                            return sum + (60 / tempo * 4 / previousNoteValue * 1000);
+                        } else if (block.macroDef && block.macroDef !== ';') {
+                            inMacro = true;
+                        } else if (block.tempo) {
+                            tempo = Number(block.tempo.replace('t', '')) || tempo;
+                        } else if (block.noteValue) {
+                            scoreNoteValue = noteValueStrToNum(block.noteValue);
+                        } else if (block.repeatStartEnd?.startsWith('/:')) {
+                            let count = block.repeatStartEnd.replace('/:', '');
+                            count = count === '' ? 2 : Number(count);
+                            let endIndex = findRepeatEndIndex(index);
+                            if (endIndex === -1) {
+                                endIndex = blocks.length + 1;
+                            }
+                            if (!count) {
+                                return sum - calcMs(blocks.slice(index + 1, endIndex - 1));
+                            } else {
+                                return sum + calcMs(blocks.slice(index + 1, endIndex - 1), true) * (count - 1);
+                            }
+                        } else if (block.repeatBreak && !ignoreRepeatBreak) {
+                            let endIndex = findRepeatEndIndex(index);
+                            if (endIndex === -1) {
+                                endIndex = blocks.length + 1;
+                            }
+                            return sum - calcMs(blocks.slice(index + 1, endIndex - 1));
+                        } else if (block.macroUse) {
+                            const targetMacro = {};
+                            targetMacro.start = this.#blocksData.findIndex(b => b.macroDef?.startsWith(block.macroUse));
+                            if (targetMacro.start > -1) {
+                                const findMacroEndIndex = start => {
+                                    let end = start + 1;
+                                    while (this.#blocksData[end].macroDef !== ';' && this.#blocksData[end].trackNo === block.trackNo) {
+                                        end++;
+                                    };
+                                    return end;
+                                };
+                                targetMacro.end = findMacroEndIndex(targetMacro.start);
+                                targetMacro.blocks = this.#blocksData.slice(targetMacro.start + 1, targetMacro.end);
+                                return sum + calcMs(targetMacro.blocks);
                             }
                         }
-                        return false;
-                    });
-                };
-                if (inMacro) {
-                    if (block.macroDef === ';') {
-                        inMacro = false;
-                    }
-                } else if (block.tonePitch || block.rest || block.tieSlur) {
-                    if (skip || block.tieSlur === '&') {
                         return sum;
-                    }
-                    const noteValue = noteValueStrToNum(block.tonePitch || block.rest || block.tieSlur);
-                    return sum + (60 / tempo * 4 / noteValue * 1000);
-                } else if (block.polyStartEnd) {
-                    skip = block.polyStartEnd === '[';
-                    if (skip) {
-                        return sum;
-                    }
-                    const previousNoteValue = noteValueStrToNum(blocks[index - 1].tonePitch);
-                    return sum + (60 / tempo * 4 / previousNoteValue * 1000);
-                } else if (block.macroDef && block.macroDef !== ';') {
-                    inMacro = true;
-                } else if (block.tempo) {
-                    tempo = Number(block.tempo.replace('t', '')) || tempo;
-                } else if (block.noteValue) {
-                    scoreNoteValue = noteValueStrToNum(block.noteValue);
-                } else if (block.repeatStartEnd?.startsWith('/:')) {
-                    let count = block.repeatStartEnd.replace('/:', '');
-                    count = count === '' ? 2 : Number(count);
-                    let endIndex = findRepeatEndIndex(index);
-                    if (endIndex === -1) {
-                        endIndex = blocks.length + 1;
-                    }
-                    if (!count) {
-                        return sum - calcMs(blocks.slice(index + 1, endIndex - 1));
-                    } else {
-                        return sum + calcMs(blocks.slice(index + 1, endIndex - 1), true) * (count - 1);
-                    }
-                } else if (block.repeatBreak && !ignoreRepeatBreak) {
-                    let endIndex = findRepeatEndIndex(index);
-                    if (endIndex === -1) {
-                        endIndex = blocks.length + 1;
-                    }
-                    return sum - calcMs(blocks.slice(index + 1, endIndex - 1));
-                } else if (block.macroUse) {
-                    const targetMacro = {};
-                    targetMacro.start = this.#blocksData.findIndex(b => b.macroDef?.startsWith(block.macroUse));
-                    if (targetMacro.start > -1) {
-                        const findMacroEndIndex = start => {
-                            let end = start + 1;
-                            while (this.#blocksData[end].macroDef !== ';' && this.#blocksData[end].trackNo === block.trackNo) {
-                                end++;
-                            };
-                            return end;
-                        };
-                        targetMacro.end = findMacroEndIndex(targetMacro.start);
-                        targetMacro.blocks = this.#blocksData.slice(targetMacro.start + 1, targetMacro.end);
-                        return sum + calcMs(targetMacro.blocks);
-                    }
+                    }, 0);
+                    const skipMs = calcMs(blocks);
+                    return skipMs;
+                } else {
+                    return 0;
                 }
-                return sum;
-            }, 0);
-            const skipMs = calcMs(skippedPlayFromHereTrackBlocks);
-            console.log(`Skipped playback time: ${skipMs} ms`);
-            mtcSync.additionalStartMSec = skipMs;
+            })(skippedPlayFromHereTrackBlocks);
+            console.log(`Skipped playback time: ${mtcSync.additionalStartMSec} ms`);
         }
         copyBtn.disabled = saveBtn.disabled = true;
     }
@@ -2193,6 +2202,7 @@ MTC Senderとして動作します。`,
                         startMSec,
                     });
                     mtcSyncEnable = true;
+                    blockManager.calcPlayFromHere();
                 },
                 'cancel-sync-mtc': () => {
                     mtcSyncEnable = false;
