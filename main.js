@@ -2335,7 +2335,7 @@ MTC Senderとして動作します。`,
                         value: elem.value,
                     }];
                 } else {
-                    return [elem.name, elem.value];
+                    return [elem.name, elem.valueAsNumber || elem.value];
                 }
             })
         );
