@@ -2239,6 +2239,10 @@ MTC Senderとして動作します。`,
     async prompt(item, type) {
         this.item = item;
         this.type = type || Object.keys(this.#dialogDefinitions).find(key => key in item.dataset);
+        if (!this.type) {
+            console.warn('No dialog type found for the item:', item);
+            return;
+        }
         this.mmlText = item.dataset[this.type];
         switch (this.type) {
             case 'repeatStartEnd':
