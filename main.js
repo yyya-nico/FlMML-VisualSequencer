@@ -1055,7 +1055,7 @@ class BlockManager {
                             if (targetMacro.start > -1) {
                                 const findMacroEndIndex = start => {
                                     let end = start + 1;
-                                    while (this.#blocksData[end].macroDef !== ';' && this.#blocksData[end].trackNo === block.trackNo) {
+                                    while (this.#blocksData[end].macroDef !== ';' && this.#blocksData[end].trackNo === this.#blocksData[start].trackNo) {
                                         end++;
                                     };
                                     return end;
