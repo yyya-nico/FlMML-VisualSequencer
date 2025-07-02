@@ -10,6 +10,7 @@ import { htmlspecialchars, nl2br, resetAnimation, useVisualViewportToCss, waitSc
 
 const version = import.meta.env.VITE_APP_VER;
 
+const wrap = document.querySelector('.wrap');
 const editor = document.querySelector('.editor');
 const tones = document.getElementById('tones');
 const action = document.getElementById('action');
@@ -675,7 +676,6 @@ class BlockManager {
         [tones, action, musicalScore].forEach(target => {
             target.classList.add('no-op');
         });
-        const wrap = document.querySelector('.wrap');
         // const headerHeight = parseInt(getComputedStyle(document.querySelector(':root')).getPropertyValue('--header-height'));
         // const scrTo = (top) => {
         //     top -= headerHeight;
@@ -3651,24 +3651,80 @@ saveBtn.addEventListener('click', e => {
     }
 });
 
+const allowedExtensions = ['.mml', '.flmml', '.txt', '.json'];
 openBtn.addEventListener('click', () => {
     const inputFile = document.createElement('input');
-    const fr = new FileReader();
     inputFile.type = 'file';
-    inputFile.accept = '.mml,.flmml,.txt,.json';
+    inputFile.accept = allowedExtensions.join(',');
     inputFile.click();
-    inputFile.onchange = () => {
-        fr.onload = () => {
-            const text = fr.result;
-            if (isValidJSON(text)) {
-                blockManager.blocksData = JSON.parse(text);
-                alert('JSONブロックデータが読み込まれました。');
-            } else {
-                mml.setMml(text.replace(/\r/g, ''));
-                blockManager.importMml(mml);
-            }
-        };
-        fr.readAsText(inputFile.files[0]);
+    inputFile.onchange = async () => {
+        const file = inputFile.files[0];
+        const text = await file.text();
+        if (isValidJSON(text)) {
+            blockManager.blocksData = JSON.parse(text);
+            alert('JSONブロックデータが読み込まれました。');
+        } else {
+            mml.setMml(text.replace(/\r/g, ''));
+            blockManager.importMml(mml);
+        }
+    }
+});
+
+document.addEventListener('dragover', e => {
+    e.preventDefault();
+    if (e.dataTransfer.types.includes('Files')) {
+        e.dataTransfer.dropEffect = 'copy';
+    }
+});
+
+let dragCounter = 0;
+document.addEventListener('dragenter', e => {
+    e.preventDefault();
+
+    if (e.dataTransfer.types.includes('Files')) {
+        dragCounter++;
+        if (dragCounter === 1) {
+            wrap.classList.add('file-dragover');
+        }
+    }
+});
+
+document.addEventListener('dragleave', e => {
+    e.preventDefault();
+
+    if (e.dataTransfer.types.includes('Files')) {
+        dragCounter--;
+        if (dragCounter <= 0) {
+            dragCounter = 0;
+            wrap.classList.remove('file-dragover');
+        }
+    }
+});
+
+document.addEventListener('drop', async e => {
+    e.preventDefault();
+
+    dragCounter = 0;
+    wrap.classList.remove('file-dragover');
+    
+    const files = e.dataTransfer.files;
+    if (files.length === 0) return;
+    
+    const file = files[0];
+    const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+    
+    if (!allowedExtensions.includes(fileExtension)) {
+        alert('対応していないファイル形式です。.mml, .flmml, .txt, .json ファイルのみ対応しています。');
+        return;
+    }
+
+    const text = await file.text();
+    if (isValidJSON(text)) {
+        blockManager.blocksData = JSON.parse(text);
+        alert('JSONブロックデータが読み込まれました。');
+    } else {
+        mml.setMml(text.replace(/\r/g, ''));
+        blockManager.importMml(mml);
     }
 });
 

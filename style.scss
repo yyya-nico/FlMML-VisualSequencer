@@ -836,6 +836,29 @@ header {
         }
     }
 
+    &.file-dragover {
+        position: relative;
+
+        &::before {
+            display: grid;
+            place-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 9999;
+            width: 100vw;
+            height: 100vh;
+            color: #ffffff;
+            font-size: 24px;
+            font-weight: 700;
+            background-color: #5590efcc;
+            text-align: center;
+            content: "ここにファイルをドロップ\A(.mml, .flmml, .txt, .json)";
+            white-space: pre-line;
+            pointer-events: none;
+        }
+    }
+
     .author {
         text-align: center;
     }
