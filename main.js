@@ -1646,7 +1646,7 @@ class DialogFormManager {
                     target.dataset.noteShift = `ns${noteShift}`;
                 },
                 'set-note-shift-relative': (target, inputs) => {
-                    const {noteShift} = inputs;
+                    const {'note-shift': noteShift} = inputs;
                     target.dataset.noteShift = `@ns${noteShift}`;
                 }
             }
