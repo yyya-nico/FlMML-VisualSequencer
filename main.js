@@ -1594,7 +1594,7 @@ class DialogFormManager {
                     name: 'velocity',
                     min: '-127',
                     max: '127',
-                    value: (mmlText) => mmlText.startsWith('@v') ? mmlText.replace('@v', '') : Number((mmlText.match(/[0-9]+/) || [''])[0]) * (mmlText.startsWith('(') ? 1 : -1)
+                    value: (mmlText) => Number((mmlText.match(/[0-9]+/) || [''])[0]) * (mmlText.startsWith(')') ? -1 : 1)
                 }
             ],
             buttons: [
@@ -1615,7 +1615,7 @@ class DialogFormManager {
                 },
                 'set-velocity-relative': (target, inputs) => {
                     const {velocity} = inputs;
-                    target.dataset.velocity = (velocity > 0 ? '(' : ')').repeat(Math.abs(velocity));
+                    target.dataset.velocity = (velocity >= 0 ? '(' : ')') + Math.abs(velocity);
                 }
             }
         },
@@ -3125,12 +3125,11 @@ const wheelHandler = e => {
                 }
             } else if ('velocity' in target.dataset) {
                 const isAbsolute = target.dataset.velocity.startsWith('@v');
+                const velocity = Number((target.dataset.velocity.match(/[0-9]+/) || [''])[0]) * (target.dataset.velocity.startsWith(')') ? -1 : 1)
                 if (isAbsolute) {
-                    const velocity = Number(target.dataset.velocity.replace('@v', ''));
                     const increase = minmax(velocity, 0, 127);
                     target.dataset.velocity = '@v' + (velocity + increase);
                 } else {
-                    const velocity = Number((target.dataset.velocity.match(/[0-9]+/) || [''])[0]) * (target.dataset.velocity.startsWith('(') ? 1 : -1);
                     const increase = minmax(velocity, -127, 127);
                     target.dataset.velocity = (velocity + increase >= 0 ? '(' : ')') + Math.abs(velocity + increase);
                 }
