@@ -311,19 +311,54 @@ header {
     @return calc(#{100 + $unit} - var(--header-height));
 }
 
-@function randomColor() {
-    @return rgb(
-        64 + math.random(159),
-        32 + math.random(159),
-        32 + math.random(159)
-    );
+// 直近で生成した色を保存し、似た色を避ける関数
+$__last-colors: () !default;
+
+@function color-distance($c1, $c2) {
+    // RGB間のユークリッド距離
+    $dr: red($c1) - red($c2);
+    $dg: green($c1) - green($c2);
+    $db: blue($c1) - blue($c2);
+    @return math.sqrt($dr * $dr + $dg * $dg + $db * $db);
 }
 
-@function randomColorHsl() {
-    @return hsl(
-        math.random(360) 50 + math.random(25) + 0% 30 + math.random(50) + 0%
-    );
+@function randomColor() {
+    $max-tries: 10;
+    $min-distance: 80;
+    $color: null;
+    $tries: 0;
+
+    @while $tries < $max-tries {
+        $color: rgb(
+            64 + math.random(159),
+            32 + math.random(159),
+            32 + math.random(159)
+        );
+        $is-similar: false;
+        @each $prev in $__last-colors {
+            @if color-distance($color, $prev) < $min-distance {
+                $is-similar: true;
+            }
+        }
+        @if not $is-similar {
+            // 直近8色だけ記憶
+            $__last-colors: append($__last-colors, $color);
+            @if length($__last-colors) > 8 {
+                $__last-colors: slice($__last-colors, -7);
+            }
+            @return $color;
+        }
+        $tries: $tries + 1;
+    }
+    // 失敗したらそのまま返す
+    @return $color;
 }
+
+// @function randomColorHsl() {
+//     @return hsl(
+//         math.random(360) 50 + math.random(25) + 0% 30 + math.random(50) + 0%
+//     );
+// }
 
 @keyframes bounce {
     0% {
