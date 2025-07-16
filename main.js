@@ -307,7 +307,6 @@ class BlockManager {
         const startPosTrackNo = !hasPlayFromHere ? -1 : this.#blocksData[startPos].trackNo;
         this.#blocksData.forEach((block, index) => {
             const { tone, tonePitch } = block;
-            const withinPlaybackRange = !hasPlayFromHere || inMacro || hasPlayFromHere && block.trackNo === startPosTrackNo && index >= startPos;
             if (block.trackNo !== trackNo) {
                 if (toneSet.size) {
                     [...toneSet].forEach((_, i) => {
@@ -323,6 +322,7 @@ class BlockManager {
                 toneAppended = false;
                 inMacro = false;
             }
+            const withinPlaybackRange = !hasPlayFromHere || inMacro || hasPlayFromHere && block.trackNo === startPosTrackNo && index >= startPos;
             if (tone !== undefined) {
                 toneIndex = [...toneSet].indexOf(tone);
                 if (!toneAppended) {
