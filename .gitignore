@@ -1,3 +1,7 @@
+# Build output
+dist/
+*.tgz
+
 # Logs
 logs
 *.log
