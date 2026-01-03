@@ -3005,55 +3005,25 @@ editor.addEventListener('contextmenu', e => {
     }
 });
 
-let lastY = null, ignoreTouch = false, dragJudgementTimer = null;
-editor.addEventListener('touchstart', e => {
-    const touchY = [...e.touches].at(-1).pageY;
-    lastY = touchY;
-    dragJudgementTimer = setTimeout(() => {
-        ignoreTouch = true;
-    }, 500);
-});
-const wheelHandler = e => {
-    if (stepEnable) {
-        return;
-    }
-    const ctrlKey = e.ctrlKey || ctrlSw.checked;
-    const is = id => Boolean(e.target.closest('#' + id));
-    const isButton = e.target.tagName.toLowerCase() === 'button';
-    if (e.type === 'touchmove') {
-        const touchY = [...e.touches].at(-1).pageY;
-        if (ignoreTouch) {
-            e.cancelable && e.preventDefault();
-            return;
-        } else if (touchY - lastY < -30) {
-            e.deltaY = -1;
-            clearTimeout(dragJudgementTimer);
-        } else if (touchY - lastY > 30) {
-            e.deltaY = 1;
-            clearTimeout(dragJudgementTimer);
-        } else {
-            e.cancelable && e.preventDefault();
-            return;
-        }
-        lastY = touchY;
-    }
-    const isPositive = e.deltaY < 0;
-    let target = isButton && e.target !== addTrackBtn && e.target !== removeTrackBtn ? e.target : lastTouchedButton?.closest('#musical-score') && lastTouchedButton;
-    if (!target) {
+const buttonParamChange = (target, direction, ctrlKey) => {
+    if (stepEnable) return;
+    const is = id => Boolean(target.closest('#' + id));
+    const isButton = target.tagName.toLowerCase() === 'button';
+    let button = isButton && target !== addTrackBtn && target !== removeTrackBtn ? target : lastTouchedButton?.closest('#musical-score') && lastTouchedButton;
+    if (!button) {
         return;
     } else if (is('musical-score')) {
         if (musicalScore.classList.contains('no-op')) {
             return;
         }
-        e.preventDefault();
-        let beforeChange = JSON.parse(JSON.stringify(target.dataset));
-        if (!ctrlKey && 'tone' in target.dataset) {
+        let beforeChange = JSON.parse(JSON.stringify(button.dataset));
+        if (!ctrlKey && 'tone' in button.dataset) {
             const pitches = ['c', 'c+', 'd', 'd+', 'e', 'f', 'f+', 'g', 'g+', 'a', 'a+', 'b'];
             const octave = {
                 down: '>',
                 up: '<'
             };
-            const currentPitch = target.dataset.tonePitch;
+            const currentPitch = button.dataset.tonePitch;
             const currentPitchIndex = pitches.findIndex(pitch => currentPitch.match(/[a-g]\+?/)[0] === pitch);
             const countStr = (target, str) => (target.match(new RegExp(str, 'g')) || []).length;
             const octaveCount = {
@@ -3062,101 +3032,100 @@ const wheelHandler = e => {
             };
             const octaveStr = octave.down.repeat(octaveCount.down) + octave.up.repeat(octaveCount.up);
             const noteValue = (currentPitch.match(/[0-9]+/) || [''])[0];
-            const dots = (target.dataset.tonePitch.match(/\.+/) || [''])[0];
-            if (isPositive) { // Up
+            const dots = (button.dataset.tonePitch.match(/\.+/) || [''])[0];
+            if (direction > 0) { // Up
                 if (currentPitchIndex === pitches.length - 1) {
                     if (octaveCount.down) {
-                        target.dataset.tonePitch = octaveStr.substring(1) + pitches.at(0) + noteValue + dots;
+                        button.dataset.tonePitch = octaveStr.substring(1) + pitches.at(0) + noteValue + dots;
                     } else {
-                        target.dataset.tonePitch = octaveStr + octave.up + pitches.at(0) + noteValue + dots;
+                        button.dataset.tonePitch = octaveStr + octave.up + pitches.at(0) + noteValue + dots;
                     }
                 } else {
-                    target.dataset.tonePitch = octaveStr + pitches[currentPitchIndex + 1] + noteValue + dots;
+                    button.dataset.tonePitch = octaveStr + pitches[currentPitchIndex + 1] + noteValue + dots;
                 }
             } else { // Down
                 if (currentPitchIndex === 0) {
                     if (octaveCount.up) {
-                        target.dataset.tonePitch = octaveStr.substring(1) + pitches.at(-1) + noteValue + dots;
+                        button.dataset.tonePitch = octaveStr.substring(1) + pitches.at(-1) + noteValue + dots;
                     } else {
-                        target.dataset.tonePitch = octaveStr + octave.down + pitches.at(-1) + noteValue + dots;
+                        button.dataset.tonePitch = octaveStr + octave.down + pitches.at(-1) + noteValue + dots;
                     }
                 } else {
-                    target.dataset.tonePitch = octaveStr + pitches[currentPitchIndex - 1] + noteValue + dots;
+                    button.dataset.tonePitch = octaveStr + pitches[currentPitchIndex - 1] + noteValue + dots;
                 }
             }
-            playMusicNote(target);
+            playMusicNote(button);
         } else {
-            const increaseBase = isPositive ? 1 : -1;
             const minmax = (current, min = -Infinity, max = Infinity) => current + increaseBase < min ? 0 : current + increaseBase > max ? 0 : increaseBase;
-            if (ctrlKey && 'tonePitch' in target.dataset) {
-                const noteValue = Number((target.dataset.tonePitch.match(/[0-9]+/) || [''])[0]);
-                const dots = (target.dataset.tonePitch.match(/\.+/) || [''])[0];
+            if (ctrlKey && 'tonePitch' in button.dataset) {
+                const noteValue = Number((button.dataset.tonePitch.match(/[0-9]+/) || [''])[0]);
+                const dots = (button.dataset.tonePitch.match(/\.+/) || [''])[0];
                 const increase = minmax(noteValue, 0, 384);
                 const currentNoteValueIndex = validNoteValues.findIndex(validNoteValue => validNoteValue === noteValue);
                 const newNoteValue = noteValue + increase !== 0 ? validNoteValues[currentNoteValueIndex + increase] : '';
-                target.dataset.tonePitch = target.dataset.tonePitch.replace(/[0-9]*\.*/g, '') + newNoteValue + dots;
-                playMusicNote(target);
-            } else if ('tempo' in target.dataset) {
-                const tempo = Number(target.dataset.tempo.replace('t', ''));
+                button.dataset.tonePitch = button.dataset.tonePitch.replace(/[0-9]*\.*/g, '') + newNoteValue + dots;
+                playMusicNote(button);
+            } else if ('tempo' in button.dataset) {
+                const tempo = Number(button.dataset.tempo.replace('t', ''));
                 const increase = minmax(tempo, 0);
-                target.dataset.tempo = 't' + (tempo + increase * 10);
-            } else if ('noteValue' in target.dataset) {
-                const noteValue = Number((target.dataset.noteValue.match(/[0-9]+/) || [''])[0]);
+                button.dataset.tempo = 't' + (tempo + increase * 10);
+            } else if ('noteValue' in button.dataset) {
+                const noteValue = Number((button.dataset.noteValue.match(/[0-9]+/) || [''])[0]);
                 const increase = minmax(noteValue, 1, 384);
                 const currentNoteValueIndex = validNoteValues.findIndex(validNoteValue => validNoteValue === noteValue);
-                target.dataset.noteValue = target.dataset.noteValue.replace(/[0-9]+/, validNoteValues[currentNoteValueIndex + increase]);
-            } else if ('rest' in target.dataset) {
-                const rest = Number((target.dataset.rest.match(/[0-9]+/) || [''])[0]);
-                const dots = (target.dataset.rest.match(/\.+/) || [''])[0];
+                button.dataset.noteValue = button.dataset.noteValue.replace(/[0-9]+/, validNoteValues[currentNoteValueIndex + increase]);
+            } else if ('rest' in button.dataset) {
+                const rest = Number((button.dataset.rest.match(/[0-9]+/) || [''])[0]);
+                const dots = (button.dataset.rest.match(/\.+/) || [''])[0];
                 const increase = minmax(rest, 0, 384);
                 const currentNoteValueIndex = validNoteValues.findIndex(validNoteValue => validNoteValue === rest);
                 const newRest = rest + increase !== 0 ? validNoteValues[currentNoteValueIndex + increase] : '';
-                target.dataset.rest = 'r' + newRest + dots;
-            } else if ('octave' in target.dataset) {
-                const isAbsolute = target.dataset.octave.startsWith('o');
+                button.dataset.rest = 'r' + newRest + dots;
+            } else if ('octave' in button.dataset) {
+                const isAbsolute = button.dataset.octave.startsWith('o');
                 if (isAbsolute) {
-                    const octave = Number(target.dataset.octave.replace('o', ''));
+                    const octave = Number(button.dataset.octave.replace('o', ''));
                     const increase = minmax(octave, 0, 8);
-                    target.dataset.octave = 'o' + (octave + increase);
+                    button.dataset.octave = 'o' + (octave + increase);
                 } else {
-                    const octave = (target.dataset.octave.match(/<+/) || [''])[0].length - (target.dataset.octave.match(/>+/) || [''])[0].length;
+                    const octave = (button.dataset.octave.match(/<+/) || [''])[0].length - (button.dataset.octave.match(/>+/) || [''])[0].length;
                     const increase = minmax(octave, -8, 8);
-                    target.dataset.octave = octave + increase > 0 ? '<'.repeat(octave + increase) : '>'.repeat(-(octave + increase));
+                    button.dataset.octave = octave + increase > 0 ? '<'.repeat(octave + increase) : '>'.repeat(-(octave + increase));
                 }
-            } else if ('velocity' in target.dataset) {
-                const isAbsolute = target.dataset.velocity.startsWith('@v');
-                const velocity = Number((target.dataset.velocity.match(/[0-9]+/) || [''])[0]) * (target.dataset.velocity.startsWith(')') ? -1 : 1)
+            } else if ('velocity' in button.dataset) {
+                const isAbsolute = button.dataset.velocity.startsWith('@v');
+                const velocity = Number((button.dataset.velocity.match(/[0-9]+/) || [''])[0]) * (button.dataset.velocity.startsWith(')') ? -1 : 1)
                 if (isAbsolute) {
                     const increase = minmax(velocity, 0, 127);
-                    target.dataset.velocity = '@v' + (velocity + increase);
+                    button.dataset.velocity = '@v' + (velocity + increase);
                 } else {
                     const increase = minmax(velocity, -127, 127);
-                    target.dataset.velocity = (velocity + increase >= 0 ? '(' : ')') + Math.abs(velocity + increase);
+                    button.dataset.velocity = (velocity + increase >= 0 ? '(' : ')') + Math.abs(velocity + increase);
                 }
-            } else if ('noteShift' in target.dataset) {
-                const noteShift = Number((target.dataset.noteShift.match(/-?[0-9]+/) || [''])[0]);
+            } else if ('noteShift' in button.dataset) {
+                const noteShift = Number((button.dataset.noteShift.match(/-?[0-9]+/) || [''])[0]);
                 const increase = increaseBase;
-                target.dataset.noteShift = target.dataset.noteShift.match(/@?ns/)[0] + (noteShift + increase);
-            } else if ('detune' in target.dataset) {
-                const detune = Number(target.dataset.detune.replace('@d', ''));
+                button.dataset.noteShift = button.dataset.noteShift.match(/@?ns/)[0] + (noteShift + increase);
+            } else if ('detune' in button.dataset) {
+                const detune = Number(button.dataset.detune.replace('@d', ''));
                 const increase = increaseBase;
-                target.dataset.detune = '@d' + (detune + increase);
-            } else if ('tieSlur' in target.dataset) {
-                const tieSlur = Number((target.dataset.tieSlur.match(/[0-9]+/) || [''])[0]);
-                const dots = (target.dataset.tieSlur.match(/\.+/) || [''])[0];
+                button.dataset.detune = '@d' + (detune + increase);
+            } else if ('tieSlur' in button.dataset) {
+                const tieSlur = Number((button.dataset.tieSlur.match(/[0-9]+/) || [''])[0]);
+                const dots = (button.dataset.tieSlur.match(/\.+/) || [''])[0];
                 const increase = minmax(tieSlur, 0, 384);
                 const currentNoteValueIndex = validNoteValues.findIndex(validNoteValue => validNoteValue === tieSlur);
                 const newTieSlur = tieSlur + increase !== 0 ? validNoteValues[currentNoteValueIndex + increase] : '';
-                target.dataset.tieSlur = '&' + newTieSlur + dots;
-                if (target.dataset.tieSlur === '&') {
-                    target.ariaLabel = 'スラー';
+                button.dataset.tieSlur = '&' + newTieSlur + dots;
+                if (button.dataset.tieSlur === '&') {
+                    button.ariaLabel = 'スラー';
                 } else {
-                    target.ariaLabel = 'タイ';
+                    button.ariaLabel = 'タイ';
                 }
-            } else if ('repeatStartEnd' in target.dataset) {
-                if (target.dataset.repeatStartEnd === ':/') {
+            } else if ('repeatStartEnd' in button.dataset) {
+                if (button.dataset.repeatStartEnd === ':/') {
                     const findRepeatStartElem = () => {
-                        let findTemp = target.parentElement;
+                        let findTemp = button.parentElement;
                         while (findTemp && !(findTemp.firstElementChild.dataset.repeatStartEnd?.startsWith('/:'))) {
                             findTemp = findTemp.previousElementSibling;
                         };
@@ -3169,36 +3138,68 @@ const wheelHandler = e => {
                         const baseItem = action.querySelector('.repeat-start-end');
                         const newItem = baseItem.cloneNode(true);
                         li.appendChild(newItem);
-                        ul.insertBefore(li, target.parentElement);
-                        target = newItem;
+                        ul.insertBefore(li, button.parentElement);
+                        button = newItem;
                     } else {
-                        target = repeatStart;
+                        button = repeatStart;
                     }
-                    beforeChange = JSON.parse(JSON.stringify(target.dataset));
+                    beforeChange = JSON.parse(JSON.stringify(button.dataset));
                 }
-                const repeat = Number((target.dataset.repeatStartEnd.match(/[0-9]+/) || [-1])[0]);
+                const repeat = Number((button.dataset.repeatStartEnd.match(/[0-9]+/) || [-1])[0]);
                 const increase = minmax(repeat, -1);
                 const newRepeat = repeat + increase !== -1 ? repeat + increase : '';
-                target.dataset.repeatStartEnd = '/:' + newRepeat;
+                button.dataset.repeatStartEnd = '/:' + newRepeat;
             }
         }
-        const afterChange = JSON.parse(JSON.stringify(target.dataset));
+        const afterChange = JSON.parse(JSON.stringify(button.dataset));
         if (JSON.stringify(beforeChange) !== JSON.stringify(afterChange)) {
             history.pushState({
                 operation: 'valueChange',
-                target,
+                target: button,
                 beforeChange,
                 afterChange
             });
         }
-        lastTouchedButton = target;
+        lastTouchedButton = button;
         blockManager.blocksDataUpdate();
         blockManager.saveBlocksData();
         blockManager.exportMml(mml);
     }
 };
-editor.addEventListener('wheel', wheelHandler);
-editor.addEventListener('touchmove', wheelHandler);
+
+let moveStrage = 0;
+editor.addEventListener('wheel', e => {
+    e.preventDefault();
+    moveStrage += e.deltaY;
+    if (Math.abs(moveStrage) < 30) return;
+    const direction = moveStrage > 0 ? 1 : -1;
+    const ctrlKey = e.ctrlKey || ctrlSw.checked;
+    buttonParamChange(e.target, direction, ctrlKey)
+    moveStrage = 0;
+});
+
+let lastY = null, ignoreTouch = false, dragJudgementTimer = null;
+editor.addEventListener('touchstart', e => {
+    const y = [...e.touches].at(-1).pageY;
+    lastY = y;
+    dragJudgementTimer = setTimeout(() => {
+        ignoreTouch = true;
+    }, 500);
+});
+
+editor.addEventListener('touchmove', e => {
+    e.preventDefault();
+    if (ignoreTouch) return;
+    clearTimeout(dragJudgementTimer);
+    const y = [...e.touches].at(-1).pageY;
+    const distance = lastY - y;
+    if (Math.abs(distance) < 30) return;
+    const direction = distance > 0 ? 1 : -1;
+    const ctrlKey = e.ctrlKey || ctrlSw.checked;
+    buttonParamChange(e.target, direction, ctrlKey);
+    lastY = y;
+});
+
 editor.addEventListener('touchend', () => {
     clearTimeout(dragJudgementTimer);
     ignoreTouch = false;
