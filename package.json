@@ -15,7 +15,7 @@
     "stylelint": "^16.4.0",
     "stylelint-config-standard": "^36.0.0",
     "stylelint-scss": "^6.2.1",
-    "vite": "^5.0.8"
+    "vite": "^7.3.0"
   },
   "dependencies": {
     "emoji-picker-element": "^1.21.0",
