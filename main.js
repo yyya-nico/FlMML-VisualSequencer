@@ -3056,7 +3056,7 @@ const buttonParamChange = (target, direction, ctrlKey) => {
             }
             playMusicNote(button);
         } else {
-            const minmax = (current, min = -Infinity, max = Infinity) => current + increaseBase < min ? 0 : current + increaseBase > max ? 0 : increaseBase;
+            const minmax = (current, min = -Infinity, max = Infinity) => current + direction < min ? 0 : current + direction > max ? 0 : direction;
             if (ctrlKey && 'tonePitch' in button.dataset) {
                 const noteValue = Number((button.dataset.tonePitch.match(/[0-9]+/) || [''])[0]);
                 const dots = (button.dataset.tonePitch.match(/\.+/) || [''])[0];
@@ -3104,11 +3104,11 @@ const buttonParamChange = (target, direction, ctrlKey) => {
                 }
             } else if ('noteShift' in button.dataset) {
                 const noteShift = Number((button.dataset.noteShift.match(/-?[0-9]+/) || [''])[0]);
-                const increase = increaseBase;
+                const increase = direction;
                 button.dataset.noteShift = button.dataset.noteShift.match(/@?ns/)[0] + (noteShift + increase);
             } else if ('detune' in button.dataset) {
                 const detune = Number(button.dataset.detune.replace('@d', ''));
-                const increase = increaseBase;
+                const increase = direction;
                 button.dataset.detune = '@d' + (detune + increase);
             } else if ('tieSlur' in button.dataset) {
                 const tieSlur = Number((button.dataset.tieSlur.match(/[0-9]+/) || [''])[0]);
