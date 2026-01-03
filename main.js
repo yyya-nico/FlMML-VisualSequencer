@@ -2709,7 +2709,7 @@ const getNonExistNoteClassName = () => {
 };
 
 document.addEventListener('keydown', e => {
-    const ctrlKey = e.ctrlKey || ctrlSw.checked;
+    const ctrlKey = e.ctrlKey || e.metaKey || ctrlSw.checked;
     switch (e.key?.toLowerCase()) {
         case ' ':
             if (stepEnable) {
@@ -2742,7 +2742,7 @@ document.addEventListener('keydown', e => {
 });
 
 editor.addEventListener('click', async e => {
-    const ctrlKey = e.ctrlKey || ctrlSw.checked;
+    const ctrlKey = e.ctrlKey || e.metaKey || ctrlSw.checked;
     const is = id => Boolean(e.target.closest('#' + id));
     const isButton = e.target.tagName.toLowerCase() === 'button';
     if ([tones, action, musicalScore].some(target => target.classList.contains('no-op'))) {
@@ -3173,7 +3173,7 @@ editor.addEventListener('wheel', e => {
     moveStrage += e.deltaY;
     if (Math.abs(moveStrage) < 30) return;
     const direction = moveStrage > 0 ? 1 : -1;
-    const ctrlKey = e.ctrlKey || ctrlSw.checked;
+    const ctrlKey = e.ctrlKey || e.metaKey || ctrlSw.checked;
     buttonParamChange(e.target, direction, ctrlKey)
     moveStrage = 0;
 });
@@ -3195,7 +3195,7 @@ editor.addEventListener('touchmove', e => {
     const distance = lastY - y;
     if (Math.abs(distance) < 30) return;
     const direction = distance > 0 ? 1 : -1;
-    const ctrlKey = e.ctrlKey || ctrlSw.checked;
+    const ctrlKey = e.ctrlKey || e.metaKey || ctrlSw.checked;
     buttonParamChange(e.target, direction, ctrlKey);
     lastY = y;
 });
@@ -3217,7 +3217,7 @@ editor.addEventListener('dragstart', e => {
 let dropEffect = null;
 [tones, action, musicalScore].forEach(target => {
     const dragEventHandler = e => {
-        const ctrlKey = e.ctrlKey || ctrlSw.checked;
+        const ctrlKey = e.ctrlKey || e.metaKey || ctrlSw.checked;
         const { from = null } = dragInfo;
         const dt = e.dataTransfer;
         switch (from) {
